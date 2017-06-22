@@ -1,0 +1,54 @@
+#include <stdio.h>
+#include <string.h>
+
+// faults with error codes:
+// 8 #DF double fault - error is always zero
+// 10 #TS invalid TSS - error is selector that triggered fault
+// 11 #NP segment not present - error is selector index of missing segment
+// 12 #SS stack exception - error is selector index or zero
+// 13 #GP general protection - error is selector index or zero
+// 14 #PF page fault - error code is indicating why fault occured. faulting address is in CR2
+
+void main(int argc, char** argv) {
+  int num_interrupts = 256;
+
+  printf("extern irq_1param\n");
+  printf("extern irq_2param\n");
+  printf("extern irq_syscall\n");
+  printf("\n");
+
+  printf("global cr2_register\n");
+  printf("cr2_register:\n");
+  printf("  dq 0\n");
+  printf("\n");
+
+  for (int i = 0; i < num_interrupts; i++) {
+    printf("\n");
+    printf("global irq%d_handler\n", i);
+    printf("irq%d_handler:\n", i);
+    if (i == 8 || i == 10 || i == 11 || i == 12 || i == 13 || i == 14) {
+      // error code is only 32 bits, not 64. what do? hope it doesnt matter.
+      // swap error code and rsi, use [rsp - 8] as temp
+      // can't do that, just leave error code there and do an empty pop later.
+      printf("  push rsi\n");
+      if (i == 14) {
+        // for page faults, save CR2 register using rsi as temp
+        printf("  mov rsi,cr2\n");
+        printf("  mov [cr2_register],rsi\n");
+      }
+      printf("  mov rsi,[rsp+8]\n");
+      printf("  push rdi\n");
+      printf("  mov rdi,%d\n", i);
+      printf("  jmp irq_2param\n");
+    } else if (i == 0x80) {
+      // system call
+      printf("  push rdi\n");
+      printf("  mov rdi,%d\n", i);
+      printf("  jmp irq_syscall\n");
+    } else {
+      printf("  push rdi\n");
+      printf("  mov rdi,%d\n", i);
+      printf("  jmp irq_1param\n");
+    }
+  }
+}

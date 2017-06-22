@@ -1,0 +1,23 @@
+pic mask:
+8EB8
+1000 1110 1011 1000
+
+pic mask is 8 bits + 8 bits
+0 means enabled, 1 means disabled/masked
+
+00 0 
+01 0 
+02 0 
+03 1 
+04 1
+05
+06
+07
+08
+09
+10
+11
+12
+13
+14
+15

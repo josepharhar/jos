@@ -1,0 +1,27 @@
+sudo apt-get install libbison-dev libgmp-dev libmpfr-dev libisl-dev libcloog-isl-dev libmpc-dev texinfo
+
+binutils
+ftp://ftp.gnu.org/gnu/binutils/binutils-2.9.1.tar.gz
+linux32 ./configure --target=x86_64-elf --prefix=$HOME/bin --with-sysroot --disable-nls --disable-werror
+linux32 make
+linux32 make install
+
+using binutils package instead because installing from source didnt work
+
+gcc
+ftp://ftp.gnu.org/gnu/gcc/gcc-6.3.0/gcc-6.3.0.tar.gz
+g++ couldn't recognize command line argument -V, using 5.4.0 instead
+ftp://ftp.gnu.org/gnu/gcc/gcc-5.4.0/gcc-5.4.0.tar.gz
+./configure --target=x86_64-elf --prefix=$HOME/bin --disable-nls --enable-languages=c,c++ --without-headers
+make all-gcc && make all-target-libgcc && make install-gcc && make install-target-libgcc
+same thing happened. wtf.
+
+ran this in gcc-6.3.0
+findf | grep configure | xargs sed -i "s/-V -qversion//g"
+
+sudo ln -s /usr/bin/aclocal-1.15 /usr/local/bin/aclocal-1.14
+
+http://stackoverflow.com/questions/22967925/running-qemu-remotely-via-ssh
+qemu -curses or qemu -nographic
+
+readelf -a kernel.bin

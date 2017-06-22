@@ -1,0 +1,7 @@
+cross/
+image/
+os.img
+src/a.out
+binutils-*
+gcc-*
+build-*

@@ -1,0 +1,8 @@
+size of os.img in bytes:
+16,777,216
+
+bytes per sector: 36,352
+sectors per cluster: 216
+total sectors: 49,020
+num fat tables: 251
+

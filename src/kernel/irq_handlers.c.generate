@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+  int num_handlers = 256;
+
+  printf("#ifndef IRQ_HANDLERS_H_\n");
+  printf("#define IRQ_HANDLERS_H_\n\n");
+
+  printf("#ifdef __cplusplus\n");
+  printf("extern \"C\" {\n");
+  printf("#endif\n\n");
+
+  for (int i = 0; i < num_handlers; i++) {
+    printf("void irq%d_handler();\n", i);
+  }
+
+  printf("\n");
+
+  printf("uint64_t asm_irq_functions[] = {\n");
+  for (int i = 0; i < num_handlers; i++) {
+    printf("  (uint64_t) &irq%d_handler,\n", i);
+  }
+  printf("};\n\n");
+
+  printf("#ifdef __cplusplus\n");
+  printf("}\n");
+  printf("#endif\n\n");
+
+  printf("#endif  // IRQ_HANDLERS_H_\n");
+
+  return 0;
+}

@@ -1,0 +1,6 @@
+blocking ata driver
+
+
+
+mark this process as blocked
+send read command to device
