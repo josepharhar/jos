@@ -14,6 +14,7 @@
 #define SYSCALL_EXEC 6
 #define SYSCALL_FORK 7
 #define SYSCALL_GETPID 8
+#define SYSCALL_CLONE 9
 
 #define MAX_NUM_SYSCALLS 256
 
