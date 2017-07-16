@@ -4,7 +4,7 @@ set -e
 
 source shrc.sh
 
-wget http://mirror.nexcess.net/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz
+wget "ftp://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.gz"
 tar -xzf binutils-${BINUTILS_VERSION}.tar.gz
 
 wget "ftp://ftp.gnu.org/gnu/gcc/gcc-6.3.0/gcc-${GCC_VERSION}.tar.gz"
