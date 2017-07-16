@@ -6,12 +6,14 @@
 #include "clone.h"
 #include "getpid.h"
 
-void NewProc() {
-  Puts("Hello from NewProc()\n");
-}
+static void NewProc();
+extern char new_stack[];
 
+// TODO the first piece of code in this file is what gets run by
+// exec(), make it always look for main() somehow instead
 int main() {
   Puts("Hello from init\n");
+  printu("main() pid: %d\n", getpid());
 
   /*uint64_t rsp;
   GET_REGISTER("rsp", rsp);
@@ -22,17 +24,22 @@ int main() {
   printu("flags: %p\n", get_flags());*/
 
   printu("calling clone\n");
-  clone(NewProc);
-  /*uint64_t pid = Fork();
-  if (pid) {
-    printu("parent proc pid %p with child pid %p\n", Getpid(), pid);
-  } else {
-    printu("child proc pid %d\n", Getpid());
-  }*/
-
-  //while (1) {}
+  clone(NewProc, new_stack + 2048);
+  printu("main() done calling clone\n");
 
   while (1) {
     Putc(Getc());
   }
+}
+
+char new_stack[4096];
+static void NewProc() {
+  Puts("Hello from NewProc()\n");
+  printu("NewProc pid: %d\n", getpid());
+
+  while (1) {
+    Putc(Getc());
+  }
+
+  // TODO ending process causes page fault
 }

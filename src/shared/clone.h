@@ -5,6 +5,6 @@
 
 typedef void (*CloneCallback)();
 
-void clone(CloneCallback callback);
+void clone(CloneCallback callback, void* new_stack);
 
 #endif  // SHARED_CLONE_H_

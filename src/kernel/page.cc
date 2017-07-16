@@ -31,6 +31,16 @@ extern uint64_t p4_table[];
 extern uint64_t p3_table[];
 extern uint64_t p2_table[];
 
+// http://wiki.osdev.org/Page_Fault
+struct PageFaultError {
+  uint32_t protection_violation:1;
+  uint32_t write:1; // 0 = read, 1 = write
+  uint32_t user:1; // 0 = kernel mode, 1 = user mode
+  uint32_t rsvd:1;
+  uint32_t instruction_fetch:1;
+  uint32_t reserved:27;
+} __attribute__((packed));
+
 struct VirtualAddress {
   uint64_t physical_frame_offset:12;
   uint64_t p1_index:9; // index into p1 table
@@ -360,6 +370,7 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
   // TODO handle more stuff in the identity map, not all of it was set up in the page table already, only first 1GB
   //printk("HandlePageFault() error_code: 0x%llX, faulting_address: 0x%llX\n", error_code, faulting_address);
   VirtualAddress virtual_address = ToVirtualAddress(faulting_address);
+  PageFaultError error = *((PageFaultError*) &error_code);
 
   PageTableEntry* p1_entry = 0;
 
@@ -373,11 +384,16 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
       p1_entry->user_accessible = 1;
     }
   } else {
+    // http://wiki.osdev.org/Page_Fault
     printk("page fault outside of reserved space:\n");
     printk("  error_code: %p\n", error_code);
+    printk("    error.write: %p\n", error.write);
+    printk("    error.user: %p\n", error.user);
+    printk("    error.protection_violation: %p\n", error.protection_violation);
     printk("  faulting_address: %p\n", faulting_address);
     printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
     SaveState(current_proc);
+    printk("  pid: %d\n", current_proc->pid);
     printk("  rip: %p\n", current_proc->rip);
     printk("  halting\n");
     HALT_LOOP();

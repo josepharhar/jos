@@ -3,6 +3,6 @@
 
 #include "stdint.h"
 
-uint64_t Getpid();
+uint64_t getpid();
 
 #endif  // GETPID_H_
