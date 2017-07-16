@@ -9,13 +9,6 @@ NASM = nasm -f elf64 -g
 GAS = x86_64-elf-as
 LD = x86_64-elf-ld
 
-#OBJS = build/multiboot_header.o build/boot.o build/main.o \
-#	build/long_mode_init.o build/vga.o build/string.o build/keyboard.o \
-#	build/asm.o build/printk.o build/irq.o build/idt.o \
-#	build/multi_interrupt_handlers.o build/serial.o build/tags.o build/frame.o \
-#	build/irq_nasm.o build/page.o build/kmalloc.o build/proc.o build/syscall.o \
-#	build/block_device.o build/ata_block_device.o build/stdcc.o build/vfs.o
-
 KERNEL_SOURCE_DIR = src/kernel
 KERNEL_BUILD_DIR = build/kernel
 KERNEL_SOURCES_CXX = $(shell find $(KERNEL_SOURCE_DIR) -name "*.cc")

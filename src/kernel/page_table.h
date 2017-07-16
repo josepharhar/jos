@@ -1,6 +1,8 @@
 #ifndef KERNEL_PAGE_TABLE_H_
 #define KERNEL_PAGE_TABLE_H_
 
+#include "stdint.h"
+
 class PageTable {
  public:
   PageTable();

@@ -21,7 +21,7 @@
 #include "exec_handler.h"
 #include "files.h"
 #include "exec.h"
-#include "fork_handler.h"
+#include "clone_handler.h"
 #include "getpid_handler.h"
 
 extern uint64_t stack_top[];
@@ -164,8 +164,10 @@ void KernelMain() {
   ProcInit();
   IOInit();
 
-  InitFork();
+  //InitFork();
   InitGetpid();
+
+  InitClone();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();

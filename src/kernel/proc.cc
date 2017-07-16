@@ -63,22 +63,20 @@ ProcContext* ProcCreateKthread(KthreadFunction entry_point, void* arg) {
   return new_proc;
 }
 
-// this is intended for user processes for fork()
-ProcContext* ProcCreateCopy(uint64_t new_rip) {
+// this is intended for user processes for clone()
+ProcContext* ProcClone(uint64_t new_rip) {
   // TODO check to make sure procs are running first?
   ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
 
   SaveState(current_proc); // update current_proc registers
 
-  // this copies the instruction pointer from right before the syscall?
+  // TODO create more clone() settings to set new proc's registers?
   memcpy(new_proc, current_proc, sizeof(ProcContext));
   new_proc->rip = new_rip;
   printk("new_proc->rip: %p\n", new_proc->rip);
   printk("new_proc->rsp: %p\n", new_proc->rsp);
   printk("new_proc->rbp: %p\n", new_proc->rbp);
 
-  // set new page table for new proc
-  //new_proc->cr3 = (uint64_t) CopyCurrentPageTable();
   new_proc->pid = new_proc_id++;
 
   proc_list.Add(new_proc);

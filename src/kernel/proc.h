@@ -16,7 +16,7 @@ void ProcExit();
 int ProcIsRunning(); // returns 1 if threading system is running, else 0
 
 void ProcPrint();
-ProcContext* ProcCreateCopy(uint64_t);
+ProcContext* ProcClone(uint64_t rip);
 
 struct ProcQueue {
   struct ProcContext* head;

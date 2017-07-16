@@ -1,5 +1,7 @@
 #include "clone.h"
 
-uint64_t clone() {
+#include "syscall.h"
 
+void clone(CloneCallback callback) {
+  Syscall(SYSCALL_CLONE, (uint64_t) callback);
 }

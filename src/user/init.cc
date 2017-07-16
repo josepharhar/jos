@@ -3,8 +3,12 @@
 #include "io.h"
 #include "asm.h"
 #include "printu.h"
-#include "fork.h"
+#include "clone.h"
 #include "getpid.h"
+
+void NewProc() {
+  Puts("Hello from NewProc()\n");
+}
 
 int main() {
   Puts("Hello from init\n");
@@ -17,13 +21,14 @@ int main() {
   asm volatile ("int $0x81");
   printu("flags: %p\n", get_flags());*/
 
-  printu("calling fork\n");
-  uint64_t pid = Fork();
+  printu("calling clone\n");
+  clone(NewProc);
+  /*uint64_t pid = Fork();
   if (pid) {
     printu("parent proc pid %p with child pid %p\n", Getpid(), pid);
   } else {
     printu("child proc pid %d\n", Getpid());
-  }
+  }*/
 
   //while (1) {}
 
