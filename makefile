@@ -9,6 +9,9 @@ NASM = nasm -f elf64 -g
 GAS = x86_64-elf-as
 LD = x86_64-elf-ld
 
+LOOP_ONE = /dev/loop6
+LOOP_TWO = /dev/loop7
+
 KERNEL_SOURCE_DIR = src/kernel
 KERNEL_BUILD_DIR = build/kernel
 KERNEL_SOURCES_CXX = $(shell find $(KERNEL_SOURCE_DIR) -name "*.cc")
@@ -56,25 +59,25 @@ run: os.img
 
 os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	-sudo umount /mnt/fatgrub
-	-sudo losetup -d /dev/loop1
-	-sudo losetup -d /dev/loop0
+	-sudo losetup -d $(LOOP_TWO)
+	-sudo losetup -d $(LOOP_ONE)
 	-rm -f os.img
 	#cp build/kernel.bin image/boot/kernel.bin
 	dd if=/dev/zero of=os.img bs=512 count=32768
 	parted os.img mklabel msdos
 	parted os.img mkpart primary fat32 2048s 30720s
 	parted os.img set 1 boot on
-	sudo losetup /dev/loop0 os.img
-	sudo losetup /dev/loop1 os.img -o 1048576
+	sudo losetup $(LOOP_ONE) os.img
+	sudo losetup $(LOOP_TWO) os.img -o 1048576
 	#sudo mkdosfs -F32 -f 2 /dev/loop1
-	sudo mkdosfs -F32 -f 2 -S 512 -s 1 /dev/loop1
+	sudo mkdosfs -F32 -f 2 -S 512 -s 1 $(LOOP_TWO)
 	sudo mkdir -p /mnt/fatgrub
-	sudo mount /dev/loop1 /mnt/fatgrub
-	sudo grub-install --root-directory=/mnt/fatgrub --no-floppy --modules="normal part_msdos ext2 multiboot" /dev/loop0
+	sudo mount $(LOOP_TWO) /mnt/fatgrub
+	sudo grub-install --root-directory=/mnt/fatgrub --no-floppy --modules="normal part_msdos ext2 multiboot" $(LOOP_ONE)
 	sudo cp -r image/* /mnt/fatgrub
 	-sudo umount /mnt/fatgrub
-	-sudo losetup -d /dev/loop1
-	-sudo losetup -d /dev/loop0
+	-sudo losetup -d $(LOOP_TWO)
+	-sudo losetup -d $(LOOP_ONE)
 
 
 image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
@@ -94,7 +97,9 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SH
 
 
 # TODO support multiple user executables
-image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS)
+image/user:
+	mkdir image/user
+image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user
 	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS)
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.asm
@@ -140,5 +145,5 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 clean:
 	-rm -f os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o
 	-sudo umount /mnt/fatgrub
-	-sudo losetup -d /dev/loop1
-	-sudo losetup -d /dev/loop0
+	-sudo losetup -d $(LOOP_TWO)
+	-sudo losetup -d $(LOOP_ONE)
