@@ -43,14 +43,14 @@ struct ATARequest {
   RequestType request_type;
 };
 
-class ATABlockDevice /*: public BlockDevice*/ {
+class ATABlockDevice : public BlockDevice {
  public:
   ~ATABlockDevice();
 
   // buffers must be in kernel memory so interrupt handler can use it
   // after a context swap out of this process
-  int ReadBlock(uint64_t block_num, void* dest) /*override*/;
-  int WriteBlock(uint64_t block_num, void* src) /*override*/;
+  int ReadBlock(uint64_t block_num, void* dest) override;
+  int WriteBlock(uint64_t block_num, void* src) override;
 
   static ATABlockDevice* Probe(uint16_t bus_base_port,
                                uint16_t ata_master,

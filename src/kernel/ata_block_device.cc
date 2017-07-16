@@ -227,8 +227,7 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
   */
 
 
-  ATABlockDevice* device = (ATABlockDevice*) kcalloc(sizeof(ATABlockDevice));
-  *device = ATABlockDevice();
+  ATABlockDevice* device = new ATABlockDevice();
   device->bus_base_port = bus_base_port;
   //*device->request_queue = Queue<ATARequest>();
   device->is_master = is_master;

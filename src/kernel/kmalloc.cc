@@ -132,6 +132,14 @@ void* kcalloc(uint64_t size) {
   return pointer;
 }
 
+void* operator new(uint64_t size) {
+  return kcalloc(size);
+}
+
+void operator delete(void* address) {
+  return kfree(address);
+}
+
 int ReadWriteTest(void* address, int size) {
   uint8_t* pointer = (uint8_t*) address;
   for (int i = 0; i < size; i++) {
