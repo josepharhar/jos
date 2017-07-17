@@ -137,7 +137,11 @@ void* operator new(uint64_t size) {
 }
 
 void operator delete(void* address) {
-  return kfree(address);
+  kfree(address);
+}
+
+void operator delete(void* address, uint64_t size) {
+  kfree(address);
 }
 
 int ReadWriteTest(void* address, int size) {

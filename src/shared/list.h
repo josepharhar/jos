@@ -1,16 +1,6 @@
 #ifndef LIST_H_
 #define LIST_H_
 
-#include "kmalloc.h"
-#include "printk.h"
-
-template <typename T>
-struct ListEntry {
-  T* value;
-  ListEntry<T>* prev; // may point to self
-  ListEntry<T>* next; // may point to self
-};
-
 template <typename T>
 class List {
  public:
@@ -18,7 +8,7 @@ class List {
   ~List() {}
 
   void Add(T* value) {
-    ListEntry<T>* new_entry = (ListEntry<T>*) kmalloc(sizeof(ListEntry<T>));
+    ListEntry<T>* new_entry = new ListEntry<T>();
     new_entry->value = value;
     new_entry->prev = 0;
     new_entry->next = 0;
@@ -43,10 +33,10 @@ class List {
       // removing last entry
       // assert head
       if (entry != head) {
-        printk("List this should never happen\n");
+        // TODO add NOTREACHED() and use it here
       }
 
-      kfree(entry);
+      delete entry;
       head = 0;
       return;
     }
@@ -57,7 +47,7 @@ class List {
 
     entry->prev->next = entry->next;
     entry->next->prev = entry->prev;
-    kfree(entry);
+    delete entry;
   }
 
   T* GetHead() {
@@ -98,6 +88,13 @@ class List {
   }
 
  private:
+  template <typename E>
+  struct ListEntry {
+    E* value;
+    ListEntry<E>* prev; // may point to self
+    ListEntry<E>* next; // may point to self
+  };
+
   ListEntry<T>* head;
 
   ListEntry<T>* GetEntry(T* value) {

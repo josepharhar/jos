@@ -84,31 +84,6 @@ ProcContext* ProcClone(uint64_t new_rip) {
   return new_proc;
 }
 
-// this functionality is replaced with usermode setting in exec()
-// TODO usermode setting in exec() seems wrong, maybe should be done somewhere else
-/*ProcContext* ProcCreateUserThread(KthreadFunction entry_point, void* arg) {
-  struct ProcContext* new_proc = (struct ProcContext*) kcalloc(sizeof(struct ProcContext));
-  new_proc->rip = (uint64_t) entry_point;
-  new_proc->cs = GDT_USER_CS;
-  new_proc->rsp = USER_STACK_BOTTOM; // TODO where should user stack go and how should it be allocated?
-  new_proc->ss = GDT_USER_DS;
-  new_proc->rflags = INTERRUPT_ENABLE_BIT | (3 << 12); // user mode flags
-  new_proc->pid = new_proc_id++;
-
-  // set first C argument to new proc function to void* arg
-  new_proc->rdi = (uint64_t) arg;
-
-  // push ProcExit() onto stack
-  // this will be done in exec handler for user procs instead
-  // uint64_t* stack_pointer = (uint64_t*) new_proc->rsp;
-  // *stack_pointer = (uint64_t) &ProcExit;
-
-  // add new_proc to linked list
-  proc_list.Add(new_proc);
-
-  return new_proc;
-}*/
-
 // returns 0 if all procs are blocked
 // uses round robin from current_proc
 static struct ProcContext* GetNextUnblockedProc() {
@@ -168,51 +143,6 @@ void ProcReschedule() {
   if (interrupts_were_enabled) {
     cli();
   }
-
-  /*
-  // round robin scheduler, just pick the next proc in the linked list
-  //next_proc = current_proc->all_procs_next;
-  next_proc = current_proc;
-
-  BEGIN_CS(); // interrupts can change process blocking
-
-  //while (next_proc->is_blocked) {
-  while (1) {
-    if (!next_proc->all_procs_next) {
-      next_proc = all_procs;
-    } else {
-      next_proc = next_proc->all_procs_next;
-    }
-
-    if (next_proc == current_proc && current_proc->is_blocked) {
-      // we have wrapped around all procs, there are no
-      // unblocked procs to run
-
-      // TODO figure out how to atomically halt and enable interrupts at the same time.
-      // If i enable interrupts then halt, then an interrupt to unblock a process could be
-      // handled before calling halt, in which case there should be no halting and
-      // execution would not resume until another interrupt is fired
-      
-      // there this a chance this could stay blocked for two interrupts instead of one
-      //END_CS();
-      sti();
-      // in between these lines an interrupt could be handled, in which case we don't want to hlt
-      asm volatile ("hlt");
-      //BEGIN_CS();
-      cli();
-
-    } else {
-      // consider running next_proc
-      if (next_proc->is_blocked) {
-        // cant run next_proc
-      } else {
-        // can run next_proc
-        break;
-      }
-    }
-  }
-
-  END_CS();*/
 }
 
 void ProcYield() {
