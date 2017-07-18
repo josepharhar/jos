@@ -1,7 +1,16 @@
 #ifndef LIST_H_
 #define LIST_H_
 
+#include "collection.h"
+
 template <typename T>
+class List : public Collection<T> {
+ public:
+  List() {}
+  virtual ~List() {}
+};
+
+/*template <typename T>
 class List {
  public:
   List() : head(0) {}
@@ -108,6 +117,6 @@ class List {
 
     return 0;
   }
-};
+};*/
 
 #endif  // LIST_H_
