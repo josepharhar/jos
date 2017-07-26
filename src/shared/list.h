@@ -11,6 +11,21 @@ class List : public Collection<T> {
 
   virtual void Add(T value) = 0;
   virtual bool Remove(T value) = 0;
+
+  T Get(uint64_t index) {
+    if (index >= Size()) {
+      // TODO NOTREACHED() or DCHECK() or error message or something
+    }
+
+    Iterator<T>* iterator = GetIterator();
+    for (int i = 0; i < index; i++) {
+      iterator.Next();
+    }
+
+    T value = iterator.Next();
+    delete iterator;
+    return value;
+  }
 };
 
 /*template <typename T>

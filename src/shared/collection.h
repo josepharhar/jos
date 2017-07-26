@@ -33,6 +33,10 @@ class Collection : public Iterable<T> {
     delete iterator;
     return size;
   }
+
+  bool IsEmpty() {
+    return !Size();
+  }
 };
 
 #endif  // COLLECTION_H_

@@ -7,7 +7,7 @@
 #include "page.h"
 #include "asm.h"
 #include "printk.h"
-#include "list.h"
+#include "linked_list.h"
 #include "user.h"
 #include "string.h"
 #include "frame.h"
@@ -24,7 +24,7 @@ struct ProcContext* current_proc = 0; // global for snakes
 static struct ProcContext* next_proc = 0; // set by ProcReschedule()
 static struct ProcContext* main_proc = 0; // context of thread that called ProcRun()
 
-static List<struct ProcContext> proc_list = List<struct ProcContext>();
+static LinkedList<ProcContext*> proc_list;
 
 // starts system, returns when all threads are complete
 void ProcRun() {
@@ -34,7 +34,7 @@ void ProcRun() {
     return;
   }
 
-  current_proc = proc_list.GetHead(); // current_proc will be run first
+  current_proc = proc_list.Get(0); // current_proc will be run first
   next_proc = 0;
   Syscall(SYSCALL_PROC_RUN);
 }
@@ -94,23 +94,34 @@ static struct ProcContext* GetNextUnblockedProc() {
 
   BEGIN_CS(); // interrupts can change blocking
 
-  struct ProcContext* proc = current_proc;
+  // TODO wrap iterator in UniquePtr and remove deletes
+  Iterator<ProcContext*>* iterator = proc_list.GetIterator();
+  while (iterator.HasNext() && iterator.Next() != current_proc);
+  ProcContext* proc = current_proc;
   do {
-    proc = proc_list.GetNext(proc);
+    //proc = proc_list.GetNext(proc);
+    if (!iterator.HasNext()) {
+      delete iterator;
+      iterator = proc_list.GetIterator();
+    }
+    proc = iterator.Next();
 
     if (!proc->is_blocked) {
       END_CS();
+      delete iterator;
       return proc;
     }
 
     if (proc == current_proc) {
       // we have looped all the way around and have found no unblocked procs
       END_CS();
+      delete iterator;
       return 0;
     }
   } while (proc != current_proc);
 
   END_CS();
+  delete iterator;
   return 0;
 }
 
