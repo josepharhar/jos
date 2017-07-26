@@ -63,11 +63,11 @@ void PrintIndent(int level) {
   }
 }
 
-void PrintDir(Inode* inode, int level) {
+/*void PrintDir(Inode* inode, int level) {
   if (inode->IsDirectory()) {
     PrintIndent(level);
     printk("%s/\n", inode->GetName());
-    List<Inode> sub_inodes = inode->ReadDir();
+    LinkedList<Inode*> sub_inodes = inode->ReadDir();
     Inode* sub_inode = sub_inodes.GetHead();
     while (sub_inode) {
       if (strcmp(sub_inode->GetName(), "..") && strcmp(sub_inode->GetName(), ".")) {
@@ -83,10 +83,9 @@ void PrintDir(Inode* inode, int level) {
     printk("%s\n", inode->GetName());
   }
 }
-
 void PrintDir(Inode* inode) {
   PrintDir(inode, 0);
-}
+}*/
 
 /*void ProcVFS(void* arg) {
   ATABlockDevice* ata_device = CreateATADevice();

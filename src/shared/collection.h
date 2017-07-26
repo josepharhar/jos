@@ -9,26 +9,28 @@ class Collection : public Iterable<T> {
   Collection() {}
   virtual ~Collection() {}
 
-  virtual bool Add(T value) = 0;
-  virtual bool Remove(T value) = 0;
+  virtual Iterator<T>* GetIterator() = 0;
 
   bool Contains(T value) {
-    Iterator<E> iterator = Iterator();
-    while (iterator.HasNext()) {
-      if (iterator.Next() == value) {
+    Iterator<T>* iterator = GetIterator();
+    while (iterator->HasNext()) {
+      if (iterator->Next() == value) {
+        delete iterator;
         return true;
       }
     }
+    delete iterator;
     return false;
   }
 
   uint64_t Size() {
     uint64_t size = 0;
-    Iterator<E> iterator = Iterator();
-    while (iterator.HasNext()) {
-      iterator.Next();
+    Iterator<T>* iterator = GetIterator();
+    while (iterator->HasNext()) {
+      iterator->Next();
       size++;
     }
+    delete iterator;
     return size;
   }
 };

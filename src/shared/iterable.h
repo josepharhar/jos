@@ -9,7 +9,8 @@ class Iterable {
   Iterable() {}
   virtual ~Iterable() {}
 
-  virtual Iterator<T> Iterator() = 0;
+  // TODO this causes a compile error
+  //virtual Iterator<T>* GetIterator() = 0;
 };
 
 #endif  // ITERABLE_H_

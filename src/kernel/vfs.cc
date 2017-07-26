@@ -166,8 +166,8 @@ File* Inode::Open() {
   return file;
 }
 
-List<Inode> Inode::ReadDir() {
-  List<Inode> list = List<Inode>();
+LinkedList<Inode*> Inode::ReadDir() {
+  LinkedList<Inode*> list;
 
   if (!is_directory) {
     return list;

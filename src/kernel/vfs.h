@@ -6,7 +6,7 @@
 
 #include "stdint.h"
 #include "ata_block_device.h"
-#include "list.h"
+#include "linked_list.h"
 
 #define LFN_BUFFER_LENGTH 257
 
@@ -101,7 +101,7 @@ class Inode {
   static void Destroy(Inode* inode);
 
   File* Open();
-  List<Inode> ReadDir();
+  LinkedList<Inode*> ReadDir();
   //int ReadDir(ReadDirCallback callback, void* arg);
   bool IsDirectory();
   char* GetName();

@@ -8,6 +8,9 @@ class List : public Collection<T> {
  public:
   List() {}
   virtual ~List() {}
+
+  virtual void Add(T value) = 0;
+  virtual bool Remove(T value) = 0;
 };
 
 /*template <typename T>
