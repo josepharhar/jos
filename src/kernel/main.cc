@@ -122,6 +122,7 @@ void PrintDir(Inode* inode) {
 }*/
 
 void ProcInit(void* arg) {
+  printk("ProcInit\n");
   // TODO this is awful
   ATABlockDevice* block_device = CreateATADevice();
   Superblock* superblock = Superblock::Create(block_device);
@@ -155,7 +156,7 @@ void KernelMain() {
   // better. :(
   // SerialInit();
 
-  struct TagsInfo tags_info = ReadTags();
+  TagsInfo tags_info = ReadTags();
   FrameInit(tags_info);
   PageInit();
 
@@ -177,6 +178,7 @@ void KernelMain() {
 
   ProcCreateKthread(ProcInit, 0);
 
+  printk("calling procrun....\n");
   ProcRun();
 
   printk("\nKernelMain() ran out of processes to run. calling ProcPrint()\n");

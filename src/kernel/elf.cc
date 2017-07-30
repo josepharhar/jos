@@ -5,7 +5,6 @@
 #include "printk.h"
 #include "page.h"
 
-// should be 64 bytes
 struct ELF64Header {
   // ELFCommonHeader common_header;
   char magic[4];
@@ -29,8 +28,8 @@ struct ELF64Header {
   uint16_t section_entry_num;
   uint16_t section_name_index;
 } __attribute__((packed));
+static_assert(sizeof(ELF64Header) == 64);
 
-// should be 56 bytes
 struct ELF64ProgramHeader {
   uint32_t type;
   uint32_t flags;
@@ -40,7 +39,9 @@ struct ELF64ProgramHeader {
   uint64_t file_size;    // filesz
   uint64_t memory_size;  // memsz
   uint64_t alignment;
+
 } __attribute__((packed));
+static_assert(sizeof(ELF64ProgramHeader) == 56);
 
 static uint8_t elf_magic[] = {0x7F, 'E', 'L', 'F'};
 
@@ -48,16 +49,6 @@ ELFInfo ELFGetInfo(uint8_t* file, uint64_t filesize) {
   ELFInfo failure;
   failure.success = false;
 
-  if (sizeof(ELF64Header) != 64) {
-    printk("ELFGetInfo wrong sizeof(ELF64Header): %d\n",
-           sizeof(ELF64Header));
-    return failure;
-  }
-  if (sizeof(ELF64ProgramHeader) != 56) {
-    printk("ELFGetInfo wrong sizeof(ELF64Programheader): %d\n",
-           sizeof(ELF64ProgramHeader));
-    return failure;
-  }
   if (filesize < sizeof(ELF64Header)) {
     printk("ELFGetInfo filesize too small: %p\n", filesize);
     return failure;

@@ -90,10 +90,10 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.s
 	$(GAS) -g -c $< -o $@
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.c $(KERNEL_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CC) $(CC_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g 
+	$(CC) $(CC_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g -DKERNEL
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g -DKERNEL
 
 
 # TODO support multiple user executables

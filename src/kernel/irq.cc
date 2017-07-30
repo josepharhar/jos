@@ -44,7 +44,9 @@ struct IRQHandlerTableEntry {
 static IRQHandlerTableEntry irq_handler_table[NUM_IRQ_HANDLERS];
 void IRQHandlerEmpty(uint64_t interrupt_number, void* arg) {}
 void IRQHandlerDefault(uint64_t interrupt_number, void* arg) {
-  printk("IRQHandlerDefault() interrupt_number: %lld\n", interrupt_number);
+  printk("IRQHandlerDefault() interrupt_number: %lld, halting...\n", interrupt_number);
+  asm volatile ("hlt");
+  //HALT_LOOP();
 }
 
 // this goes in the GDT
@@ -217,7 +219,7 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 
 void c_interrupt_handler(uint64_t interrupt_number) {
 
-  struct IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
+  IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
   irq_handler.handler(interrupt_number, irq_handler.arg);
 
   // tables of interrupts:
@@ -397,7 +399,7 @@ void IRQSetHandler(IRQHandler handler, uint64_t interrupt_number, void* arg) {
     return;
   }
 
-  struct IRQHandlerTableEntry new_entry;
+  IRQHandlerTableEntry new_entry;
   new_entry.handler = handler;
   new_entry.arg = arg;
   irq_handler_table[interrupt_number] = new_entry;

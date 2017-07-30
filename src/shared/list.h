@@ -2,6 +2,7 @@
 #define LIST_H_
 
 #include "collection.h"
+#include "dcheck.h"
 
 template <typename T>
 class List : public Collection<T> {
@@ -15,9 +16,7 @@ class List : public Collection<T> {
   virtual Iterator<T>* GetIterator() = 0;
 
   T Get(int index) {
-    if (index >= this->Size() || index < 0) {
-      // TODO NOTREACHED() or DCHECK() or error message or something
-    }
+    DCHECK(index < this->Size() && index < 0);
 
     Iterator<T>* iterator = GetIterator();
     for (int i = 0; i < index; i++) {

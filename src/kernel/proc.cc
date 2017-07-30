@@ -29,13 +29,16 @@ static LinkedList<ProcContext*> proc_list;
 
 // starts system, returns when all threads are complete
 void ProcRun() {
+  printk("0\n");
   if (proc_list.IsEmpty()) {
     // there are no procs to run
     printk("ProcRun() proc_lsit.IsEmpty(): %p\n", proc_list.IsEmpty());
     return;
   }
 
+  printk("1\n");
   current_proc = proc_list.Get(0); // current_proc will be run first
+  printk("2\n");
   next_proc = 0;
   Syscall(SYSCALL_PROC_RUN);
 }
@@ -223,10 +226,11 @@ static void HandleSyscallProcRun(uint64_t syscall_number, uint64_t param_1, uint
     printk("HandleSyscallProcRun() current_proc: %p\n", current_proc);
     return;
   }
+  printk("HandleSyscallProcRun\n");
 
   is_proc_running = 1;
 
-  main_proc = (struct ProcContext*) kcalloc(sizeof(struct ProcContext));
+  main_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
   SaveState(main_proc);
   RestoreState(current_proc);
 }

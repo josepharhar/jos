@@ -64,8 +64,7 @@ class LinkedList : public List<T> {
     ~LinkedListIterator() override {}
 
     E Next() override {
-      // TODO implement dcheck
-      // DCHECK(next_);
+      DCHECK(next_);
 
       // TODO use fancy std::move() stuff here
       E value = next_->value;
