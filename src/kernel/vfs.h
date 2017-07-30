@@ -101,6 +101,7 @@ class Inode {
   static void Destroy(Inode* inode);
 
   File* Open();
+  // TODO make this RefCounted<LinkedList<RefCounted<Inode>>> ReadDir()
   LinkedList<Inode*> ReadDir();
   //int ReadDir(ReadDirCallback callback, void* arg);
   bool IsDirectory();

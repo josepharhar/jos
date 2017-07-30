@@ -12,19 +12,50 @@ class List : public Collection<T> {
   virtual void Add(T value) = 0;
   virtual bool Remove(T value) = 0;
 
-  T Get(uint64_t index) {
-    if (index >= Size()) {
+  virtual Iterator<T>* GetIterator() = 0;
+
+  T Get(int index) {
+    if (index >= this->Size() || index < 0) {
       // TODO NOTREACHED() or DCHECK() or error message or something
     }
 
     Iterator<T>* iterator = GetIterator();
     for (int i = 0; i < index; i++) {
-      iterator.Next();
+      iterator->Next();
     }
 
-    T value = iterator.Next();
+    T value = iterator->Next();
     delete iterator;
     return value;
+  }
+
+  int GetIndex(T value) {
+    Iterator<T>* iterator = GetIterator();
+    int i = 0;
+    while (iterator->HasNext()) {
+      if (iterator->Next() == value) {
+        delete iterator;
+        return i;
+      }
+      i++;
+    }
+    delete iterator;
+    return -1;
+  }
+
+  T GetNext(T value) {
+    int index = GetIndex(value);
+    if (index == this->Size() - 1) {
+      return Get(0);
+    }
+    return Get(index + 1);
+  }
+  T GetPrevious(T value) {
+    int index = GetIndex(value);
+    if (index == 0) {
+      return Get(this->Size() - 1);
+    }
+    return Get(index - 1);
   }
 };
 

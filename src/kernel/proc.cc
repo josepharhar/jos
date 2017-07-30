@@ -11,6 +11,7 @@
 #include "user.h"
 #include "string.h"
 #include "frame.h"
+#include "ref_counted.h"
 
 #define INTERRUPT_ENABLE_BIT (1 << 9)
 
@@ -94,34 +95,24 @@ static struct ProcContext* GetNextUnblockedProc() {
 
   BEGIN_CS(); // interrupts can change blocking
 
-  // TODO wrap iterator in UniquePtr and remove deletes
-  Iterator<ProcContext*>* iterator = proc_list.GetIterator();
-  while (iterator.HasNext() && iterator.Next() != current_proc);
   ProcContext* proc = current_proc;
+
   do {
-    //proc = proc_list.GetNext(proc);
-    if (!iterator.HasNext()) {
-      delete iterator;
-      iterator = proc_list.GetIterator();
-    }
-    proc = iterator.Next();
+    proc = proc_list.GetNext(proc);
 
     if (!proc->is_blocked) {
       END_CS();
-      delete iterator;
       return proc;
     }
 
     if (proc == current_proc) {
       // we have looped all the way around and have found no unblocked procs
       END_CS();
-      delete iterator;
       return 0;
     }
   } while (proc != current_proc);
 
   END_CS();
-  delete iterator;
   return 0;
 }
 
@@ -366,11 +357,11 @@ void ProcPrint() {
   if (proc_list.IsEmpty()) {
     printk("ProcPrint() no processes\n");
   } else {
-    struct ProcContext* proc = proc_list.GetHead();
+    ProcContext* proc = proc_list.Get(0);
     do {
       printk("pid %d is_blocked %d\n", proc->pid, proc->is_blocked);
       proc = proc_list.GetNext(proc);
-    } while (proc != proc_list.GetHead());
+    } while (proc != proc_list.Get(0));
   }
 }
 

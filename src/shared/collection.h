@@ -9,10 +9,8 @@ class Collection : public Iterable<T> {
   Collection() {}
   virtual ~Collection() {}
 
-  virtual Iterator<T>* GetIterator() = 0;
-
   bool Contains(T value) {
-    Iterator<T>* iterator = GetIterator();
+    Iterator<T>* iterator = this->GetIterator();
     while (iterator->HasNext()) {
       if (iterator->Next() == value) {
         delete iterator;
@@ -25,7 +23,7 @@ class Collection : public Iterable<T> {
 
   uint64_t Size() {
     uint64_t size = 0;
-    Iterator<T>* iterator = GetIterator();
+    Iterator<T>* iterator = this->GetIterator();
     while (iterator->HasNext()) {
       iterator->Next();
       size++;
