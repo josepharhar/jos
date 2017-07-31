@@ -61,10 +61,16 @@ static void ToString(T value, char* string, int base, int upper_case) {
   string[num_digits] = '\0';
 }
 
-// TODO what is this supposed to return?
 int printu(const char* format, ...) {
   va_list list;
   va_start(list, format);
+  int ret_value = vprintu(format, list);
+  va_end(list);
+  return ret_value;
+}
+
+// TODO what is this supposed to return?
+int vprintu(const char* format, va_list list) {
   int int_value, num_digits;
   long int long_int_value;
   long long int long_long_int_value;
@@ -224,6 +230,5 @@ int printu(const char* format, ...) {
     format++;
   }
 
-  va_end(list);
   return 0;
 }

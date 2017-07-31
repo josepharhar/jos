@@ -122,7 +122,6 @@ void PrintDir(Inode* inode) {
 }*/
 
 void ProcInit(void* arg) {
-  printk("ProcInit\n");
   // TODO this is awful
   ATABlockDevice* block_device = CreateATADevice();
   Superblock* superblock = Superblock::Create(block_device);

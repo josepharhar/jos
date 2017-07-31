@@ -22,23 +22,20 @@
 static int is_proc_running = 0;
 static uint64_t new_proc_id = 1;
 struct ProcContext* current_proc = 0; // global for snakes
-static struct ProcContext* next_proc = 0; // set by ProcReschedule()
-static struct ProcContext* main_proc = 0; // context of thread that called ProcRun()
+static ProcContext* next_proc = 0; // set by ProcReschedule()
+static ProcContext* main_proc = 0; // context of thread that called ProcRun()
 
-static LinkedList<ProcContext*> proc_list;
+static LinkedList<ProcContext*>* proc_list = nullptr;
 
 // starts system, returns when all threads are complete
 void ProcRun() {
-  printk("0\n");
-  if (proc_list.IsEmpty()) {
+  if (proc_list->IsEmpty()) {
     // there are no procs to run
-    printk("ProcRun() proc_lsit.IsEmpty(): %p\n", proc_list.IsEmpty());
+    printk("ProcRun() proc_list.IsEmpty(): %p\n", proc_list->IsEmpty());
     return;
   }
 
-  printk("1\n");
-  current_proc = proc_list.Get(0); // current_proc will be run first
-  printk("2\n");
+  current_proc = proc_list->Get(0); // current_proc will be run first
   next_proc = 0;
   Syscall(SYSCALL_PROC_RUN);
 }
@@ -62,7 +59,7 @@ ProcContext* ProcCreateKthread(KthreadFunction entry_point, void* arg) {
   *stack_pointer = (uint64_t) &ProcExit;
 
   // add new_proc to linked list
-  proc_list.Add(new_proc);
+  proc_list->Add(new_proc);
 
   return new_proc;
 }
@@ -83,7 +80,7 @@ ProcContext* ProcClone(uint64_t new_rip) {
 
   new_proc->pid = new_proc_id++;
 
-  proc_list.Add(new_proc);
+  proc_list->Add(new_proc);
 
   return new_proc;
 }
@@ -91,8 +88,8 @@ ProcContext* ProcClone(uint64_t new_rip) {
 // returns 0 if all procs are blocked
 // uses round robin from current_proc
 static struct ProcContext* GetNextUnblockedProc() {
-  if (!current_proc || proc_list.IsEmpty()) {
-    printk("GetNextUnblockedProc() current_proc: %p, proc_list.IsEmpty(): %p\n", current_proc, proc_list.IsEmpty());
+  if (!current_proc || proc_list->IsEmpty()) {
+    printk("GetNextUnblockedProc() current_proc: %p, proc_list->IsEmpty(): %p\n", current_proc, proc_list->IsEmpty());
     return 0;
   }
 
@@ -101,7 +98,7 @@ static struct ProcContext* GetNextUnblockedProc() {
   ProcContext* proc = current_proc;
 
   do {
-    proc = proc_list.GetNext(proc);
+    proc = proc_list->GetNext(proc);
 
     if (!proc->is_blocked) {
       END_CS();
@@ -122,9 +119,9 @@ static struct ProcContext* GetNextUnblockedProc() {
 // sets next_proc to the next process to switch contexts to during yield or exit
 // if there is only one proc left, then sets next_proc = current_proc
 void ProcReschedule() {
-  if (!current_proc || proc_list.IsEmpty()) {
+  if (!current_proc || proc_list->IsEmpty()) {
     // there are no processes to schedule. this shouldn't happen, right?
-    printk("ProcReschedule() current_proc: %p, proc_list.IsEmpty(): %p\n", current_proc, proc_list.IsEmpty());
+    printk("ProcReschedule() current_proc: %p, proc_list->IsEmpty(): %p\n", current_proc, proc_list->IsEmpty());
     return;
   }
 
@@ -257,9 +254,9 @@ static void HandleSyscallYield(uint64_t syscall_number, uint64_t param_1, uint64
 static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_t param_2, uint64_t param_3) {
   // destroy current process and switch context to next process
   
-  if (!current_proc || !next_proc || proc_list.IsEmpty()) {
-    printk("HandleSyscallExit() current_proc: %p, next_proc: %p, proc_list.IsEmpty(): %p\n",
-        current_proc, next_proc, proc_list.IsEmpty());
+  if (!current_proc || !next_proc || proc_list->IsEmpty()) {
+    printk("HandleSyscallExit() current_proc: %p, next_proc: %p, proc_list->IsEmpty(): %p\n",
+        current_proc, next_proc, proc_list->IsEmpty());
     return;
   }
 
@@ -270,10 +267,10 @@ static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_
   // current_proc = next_proc
   // restore current_proc
 
-  struct ProcContext* current_proc_prev = proc_list.GetPrevious(current_proc);
+  struct ProcContext* current_proc_prev = proc_list->GetPrevious(current_proc);
 
   // remove current_proc from linked list
-  proc_list.Remove(current_proc);
+  proc_list->Remove(current_proc);
 
   // free current_proc resources
   // TODO free page table
@@ -283,7 +280,7 @@ static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_
   // set current_proc to the proc prior to current_proc in the list
   current_proc = current_proc_prev;
 
-  if (proc_list.IsEmpty()) {
+  if (proc_list->IsEmpty()) {
     // no more procs to run, restore main context
     is_proc_running = 0;
     RestoreState(main_proc);
@@ -358,14 +355,14 @@ void ProcBlockOn(struct ProcQueue* queue) {
 }
 
 void ProcPrint() {
-  if (proc_list.IsEmpty()) {
+  if (proc_list->IsEmpty()) {
     printk("ProcPrint() no processes\n");
   } else {
-    ProcContext* proc = proc_list.Get(0);
+    ProcContext* proc = proc_list->Get(0);
     do {
       printk("pid %d is_blocked %d\n", proc->pid, proc->is_blocked);
-      proc = proc_list.GetNext(proc);
-    } while (proc != proc_list.Get(0));
+      proc = proc_list->GetNext(proc);
+    } while (proc != proc_list->Get(0));
   }
 }
 
@@ -377,6 +374,8 @@ void ProcInit() {
   SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
   SetSyscallHandler(SYSCALL_EXIT, HandleSyscallExit);
   SetSyscallHandler(SYSCALL_PROC_RUN, HandleSyscallProcRun);
+
+  proc_list = new LinkedList<ProcContext*>();
 }
 
 bool ProcIsKernel() {

@@ -24,12 +24,17 @@ class LinkedList : public List<T> {
     // LinkedListEntry<T>* new_entry = new LinkedListEntry<T>(std::move(value));
     LinkedListEntry<T>* new_entry = new LinkedListEntry<T>();
     new_entry->value = value;
+    new_entry->next = 0;
 
-    LinkedListEntry<T>* last = head_;
-    while (last->next) {
-      last = last->next;
+    if (!head_) {
+      head_ = new_entry;
+    } else {
+      LinkedListEntry<T>* last = head_;
+      while (last->next) {
+        last = last->next;
+      }
+      last->next = new_entry;
     }
-    last->next = new_entry;
   }
 
   bool Remove(T value) override {
