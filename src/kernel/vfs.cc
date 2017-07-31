@@ -166,8 +166,8 @@ File* Inode::Open() {
   return file;
 }
 
-LinkedList<Inode*> Inode::ReadDir() {
-  LinkedList<Inode*> list;
+LinkedList<Inode*>* Inode::ReadDir() {
+  LinkedList<Inode*>* list = new LinkedList<Inode*>();
 
   if (!is_directory) {
     return list;
@@ -247,7 +247,7 @@ LinkedList<Inode*> Inode::ReadDir() {
           new_inode->cluster = (entry->first_cluster_number_high << 16)
             | entry->first_cluster_number_low;
 
-          list.Add(new_inode);
+          list->Add(new_inode);
 
           break;
         }

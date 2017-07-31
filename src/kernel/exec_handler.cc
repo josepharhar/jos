@@ -25,12 +25,14 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
   bool success = false;
 
   // TODO make filename absolute or relative on PATH
-  Inode* inode = FindFile(root_directory, filename); // ASD;FLIJASDF;LKASJF;KL
+  printk("calling findfile\n");
+  Inode* inode = FindFile(root_directory, filename);
+  printk("done calling findfile\n");
   if (inode) {
     File* file = inode->Open();
     if (file) {
       uint8_t* file_data = (uint8_t*) kmalloc(file->GetSize());
-      file->Read(file_data, file->GetSize()); // ;KJASDF;LKJASDF;LKJ
+      file->Read(file_data, file->GetSize());
 
       ELFInfo elf_info = ELFGetInfo(file_data, file->GetSize());
       if (elf_info.success) {

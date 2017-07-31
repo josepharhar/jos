@@ -102,8 +102,7 @@ class Inode {
 
   File* Open();
   // TODO make this RefCounted<LinkedList<RefCounted<Inode>>> ReadDir()
-  LinkedList<Inode*> ReadDir();
-  //int ReadDir(ReadDirCallback callback, void* arg);
+  LinkedList<Inode*>* ReadDir();
   bool IsDirectory();
   char* GetName();
 

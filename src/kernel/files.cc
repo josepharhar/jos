@@ -6,9 +6,10 @@
 // disregards paths, directories, just finds the name
 Inode* FindFile(Inode* inode, char* filename) {
   if (inode->IsDirectory()) {
-    LinkedList<Inode*> sub_inodes = inode->ReadDir();
+    LinkedList<Inode*>* sub_inodes = inode->ReadDir();
 
-    RefCounted<Iterator<Inode*>> iterator(sub_inodes.GetIterator());
+    //RefCounted<Iterator<Inode*>> iterator(sub_inodes->GetIterator());
+    Iterator<Inode*>* iterator = sub_inodes->GetIterator();
     while (iterator->HasNext()) {
       Inode* sub_inode = iterator->Next();
       if (strcmp(sub_inode->GetName(), "..") && strcmp(sub_inode->GetName(), ".")) {
