@@ -7,10 +7,11 @@
 #include "page_table.h"
 
 static void HandleSyscallClone(uint64_t interrupt_number,
+                               uint64_t options,
                                uint64_t callback,
-                               uint64_t param_2,
-                               uint64_t param_3) {
-  ProcContext* new_proc = ProcClone(callback, true /* copy_page_table */);
+                               uint64_t new_stack) {
+  CloneOptions clone_options = CloneOptions::Deserialize(options);
+  ProcContext* new_proc = ProcClone(clone_options, callback, new_stack);
 }
 
 void InitClone() {

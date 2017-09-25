@@ -26,10 +26,12 @@ int main() {
   printu("flags: %p\n", get_flags());*/
 
   printu("calling clone\n");
-  clone(NewProc, new_stack + 2048);
+  asdf = 248;
+  CloneOptions options;
+  options.copy_page_table = 1;
+  clone(options, NewProc, new_stack + 2048);
   printu("main() done calling clone\n");
 
-  asdf = 248;
   printu("%p: %d\n", &asdf, asdf);
 
   while (1) {

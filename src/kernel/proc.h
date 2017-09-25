@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "page_table.h"
+#include "clone.h"
 
 typedef void (*KthreadFunction)(void*);
 
@@ -17,7 +18,7 @@ void ProcExit();
 int ProcIsRunning(); // returns 1 if threading system is running, else 0
 
 void ProcPrint();
-ProcContext* ProcClone(uint64_t rip, bool copy_page_table);
+ProcContext* ProcClone(CloneOptions clone_options, uint64_t new_rip, uint64_t new_stack);
 
 struct ProcQueue {
   struct ProcContext* head;
