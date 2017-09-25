@@ -9,6 +9,8 @@
 static void NewProc();
 extern char new_stack[];
 
+static int asdf = 130;
+
 // TODO the first piece of code in this file is what gets run by
 // exec(), make it always look for main() somehow instead
 int main() {
@@ -27,6 +29,9 @@ int main() {
   clone(NewProc, new_stack + 2048);
   printu("main() done calling clone\n");
 
+  asdf = 248;
+  printu("%p: %d\n", &asdf, asdf);
+
   while (1) {
     Putc(Getc());
   }
@@ -36,6 +41,8 @@ char new_stack[4096];
 static void NewProc() {
   Puts("Hello from NewProc()\n");
   printu("NewProc pid: %d\n", getpid());
+  asdf = 4880;
+  printu("%p: %d\n", &asdf, asdf);
 
   while (1) {
     Putc(Getc());

@@ -2,6 +2,7 @@
 #define PROC_H_
 
 #include "stdint.h"
+#include "page_table.h"
 
 typedef void (*KthreadFunction)(void*);
 
@@ -16,7 +17,7 @@ void ProcExit();
 int ProcIsRunning(); // returns 1 if threading system is running, else 0
 
 void ProcPrint();
-ProcContext* ProcClone(uint64_t rip);
+ProcContext* ProcClone(uint64_t rip, bool copy_page_table);
 
 struct ProcQueue {
   struct ProcContext* head;
@@ -43,6 +44,7 @@ void ProcUnblockAll(struct ProcQueue* queue);
 void ProcBlockOn(struct ProcQueue* queue);
 
 // global for snakes
+// TODO move this to proc.cc
 struct ProcContext {
   // hardware context
   // TODO add floating point state
@@ -75,6 +77,7 @@ struct ProcContext {
   uint64_t gs;  // 184
 
   uint64_t cr3;
+  PageTable* page_table;
 
   // software context
   struct ProcContext* blocked_next;

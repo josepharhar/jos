@@ -7,14 +7,6 @@
 #include "string.h"
 #include "proc.h"
 
-// indexes into p4_table
-// each accounts for 512GB of virtual addresses
-#define P4_IDENTITY_MAP 0
-#define P4_KERNEL_HEAP 1
-// 2 - 14 growth space
-#define P4_KERNEL_STACKS 14
-#define P4_USERSPACE_START 15
-
 // flags for demand paging
 // used in PageTableEntry.available2
 #define PAGE_NOT_ALLOCATED 0 // pointer in this entry is not valid
@@ -86,7 +78,7 @@ static uint64_t GetAddress(struct PageTableEntry* table_entry) {
   return table_entry->address << 12;
 }
 static void SetAddress(struct PageTableEntry* table_entry, void* pointer) {
-  uint64_t address = (uint64_t) address;
+  uint64_t address = (uint64_t) pointer;
   table_entry->address = address >> 12;
 }
 
@@ -455,40 +447,4 @@ int AllocateUserSpace(uint64_t address, uint64_t num_bytes) {
 // TODO delet this
 void PagePrintTableInfo(uint64_t address) {
   GetP1Entry(address, DO_NOT_CREATE_ENTRIES, USER_ACCESSIBLE, true);
-}
-
-static void* CopyPageTableLevel(void* old_table_void, int level) {
-  PageTableEntry* new_table = (PageTableEntry*) kmalloc(PAGE_SIZE_BYTES);
-  PageTableEntry* old_table = (PageTableEntry*) old_table_void;
-  for (int i = 0; i < PAGE_SIZE_BYTES / sizeof(PageTableEntry); i++) {
-    new_table[i] = old_table[i];
-
-    if (level == 4 && i < P4_USERSPACE_START) {
-      // don't copy inner stuff, its the same for the kernel
-    } else {
-      uint64_t old_lower_level_pointer = GetAddress(new_table + i);
-      if (old_lower_level_pointer) {
-        if (level == 1) {
-          // copy physical frame
-          void* old_frame = (void*) old_lower_level_pointer;
-          void* new_frame = kmalloc(PAGE_SIZE_BYTES);
-          memcpy(new_frame, old_frame, PAGE_SIZE_BYTES);
-          SetAddress(new_table + i, new_frame);
-        } else {
-          // copy page table level
-          void* new_lower_level_pointer = CopyPageTableLevel((void*) old_lower_level_pointer, level - 1);
-          SetAddress(new_table + i, new_lower_level_pointer);
-        }
-      }
-    }
-  }
-
-  return new_table;
-}
-void* CopyCurrentPageTable() {
-  return CopyPageTableLevel(Getcr3(), 4);
-}
-
-void FreePageTable(void* page_table) {
-  // TODO implement this
 }

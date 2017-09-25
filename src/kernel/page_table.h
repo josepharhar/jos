@@ -5,15 +5,15 @@
 
 class PageTable {
  public:
-  PageTable();
+  PageTable(uint64_t p4_entry);
   ~PageTable();
 
-  uint64_t GetP1Entry();
+  PageTable* Clone();
 
-  PageTable Clone();
+  uint64_t p4_entry();
 
  private:
-  uint64_t p4_entry;
+  uint64_t p4_entry_;  // value held in cr3 register, pointer to table
 };
 
 #endif  // KERNEL_PAGE_TABLE_H_

@@ -6,6 +6,14 @@
 #define PAGE_SIZE_BYTES 4096
 #define STACK_SIZE_BYTES (4096 * 4096) // 2MB
 
+// indexes into p4_table
+// each accounts for 512GB of virtual addresses
+#define P4_IDENTITY_MAP 0
+#define P4_KERNEL_HEAP 1
+// 2 - 14 growth space
+#define P4_KERNEL_STACKS 14
+#define P4_USERSPACE_START 15
+
 void PageInit();
 
 // these operate on the kernel heap
@@ -23,9 +31,6 @@ bool IsAddressInUserspace(uint64_t address);
 void HandlePageFault(uint64_t error_code, uint64_t faulting_address);
 
 int AllocateUserSpace(uint64_t address, uint64_t num_bytes);
-
-void* CopyCurrentPageTable();
-void FreePageTable(void* page_table);
 
 uint64_t* Getcr3();
 void Setcr3(uint64_t cr3);
