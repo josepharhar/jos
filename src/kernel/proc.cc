@@ -74,7 +74,11 @@ ProcContext* ProcClone(CloneOptions clone_options, uint64_t new_rip, uint64_t ne
 
   // TODO create more clone() settings to set new proc's registers?
   memcpy(new_proc, current_proc, sizeof(ProcContext));
-  new_proc->rip = new_rip;
+
+  if (clone_options.start_at_callback) {
+    new_proc->rip = new_rip;
+  }
+
   /*printk("new_proc->rip: %p\n", new_proc->rip);
   printk("new_proc->rsp: %p\n", new_proc->rsp);
   printk("new_proc->rbp: %p\n", new_proc->rbp);*/

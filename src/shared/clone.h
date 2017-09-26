@@ -5,7 +5,8 @@
 
 struct CloneOptions {
   uint64_t copy_page_table : 1;
-  uint64_t unused : 63;
+  uint64_t start_at_callback : 1;
+  uint64_t unused : 62;
 
   uint64_t Serialize() { return *((uint64_t*)this); }
   static CloneOptions Deserialize(uint64_t options) {
