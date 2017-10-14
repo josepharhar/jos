@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 
+export PATH := $(PATH):$(shell pwd)/cross/bin
+
 CC = x86_64-elf-gcc
 CXX = x86_64-elf-g++
 CC_FLAGS = -mno-red-zone -Wreturn-type #-g #-Wall -Werror #-mgeneral-regs-only
