@@ -9,8 +9,8 @@ NASM = nasm -f elf64 -g
 GAS = x86_64-elf-as
 LD = x86_64-elf-ld
 
-LOOP_ONE = /dev/loop6
-LOOP_TWO = /dev/loop7
+LOOP_ONE = /dev/loop7
+LOOP_TWO = /dev/loop8
 
 KERNEL_SOURCE_DIR = src/kernel
 KERNEL_BUILD_DIR = build/kernel
@@ -61,14 +61,14 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
-	-rm -f os.img
+	-rm -f os.img build/os.img
 	#cp build/kernel.bin image/boot/kernel.bin
-	dd if=/dev/zero of=os.img bs=512 count=32768
-	parted os.img mklabel msdos
-	parted os.img mkpart primary fat32 2048s 30720s
-	parted os.img set 1 boot on
-	sudo losetup $(LOOP_ONE) os.img
-	sudo losetup $(LOOP_TWO) os.img -o 1048576
+	dd if=/dev/zero of=build/os.img bs=512 count=32768
+	parted build/os.img mklabel msdos
+	parted build/os.img mkpart primary fat32 2048s 30720s
+	parted build/os.img set 1 boot on
+	sudo losetup $(LOOP_ONE) build/os.img
+	sudo losetup $(LOOP_TWO) build/os.img -o 1048576
 	#sudo mkdosfs -F32 -f 2 /dev/loop1
 	sudo mkdosfs -F32 -f 2 -S 512 -s 1 $(LOOP_TWO)
 	sudo mkdir -p /mnt/fatgrub
@@ -78,6 +78,7 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
+	mv build/os.img os.img
 
 
 image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
@@ -143,7 +144,7 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 
 .PHONY: clean
 clean:
-	-rm -f os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o
+	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
