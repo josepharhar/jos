@@ -6,4 +6,5 @@ SECTIONS {
   .text : {
     *(*)
   }
+
 }

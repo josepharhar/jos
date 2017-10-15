@@ -66,7 +66,7 @@ ProcContext* ProcCreateKthread(KthreadFunction entry_point, void* arg) {
 }
 
 // this is intended for user processes for clone()
-ProcContext* ProcClone(CloneOptions clone_options, uint64_t new_rip, uint64_t new_stack) {
+ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t new_stack) {
   // TODO check to make sure procs are running first?
   ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
 
@@ -75,7 +75,11 @@ ProcContext* ProcClone(CloneOptions clone_options, uint64_t new_rip, uint64_t ne
   // TODO create more clone() settings to set new proc's registers?
   memcpy(new_proc, current_proc, sizeof(ProcContext));
 
-  if (clone_options.start_at_callback) {
+  int asdf = 1;
+  while (asdf);
+
+  printk("start_at_callback: %d\n", clone_options->start_at_callback);
+  if (clone_options->start_at_callback) {
     new_proc->rip = new_rip;
   }
 
@@ -84,7 +88,7 @@ ProcContext* ProcClone(CloneOptions clone_options, uint64_t new_rip, uint64_t ne
   printk("new_proc->rbp: %p\n", new_proc->rbp);*/
   // TODO set rsp/rbp based on new_stack
 
-  if (clone_options.copy_page_table) {
+  if (clone_options->copy_page_table) {
     new_proc->page_table = current_proc->page_table->Clone();
     new_proc->cr3 = new_proc->page_table->p4_entry();
   }

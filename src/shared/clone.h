@@ -17,6 +17,6 @@ static_assert(sizeof(CloneOptions) == sizeof(uint64_t));
 
 typedef void (*CloneCallback)();
 
-void clone(CloneOptions options, CloneCallback callback, void* new_stack);
+void clone(CloneOptions* options, CloneCallback callback, void* new_stack);
 
 #endif  // SHARED_CLONE_H_

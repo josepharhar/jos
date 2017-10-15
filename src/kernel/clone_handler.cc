@@ -10,7 +10,8 @@ static void HandleSyscallClone(uint64_t interrupt_number,
                                uint64_t options,
                                uint64_t callback,
                                uint64_t new_stack) {
-  CloneOptions clone_options = CloneOptions::Deserialize(options);
+  // TODO security this
+  CloneOptions* clone_options = (CloneOptions*)options;
   ProcContext* new_proc = ProcClone(clone_options, callback, new_stack);
 }
 

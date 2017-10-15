@@ -30,7 +30,8 @@ int main() {
   CloneOptions options;
   options.copy_page_table = 1;
   options.start_at_callback = 0;
-  clone(options, NewProc, new_stack + 2048);
+  options.unused = 0;
+  clone(&options, NewProc, new_stack + 2048);
   printu("main() done calling clone\n");
 
   printu("%p: %d\n", &asdf, asdf);
