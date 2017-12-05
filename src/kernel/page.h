@@ -10,7 +10,10 @@
 // each accounts for 512GB of virtual addresses
 #define P4_IDENTITY_MAP 0
 #define P4_KERNEL_HEAP 1
-// 2 - 14 growth space
+
+#define P4_USERSPACE_TEXT 2
+
+// 3 - 14 growth space
 #define P4_KERNEL_STACKS 14
 #define P4_USERSPACE_START 15
 

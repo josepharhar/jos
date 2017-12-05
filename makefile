@@ -115,7 +115,7 @@ $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.c $(USER_SOURCE_DIR)/*.h $(SHARED_SO
 	$(CC) $(CC_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR)
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.cc $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR)
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g
 
 
 $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
