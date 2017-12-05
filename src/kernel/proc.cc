@@ -75,10 +75,10 @@ ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t n
   // TODO create more clone() settings to set new proc's registers?
   memcpy(new_proc, current_proc, sizeof(ProcContext));
 
-  int asdf = 1;
-  while (asdf);
+  /*int asdf = 1;
+  while (asdf);*/
 
-  printk("start_at_callback: %d\n", clone_options->start_at_callback);
+  //printk("start_at_callback: %d\n", clone_options->start_at_callback);
   if (clone_options->start_at_callback) {
     new_proc->rip = new_rip;
   }
@@ -86,7 +86,10 @@ ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t n
   /*printk("new_proc->rip: %p\n", new_proc->rip);
   printk("new_proc->rsp: %p\n", new_proc->rsp);
   printk("new_proc->rbp: %p\n", new_proc->rbp);*/
-  // TODO set rsp/rbp based on new_stack
+  if (new_stack) {
+    new_proc->rsp = new_stack;
+    new_proc->rbp = new_stack;
+  }
 
   if (clone_options->copy_page_table) {
     new_proc->page_table = current_proc->page_table->Clone();

@@ -9,7 +9,8 @@
 static void NewProc();
 extern char new_stack[];
 
-static int asdf = 130;
+//static int asdf = 130;
+extern int asdf;
 
 // TODO the first piece of code in this file is what gets run by
 // exec(), make it always look for main() somehow instead
@@ -29,9 +30,10 @@ int main() {
   asdf = 248;
   CloneOptions options;
   options.copy_page_table = 1;
-  options.start_at_callback = 0;
-  options.unused = 0;
-  clone(&options, NewProc, new_stack + 2048);
+  // TODO make start_at_callback = 0 work
+  options.start_at_callback = 1;
+  //clone(&options, NewProc, new_stack + 2048);
+  clone(&options, NewProc, 0);
   printu("main() done calling clone\n");
 
   printu("%p: %d\n", &asdf, asdf);
@@ -41,6 +43,7 @@ int main() {
   }
 }
 
+int asdf = 130;
 char new_stack[4096];
 static void NewProc() {
   Puts("Hello from NewProc()\n");
