@@ -332,6 +332,7 @@ void IRQInit() {
   IRQClearMask(1); // enable keyboard interrupts
   //IRQSetMask(1); // disable keyboard interrupts (non-serial)
   IRQClearMask(4); // enable COM1 (serial) interrupts
+  IRQClearMask(0); // enables PIC timer interrupts
   //printk("pic mask: %X\n", IRQGetMask());
 
   // set up interrupt handler table
