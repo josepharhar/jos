@@ -230,6 +230,7 @@ void c_interrupt_handler(uint64_t interrupt_number) {
     case PIC1_OFFSET:
       // programmable interrupt timer interrupt
       // should anything ever be done for this?
+      //printk("PIC timer interrupt\n");
       break;
 
     /*case PIC1_OFFSET + 1:
@@ -332,7 +333,7 @@ void IRQInit() {
   IRQClearMask(1); // enable keyboard interrupts
   //IRQSetMask(1); // disable keyboard interrupts (non-serial)
   IRQClearMask(4); // enable COM1 (serial) interrupts
-  IRQClearMask(0); // enables PIC timer interrupts
+  //IRQClearMask(0); // enables PIC timer interrupts
   //printk("pic mask: %X\n", IRQGetMask());
 
   // set up interrupt handler table

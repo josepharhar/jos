@@ -23,6 +23,7 @@
 #include "exec.h"
 #include "clone_handler.h"
 #include "getpid_handler.h"
+#include "pit.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -158,6 +159,8 @@ void KernelMain() {
   TagsInfo tags_info = ReadTags();
   FrameInit(tags_info);
   PageInit();
+
+  PitInit();
 
   InitSyscall();
   ProcInit();
