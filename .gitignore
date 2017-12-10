@@ -5,3 +5,4 @@ src/a.out
 binutils-*
 gcc-*
 build-*
+cmake/
