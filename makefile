@@ -50,6 +50,11 @@ USER_OBJECTS_GAS = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_GAS:$(USER_SOUR
 USER_OBJECTS_NASM = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_NASM:$(USER_SOURCE_DIR)/%.asm=%.o))
 USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM)
 
+TEST_SOURCE_DIR = src/test
+TEST_BUILD_DIR = build/test
+TEST_SOURCES_CXX = $(shell find $(TEST_SOURCE_DIR) -name "*.cc")
+TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.o))
+
 all: run
 
 .PHONY: run
@@ -142,6 +147,10 @@ build/multi_interrupt_handlers_generate: src/multi_interrupt_handlers_generate.c
 
 build/irq_handlers_generate: src/irq_handlers_generate.c
 	gcc src/irq_handlers_generate.c -o build/irq_handlers_generate
+
+
+#$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
+#	$(CXX) $(CXX_FLAGS) -o $(
 
 
 .PHONY: clean
