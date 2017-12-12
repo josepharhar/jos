@@ -54,6 +54,12 @@ TEST_SOURCE_DIR = src/test
 TEST_BUILD_DIR = build/test
 TEST_SOURCES_CXX = $(shell find $(TEST_SOURCE_DIR) -name "*.cc")
 TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.o))
+TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.out))
+
+UTIL_SOURCE_DIR = src/util
+UTIL_BUILD_DIR = build/util
+UTIL_SOURCES_CXX = $(shell find $(UTIL_SOURCE_DIR) -name "*.cc")
+UTIL_OBJECTS = $(addprefix $(UTIL_BUILD_DIR)/,$(UTIL_SOURCES_CXX:$(UTIL_SOURCE_DIR)/%.cc=%.o))
 
 all: run
 
@@ -88,8 +94,8 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	mv build/os.img os.img
 
 
-image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
+	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@ -g
@@ -107,8 +113,8 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SH
 # TODO support multiple user executables
 image/user:
 	mkdir image/user
-image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user
-	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS)
+image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS)
+	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
@@ -136,6 +142,10 @@ $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 
+$(UTIL_BUILD_DIR)/%.o: $(UTIL_SOURCE_DIR)/%.cc
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+
 src/multi_interrupt_handlers.asm: build/multi_interrupt_handlers_generate
 	build/multi_interrupt_handlers_generate > src/multi_interrupt_handlers.asm
 
@@ -149,13 +159,23 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 	gcc src/irq_handlers_generate.c -o build/irq_handlers_generate
 
 
-#$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
-#	$(CXX) $(CXX_FLAGS) -o $(
+.PHONY: test
+test: $(TEST_EXECS)
+
+# TODO make this depend on all headers in all source dirs?
+$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I src/
+
+$(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+	#$(LD) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+	#$(CXX) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+	./$@
 
 
 .PHONY: clean
 clean:
-	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o
+	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)

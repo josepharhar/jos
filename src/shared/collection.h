@@ -2,6 +2,7 @@
 #define COLLECTION_H_
 
 #include "iterable.h"
+#include "stdint.h"
 
 void printk(...);
 
