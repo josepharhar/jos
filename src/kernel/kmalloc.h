@@ -8,9 +8,4 @@ void kfree(void* address);
 
 void* kcalloc(uint64_t size);
 
-// global C++ allocator backed by kmalloc()
-void* operator new(uint64_t size);
-void operator delete(void* address);
-void operator delete(void* address, uint64_t size);
-
 #endif  // KMALLOC_H_

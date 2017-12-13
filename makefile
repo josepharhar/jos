@@ -56,10 +56,18 @@ TEST_SOURCES_CXX = $(shell find $(TEST_SOURCE_DIR) -name "*.cc")
 TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.o))
 TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.out))
 
+# These are for runtime c++ stuff that should be linked with all executables
+#   going into the OS but not for unit tests not run in the OS
 UTIL_SOURCE_DIR = src/util
 UTIL_BUILD_DIR = build/util
 UTIL_SOURCES_CXX = $(shell find $(UTIL_SOURCE_DIR) -name "*.cc")
 UTIL_OBJECTS = $(addprefix $(UTIL_BUILD_DIR)/,$(UTIL_SOURCES_CXX:$(UTIL_SOURCE_DIR)/%.cc=%.o))
+
+# Link against kernel executable but not user executables
+UTIL_KERNEL_SOURCE_DIR = $(UTIL_SOURCE_DIR)/kernel
+UTIL_KERNEL_BUILD_DIR = $(UTIL_BUILD_DIR)/kernel
+UTIL_KERNEL_SOURCES_CXX = $(shell find $(UTIL_KERNEL_SOURCE_DIR) -name "*.cc")
+UTIL_KERNEL_OBJECTS = $(addprefix $(UTIL_KERNEL_BUILD_DIR)/,$(UTIL_KERNEL_SOURCES_CXX:$(UTIL_KERNEL_SOURCE_DIR)/%.cc=%.o))
 
 all: run
 
@@ -166,9 +174,9 @@ test: $(TEST_EXECS)
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I src/
 
+#$(LD) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+#$(CXX) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-	#$(LD) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-	#$(CXX) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	./$@
 
