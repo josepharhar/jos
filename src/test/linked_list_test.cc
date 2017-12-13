@@ -1,4 +1,7 @@
+#include <assert.h>
+
 #include <iostream>
+#include <vector>
 
 #include "shared/linked_list.h"
 
@@ -22,15 +25,13 @@ int main(int argc, char** argv) {
   numbers.push_back(2);
   numbers.push_back(3);
 
-  LinkedList<int>* list = new LinkedList<int>();
+  LinkedList<int> list;
 
   for (int i = 0; i < numbers.size(); i++) {
-    list->Add(numbers[i]);
+    list.Add(numbers[i]);
   }
 
-  for (int i = 0; i < list->Size(); i++) {
-    assert(list->Get(i) == numbers[i]);
-  }
+  assert(IsEqual(numbers, list));
 
   return 0;
 }
