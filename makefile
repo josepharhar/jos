@@ -102,8 +102,8 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	mv build/os.img os.img
 
 
-image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
-	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
+image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS)
+	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS)
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@ -g
@@ -153,6 +153,9 @@ $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
 $(UTIL_BUILD_DIR)/%.o: $(UTIL_SOURCE_DIR)/%.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
+$(UTIL_KERNEL_BUILD_DIR)/%.o: $(UTIL_KERNEL_SOURCE_DIR)/%.cc
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
 
 src/multi_interrupt_handlers.asm: build/multi_interrupt_handlers_generate
 	build/multi_interrupt_handlers_generate > src/multi_interrupt_handlers.asm
@@ -172,7 +175,7 @@ test: $(TEST_EXECS)
 
 # TODO make this depend on all headers in all source dirs?
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I src/
+	g++ $(CXX_FLAGS) -c $< -o $@ -I src/
 
 #$(LD) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 #$(CXX) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
