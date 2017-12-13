@@ -177,8 +177,6 @@ test: $(TEST_EXECS)
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
 	g++ $(CXX_FLAGS) -c $< -o $@ -I src/
 
-#$(LD) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-#$(CXX) -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	./$@
