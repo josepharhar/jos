@@ -1,6 +1,8 @@
 #ifndef UTIL_KNEW_H_
 #define UTIL_KNEW_H_
 
+#include "stdint.h"
+
 void* operator new(uint64_t size);
 void operator delete(void* address);
 void operator delete(void* address, uint64_t size);

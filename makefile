@@ -4,9 +4,6 @@ export PATH := $(PATH):$(shell pwd)/cross/bin
 
 CC = x86_64-elf-gcc
 CXX = x86_64-elf-g++
-CC_FLAGS = -mno-red-zone -Wreturn-type #-g #-Wall -Werror #-mgeneral-regs-only
-# -fno-rtti is no runtime type information since we don't have libstdc++
-CXX_FLAGS = -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large #-g
 NASM = nasm -f elf64 -g
 GAS = x86_64-elf-as
 LD = x86_64-elf-ld
@@ -64,10 +61,15 @@ UTIL_SOURCES_CXX = $(shell find $(UTIL_SOURCE_DIR) -name "*.cc")
 UTIL_OBJECTS = $(addprefix $(UTIL_BUILD_DIR)/,$(UTIL_SOURCES_CXX:$(UTIL_SOURCE_DIR)/%.cc=%.o))
 
 # Link against kernel executable but not user executables
-UTIL_KERNEL_SOURCE_DIR = $(UTIL_SOURCE_DIR)/kernel
+#UTIL_KERNEL_SOURCE_DIR = $(UTIL_SOURCE_DIR)/kernel
+UTIL_KERNEL_SOURCE_DIR = src/util_kernel
 UTIL_KERNEL_BUILD_DIR = $(UTIL_BUILD_DIR)/kernel
 UTIL_KERNEL_SOURCES_CXX = $(shell find $(UTIL_KERNEL_SOURCE_DIR) -name "*.cc")
 UTIL_KERNEL_OBJECTS = $(addprefix $(UTIL_KERNEL_BUILD_DIR)/,$(UTIL_KERNEL_SOURCES_CXX:$(UTIL_KERNEL_SOURCE_DIR)/%.cc=%.o))
+
+CC_FLAGS = -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
+# -fno-rtti is no runtime type information since we don't have libstdc++
+CXX_FLAGS = -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ #-g
 
 all: run
 
@@ -112,10 +114,10 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.s
 	$(GAS) -g -c $< -o $@
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.c $(KERNEL_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CC) $(CC_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g -DKERNEL
+	$(CC) $(CC_FLAGS) -c $< -o $@ -g -DKERNEL
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR) -g -DKERNEL
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
 
 
 # TODO support multiple user executables
@@ -131,10 +133,10 @@ $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.s
 	$(GAS) -g -c $< -o $@
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.c $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CC) $(CC_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR)
+	$(CC) $(CC_FLAGS) -c $< -o $@
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.cc $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
-	$(CXX) $(CXX_FLAGS) -c $< -o $@ -I $(SHARED_SOURCE_DIR)
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 
 $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
@@ -175,7 +177,7 @@ test: $(TEST_EXECS)
 
 # TODO make this depend on all headers in all source dirs?
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
-	g++ $(CXX_FLAGS) -c $< -o $@ -I src/
+	g++ $(CXX_FLAGS) -c $< -o $@
 
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
