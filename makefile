@@ -21,7 +21,7 @@ KERNEL_OBJECTS_CXX = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_CXX:$(KER
 KERNEL_OBJECTS_C = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_C:$(KERNEL_SOURCE_DIR)/%.c=%.o))
 KERNEL_OBJECTS_GAS = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_GAS:$(KERNEL_SOURCE_DIR)/%.s=%.o))
 KERNEL_OBJECTS_NASM = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_NASM:$(KERNEL_SOURCE_DIR)/%.asm=%.o))
-KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM) $(KERNEL_BUILD_DIR)/cxx_util.o
+KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM)
 
 SHARED_SOURCE_DIR = src/shared
 SHARED_BUILD_DIR = build/shared
@@ -45,7 +45,7 @@ USER_OBJECTS_CXX = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_CXX:$(USER_SOUR
 USER_OBJECTS_C = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_C:$(USER_SOURCE_DIR)/%.c=%.o))
 USER_OBJECTS_GAS = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_GAS:$(USER_SOURCE_DIR)/%.s=%.o))
 USER_OBJECTS_NASM = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_NASM:$(USER_SOURCE_DIR)/%.asm=%.o))
-USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM) $(USER_BUILD_DIR)/cxx_util.o
+USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM)
 
 TEST_SOURCE_DIR = src/test
 TEST_BUILD_DIR = build/test
@@ -90,8 +90,8 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	mv build/os.img os.img
 
 
-image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS)
+image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
+	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@ -g
@@ -112,8 +112,8 @@ $(KERNEL_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 # TODO support multiple user executables
 image/user:
 	mkdir image/user
-image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS)
-	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS)
+image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
+	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
 
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
@@ -162,8 +162,7 @@ test: $(TEST_EXECS)
 
 # TODO make this depend on all headers in all source dirs?
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
-	#g++ $(CXX_FLAGS) -c $< -o $@
-	g++ -g -std=c++11 -I src/ -c $< -o $@
+	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)

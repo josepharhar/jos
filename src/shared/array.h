@@ -13,7 +13,15 @@ class Array {
     }
   }
 
-  Array<T>(const Array<T>& other) = delete;
+  Array<T>(const Array<T>& other) {
+    size_ = other.size_;
+    array_size_ = other.array_size_;
+    array_ = 0;
+    if (array_size_) {
+      array_ = (T*)malloc(array_size_ * sizeof(T));
+      memcpy(array_, other.array_, array_size_);
+    }
+  }
   Array<T>& operator=(const Array<T>& other) = delete;
 
   Array<T>(Array<T>&& other) = delete;
@@ -26,9 +34,7 @@ class Array {
     return array_[index];
   }
 
-  T* Data() {
-    return array_;
-  }
+  T* Data() { return array_; }
 
   void Add(T value) {
     if (size_ + 1 > array_size_) {
@@ -38,7 +44,7 @@ class Array {
 
       array_size_ = (old_array_size + 5) * 2;
 
-      array_ = malloc(array_size_ * sizeof(T));
+      array_ = (T*)malloc(array_size_ * sizeof(T));
       memcpy(array_, old_array, old_array_size * sizeof(T));
 
       if (old_array) {
