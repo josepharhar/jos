@@ -21,7 +21,7 @@ KERNEL_OBJECTS_CXX = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_CXX:$(KER
 KERNEL_OBJECTS_C = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_C:$(KERNEL_SOURCE_DIR)/%.c=%.o))
 KERNEL_OBJECTS_GAS = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_GAS:$(KERNEL_SOURCE_DIR)/%.s=%.o))
 KERNEL_OBJECTS_NASM = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_NASM:$(KERNEL_SOURCE_DIR)/%.asm=%.o))
-KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM)
+KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM) $(KERNEL_BUILD_DIR)/cxx_util.o
 
 SHARED_SOURCE_DIR = src/shared
 SHARED_BUILD_DIR = build/shared
@@ -45,27 +45,13 @@ USER_OBJECTS_CXX = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_CXX:$(USER_SOUR
 USER_OBJECTS_C = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_C:$(USER_SOURCE_DIR)/%.c=%.o))
 USER_OBJECTS_GAS = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_GAS:$(USER_SOURCE_DIR)/%.s=%.o))
 USER_OBJECTS_NASM = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_NASM:$(USER_SOURCE_DIR)/%.asm=%.o))
-USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM)
+USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM) $(USER_BUILD_DIR)/cxx_util.o
 
 TEST_SOURCE_DIR = src/test
 TEST_BUILD_DIR = build/test
 TEST_SOURCES_CXX = $(shell find $(TEST_SOURCE_DIR) -name "*.cc")
 TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.o))
 TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.out))
-
-# These are for runtime c++ stuff that should be linked with all executables
-#   going into the OS but not for unit tests not run in the OS
-UTIL_SOURCE_DIR = src/util
-UTIL_BUILD_DIR = build/util
-UTIL_SOURCES_CXX = $(shell find $(UTIL_SOURCE_DIR) -name "*.cc")
-UTIL_OBJECTS = $(addprefix $(UTIL_BUILD_DIR)/,$(UTIL_SOURCES_CXX:$(UTIL_SOURCE_DIR)/%.cc=%.o))
-
-# Link against kernel executable but not user executables
-#UTIL_KERNEL_SOURCE_DIR = $(UTIL_SOURCE_DIR)/kernel
-UTIL_KERNEL_SOURCE_DIR = src/util_kernel
-UTIL_KERNEL_BUILD_DIR = $(UTIL_BUILD_DIR)/kernel
-UTIL_KERNEL_SOURCES_CXX = $(shell find $(UTIL_KERNEL_SOURCE_DIR) -name "*.cc")
-UTIL_KERNEL_OBJECTS = $(addprefix $(UTIL_KERNEL_BUILD_DIR)/,$(UTIL_KERNEL_SOURCES_CXX:$(UTIL_KERNEL_SOURCE_DIR)/%.cc=%.o))
 
 CC_FLAGS = -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
 # -fno-rtti is no runtime type information since we don't have libstdc++
@@ -104,7 +90,7 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 	mv build/os.img os.img
 
 
-image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS)
+image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS)
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
@@ -117,6 +103,9 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.c $(KERNEL_SOURCE_DIR)/*.h $(SHA
 	$(CC) $(CC_FLAGS) -c $< -o $@ -g -DKERNEL
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
+
+$(KERNEL_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
 
 
@@ -138,6 +127,9 @@ $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.c $(USER_SOURCE_DIR)/*.h $(SHARED_SO
 $(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.cc $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
+$(USER_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
 
 $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
@@ -149,13 +141,6 @@ $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.c $(SHARED_SOURCE_DIR)/*.h
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
 $(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
-
-
-$(UTIL_BUILD_DIR)/%.o: $(UTIL_SOURCE_DIR)/%.cc
-	$(CXX) $(CXX_FLAGS) -c $< -o $@
-
-$(UTIL_KERNEL_BUILD_DIR)/%.o: $(UTIL_KERNEL_SOURCE_DIR)/%.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 
