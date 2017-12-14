@@ -55,7 +55,7 @@ TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR
 
 CC_FLAGS = -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
 # -fno-rtti is no runtime type information since we don't have libstdc++
-CXX_FLAGS = -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ #-g
+CXX_FLAGS = -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ -std=c++11 #-g
 
 all: run
 
@@ -162,7 +162,8 @@ test: $(TEST_EXECS)
 
 # TODO make this depend on all headers in all source dirs?
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
-	g++ $(CXX_FLAGS) -c $< -o $@
+	#g++ $(CXX_FLAGS) -c $< -o $@
+	g++ -g -std=c++11 -I src/ -c $< -o $@
 
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
