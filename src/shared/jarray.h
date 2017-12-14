@@ -1,7 +1,9 @@
-#ifndef SHARED_ARRAY_H_
-#define SHARED_ARRAY_H_
+#ifndef SHARED_JARRAY_H_
+#define SHARED_JARRAY_H_
 
 #include "string.h"
+
+namespace stdj {
 
 template <typename T>
 class Array {
@@ -9,7 +11,7 @@ class Array {
   Array() : array_(0), array_size_(0), size_(0) {}
   ~Array() {
     if (array_) {
-      free(array_);
+      delete[] array_;
     }
   }
 
@@ -18,7 +20,7 @@ class Array {
     array_size_ = other.array_size_;
     array_ = 0;
     if (array_size_) {
-      array_ = (T*)malloc(array_size_ * sizeof(T));
+      array_ = new T[array_size_];
       memcpy(array_, other.array_, array_size_);
     }
   }
@@ -44,11 +46,11 @@ class Array {
 
       array_size_ = (old_array_size + 5) * 2;
 
-      array_ = (T*)malloc(array_size_ * sizeof(T));
+      array_ = new T[array_size_];
       memcpy(array_, old_array, old_array_size * sizeof(T));
 
       if (old_array) {
-        free(old_array);
+        delete[] array_;
       }
     }
 
@@ -75,4 +77,6 @@ class Array {
   uint64_t size_;
 };
 
-#endif  // SHARED_ARRAY_H_
+}  // namespace stdj
+
+#endif  // SHARED_JARRAY_H_

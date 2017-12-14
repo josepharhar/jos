@@ -49,10 +49,16 @@ static void deallocate(void* address) {
 void* operator new(uint64_t size) {
   return allocate(size);
 }
+void* operator new[](uint64_t size) {
+  return allocate(size);
+}
 void operator delete(void* address) {
   deallocate(address);
 }
 void operator delete(void* address, uint64_t size) {
+  deallocate(address);
+}
+void operator delete[](void* address) {
   deallocate(address);
 }
 

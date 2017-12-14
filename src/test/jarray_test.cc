@@ -3,9 +3,9 @@
 #include <iostream>
 #include <vector>
 
-#include "shared/array.h"
+#include "shared/jarray.h"
 
-static bool IsEqual(std::vector<int> vector, Array<int> array) {
+static bool IsEqual(std::vector<int> vector, stdj::Array<int> array) {
   if (vector.size() != array.Size()) {
     return false;
   }
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   // TODO
 
   std::vector<int> vector;
-  Array<int> array;
+  stdj::Array<int> array;
   assert(IsEqual(vector, array));
 
   vector.push_back(1);
