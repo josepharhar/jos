@@ -20,12 +20,24 @@ class Queue {
   void Add(T value) {
     QueueEntry* new_entry = new QueueEntry();
     new_entry->value = value;
-    new_entry->next = head_;
-    head_ = new_entry;
+    new_entry->next = 0;
+    
+    if (!head_) {
+      head_ = new_entry;
+      return;
+    }
+
+    QueueEntry* last_entry = head_;
+    while (last_entry->next) {
+      last_entry = last_entry->next;
+    }
+    last_entry->next = new_entry;
   }
 
   T Remove() {
-    DCHECK_MESSAGE(head_, "Queue::Remove called on empty queue\n");
+    // TODO DCHECK_MESSAGE doesn't work
+    // DCHECK_MESSAGE(head_, "Queue::Remove called on empty queue\n");
+    DCHECK(head_);
     QueueEntry* remove_entry = head_;
     T remove_value = remove_entry->value;
     head_ = head_->next;

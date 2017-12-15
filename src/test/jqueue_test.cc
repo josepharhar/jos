@@ -3,6 +3,7 @@
 #include <iostream>
 #include <queue>
 
+#include "test.h"
 #include "shared/jqueue.h"
 
 int main(int argc, char** argv) {
@@ -11,24 +12,26 @@ int main(int argc, char** argv) {
 
   jqueue.Add(10);
   squeue.push(10);
-  assert(jqueue.Size() == squeue.size());
+  ASSERT_EQ(jqueue.Size(), squeue.size());
 
   jqueue.Add(100);
   squeue.push(100);
-  assert(jqueue.Size() == squeue.size());
+  ASSERT_EQ(jqueue.Size(), squeue.size());
 
-  assert(jqueue.Remove() == squeue.front());
+  ASSERT_EQ(jqueue.Remove(), squeue.front());
   squeue.pop();
 
   jqueue.Add(1000);
   squeue.push(1000);
-  assert(jqueue.Size() == squeue.size());
+  ASSERT_EQ(jqueue.Size(), squeue.size());
 
-  assert(jqueue.Remove() == squeue.front());
+  ASSERT_EQ(jqueue.Remove(), squeue.front());
   squeue.pop();
+  ASSERT_EQ(jqueue.Size(), squeue.size());
 
-  assert(jqueue.Remove() == squeue.front());
+  ASSERT_EQ(jqueue.Remove(), squeue.front());
   squeue.pop();
+  ASSERT_EQ(jqueue.Size(), squeue.size());
 
   return 0;
 }

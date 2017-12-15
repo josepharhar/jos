@@ -161,7 +161,7 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 test: $(TEST_EXECS)
 
 # TODO make this depend on all headers in all source dirs?
-$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc
+$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h
 	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
