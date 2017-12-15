@@ -19,13 +19,28 @@
 // ss, rsp, rflags, cs, rip
 // https://users.csc.calpoly.edu/~bellardo/courses/2174/454/notes/CPE454-Week02-2.pdf
 
-static int is_proc_running = 0;
+namespace Proc {
+
+static bool is_proc_running = false;
 static uint64_t new_proc_id = 1;
-struct ProcContext* current_proc = 0; // global for snakes
+
+static ProcContext* current_proc = 0;
 static ProcContext* next_proc = 0; // set by ProcReschedule()
 static ProcContext* main_proc = 0; // context of thread that called ProcRun()
 
 static LinkedList<ProcContext*>* proc_list = nullptr;
+
+
+
+ProcContext* GetCurrentProc() {
+  return current_proc;
+}
+
+
+
+
+
+
 
 // starts system, returns when all threads are complete
 void ProcRun() {
@@ -40,8 +55,9 @@ void ProcRun() {
   Syscall(SYSCALL_PROC_RUN);
 }
 
-ProcContext* ProcCreateKthread(KthreadFunction entry_point, void* arg) {
-  struct ProcContext* new_proc = (struct ProcContext*) kcalloc(sizeof(struct ProcContext));
+ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
+  //ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  ProcContext* new_proc = new ProcContext();
   new_proc->rip = (uint64_t) entry_point;
   new_proc->cs = 0x8; // kernel or user, for privilege level
   new_proc->rsp = (uint64_t) StackAllocate(); // TODO consider stack overflow, its only 2MB virt
@@ -68,7 +84,8 @@ ProcContext* ProcCreateKthread(KthreadFunction entry_point, void* arg) {
 // this is intended for user processes for clone()
 ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t new_stack) {
   // TODO check to make sure procs are running first?
-  ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  //ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  ProcContext* new_proc = new ProcContext();
 
   SaveState(current_proc); // update current_proc registers
 
@@ -245,7 +262,8 @@ static void HandleSyscallProcRun(uint64_t syscall_number, uint64_t param_1, uint
 
   is_proc_running = 1;
 
-  main_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  //main_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  main_proc = new ProcContext();
   SaveState(main_proc);
   RestoreState(current_proc);
 }
@@ -388,7 +406,7 @@ int ProcIsRunning() {
   return is_proc_running;
 }
 
-void ProcInit() {
+void Init() {
   SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
   SetSyscallHandler(SYSCALL_EXIT, HandleSyscallExit);
   SetSyscallHandler(SYSCALL_PROC_RUN, HandleSyscallProcRun);
@@ -396,7 +414,9 @@ void ProcInit() {
   proc_list = new LinkedList<ProcContext*>();
 }
 
-bool ProcIsKernel() {
+bool IsKernel() {
   uint64_t privilege_level = (current_proc->rflags >> 12) & 3;
   return privilege_level == 0; // zero is kernel, 3 is user
 }
+
+}  // namespace Proc
