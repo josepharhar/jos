@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "page_table.h"
 #include "clone.h"
+#include "jqueue.h"
 
 namespace Proc {
 
@@ -13,11 +14,13 @@ class ProcContext {
   ~ProcContext() {}
 
   // TODO should this be copyable?
+  // ProcContext(const ProcContext& other) = delete;
+  // ProcContext& operator=(const ProcContext& other) = delete;
 
   ProcContext(ProcContext&& other) = delete;
   ProcContext& operator=(ProcContext&& other) = delete;
 
- private:
+  // private:
   // hardware context
   // TODO add floating point state
   uint64_t rax;     // 000
@@ -58,49 +61,52 @@ class ProcContext {
   uint64_t pid;
 };
 
-
 void Init();  // initializes proc system, only call once
 
-void ProcRun();  // starts threading system, runs all threads to completion and
-                 // returns
-                 
+void Run();  // starts threading system, runs all threads to completion and
+             // returns
+
 typedef void (*KthreadFunction)(void*);
 ProcContext* CreateKthread(KthreadFunction entry_point, void* arg);
 
-void ProcReschedule();
-void ProcYield();
-void ProcExit();
-int ProcIsRunning();  // returns 1 if threading system is running, else 0
+void Reschedule();
+void Yield();
+void Exit();
+int IsRunning();  // returns 1 if threading system is running, else 0
 
-void ProcPrint();
-ProcContext* ProcClone(CloneOptions* clone_options,
-                       uint64_t new_rip,
-                       uint64_t new_stack);
+void Print();
+ProcContext* Clone(CloneOptions* clone_options,
+                   uint64_t new_rip,
+                   uint64_t new_stack);
 
-struct ProcQueue {
+// TODO delet this
+/*struct ProcQueue {
   struct ProcContext* head;
-};
+};*/
+typedef stdj::Queue<ProcContext*> ProcQueue;
 
+// TODO delet this
 // Initializes a ProcQueue structure (mainly sets head to NULL).
 // Called once for each ProcQueue during driver initialization.
-void ProcInitQueue(struct ProcQueue* queue);
+// void ProcInitQueue(struct ProcQueue* queue);
 
 // Unblocks one process from the ProcQueue,
 // moving it back to the scheduler.
 // Called by interrupt handler?
 // Returns whether or not a proc was unblocked
-int ProcUnblockHead(struct ProcQueue* queue);
+int UnblockHead(ProcQueue* queue);
 
 // Unblocks all processes from the ProcQueue,
 // moving them all back to the scheduler.
 // Called by interrupt handler?
-void ProcUnblockAll(struct ProcQueue* queue);
+void UnblockAll(ProcQueue* queue);
 
 // Blocks the current process.
 // Called by system call handler.
 // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-void ProcBlockOn(struct ProcQueue* queue);
+void BlockOn(ProcQueue* queue);
 
+// TODO shouldn't these be private?
 uint64_t* GetStackSaveState();
 void RestoreState(ProcContext* proc);
 void SaveState(ProcContext* proc);

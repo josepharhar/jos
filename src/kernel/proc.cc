@@ -31,6 +31,12 @@ static ProcContext* main_proc = 0; // context of thread that called ProcRun()
 static LinkedList<ProcContext*>* proc_list = nullptr;
 
 
+static void AssertRunning() {
+  DCHECK(proc_list);
+  DCHECK(is_proc_running);
+}
+
+
 
 ProcContext* GetCurrentProc() {
   return current_proc;
@@ -41,12 +47,19 @@ ProcContext* GetCurrentProc() {
 
 
 
+// called once during kernel initialization
+void Init() {
+  SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
+  SetSyscallHandler(SYSCALL_EXIT, HandleSyscallExit);
+  SetSyscallHandler(SYSCALL_PROC_RUN, HandleSyscallProcRun);
+  proc_list = new LinkedList<ProcContext*>();
+}
 
 // starts system, returns when all threads are complete
-void ProcRun() {
+void Run() {
   if (proc_list->IsEmpty()) {
     // there are no procs to run
-    printk("ProcRun() proc_list.IsEmpty(): %p\n", proc_list->IsEmpty());
+    printk("Start() proc_list.IsEmpty(): %p\n", proc_list->IsEmpty());
     return;
   }
 
@@ -56,7 +69,6 @@ void ProcRun() {
 }
 
 ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
-  //ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
   ProcContext* new_proc = new ProcContext();
   new_proc->rip = (uint64_t) entry_point;
   new_proc->cs = 0x8; // kernel or user, for privilege level
@@ -82,27 +94,19 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
 }
 
 // this is intended for user processes for clone()
-ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t new_stack) {
-  // TODO check to make sure procs are running first?
-  //ProcContext* new_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
-  ProcContext* new_proc = new ProcContext();
+ProcContext* Clone(CloneOptions* clone_options, uint64_t new_rip, uint64_t new_stack) {
+  AssertRunning();
 
   SaveState(current_proc); // update current_proc registers
+  ProcContext* new_proc = new ProcContext(*current_proc);
 
   // TODO create more clone() settings to set new proc's registers?
-  memcpy(new_proc, current_proc, sizeof(ProcContext));
 
-  /*int asdf = 1;
-  while (asdf);*/
-
-  //printk("start_at_callback: %d\n", clone_options->start_at_callback);
+  // TODO consolidate start_at_callback and new_rip
   if (clone_options->start_at_callback) {
     new_proc->rip = new_rip;
   }
 
-  /*printk("new_proc->rip: %p\n", new_proc->rip);
-  printk("new_proc->rsp: %p\n", new_proc->rsp);
-  printk("new_proc->rbp: %p\n", new_proc->rbp);*/
   if (new_stack) {
     new_proc->rsp = new_stack;
     new_proc->rbp = new_stack;
@@ -122,7 +126,7 @@ ProcContext* ProcClone(CloneOptions* clone_options, uint64_t new_rip, uint64_t n
 
 // returns 0 if all procs are blocked
 // uses round robin from current_proc
-static struct ProcContext* GetNextUnblockedProc() {
+static ProcContext* GetNextUnblockedProc() {
   if (!current_proc || proc_list->IsEmpty()) {
     printk("GetNextUnblockedProc() current_proc: %p, proc_list->IsEmpty(): %p\n", current_proc, proc_list->IsEmpty());
     return 0;
@@ -153,7 +157,7 @@ static struct ProcContext* GetNextUnblockedProc() {
 
 // sets next_proc to the next process to switch contexts to during yield or exit
 // if there is only one proc left, then sets next_proc = current_proc
-void ProcReschedule() {
+void Reschedule() {
   if (!current_proc || proc_list->IsEmpty()) {
     // there are no processes to schedule. this shouldn't happen, right?
     printk("ProcReschedule() current_proc: %p, proc_list->IsEmpty(): %p\n", current_proc, proc_list->IsEmpty());
@@ -182,13 +186,13 @@ void ProcReschedule() {
   }
 }
 
-void ProcYield() {
-  ProcReschedule();
+void Yield() {
+  Reschedule();
   Syscall(SYSCALL_YIELD);
 }
 
-void ProcExit() {
-  ProcReschedule();
+void Exit() {
+  Reschedule();
   Syscall(SYSCALL_EXIT);
 }
 
@@ -329,17 +333,18 @@ static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_
   }
 }
 
+// TODO delet this
 // Initializes a ProcQueue structure (mainly sets head to NULL).
 // Called once for each ProcQueue during driver initialization
-void ProcInitQueue(struct ProcQueue* queue) {
+/*void ProcInitQueue(struct ProcQueue* queue) {
   queue->head = 0;
-}
+}*/
 
 // Unblocks one process from the ProcQueue,
 // moving it back to the scheduler.
 // Called by interrupt handler?
 // Returns whether or not a proc was unblocked
-int ProcUnblockHead(struct ProcQueue* queue) {
+int UnblockHead(ProcQueue* queue) {
   BEGIN_CS();
 
   int removed_proc = 0;
@@ -359,16 +364,16 @@ int ProcUnblockHead(struct ProcQueue* queue) {
 
 // Unblocks all processes from the ProcQueue,
 // moving them all back to the scheduler
-void ProcUnblockAll(struct ProcQueue* queue) {
+void UnblockAll(ProcQueue* queue) {
   BEGIN_CS();
-  while (ProcUnblockHead(queue));
+  while (UnblockHead(queue));
   END_CS();
 }
 
 // Blocks the current process.
 // Called by system call handler.
 //void ProcBlockOn(struct ProcQueue* queue, int enable_ints) {
-void ProcBlockOn(struct ProcQueue* queue) {
+void BlockOn(ProcQueue* queue) {
   BEGIN_CS(); // appending to the queue must be atomic, it can be edited by interrupt handlers
   /*int interrupts_were_enabled = are_interrupts_enabled();
   cli();*/
@@ -402,16 +407,8 @@ void ProcPrint() {
   }
 }
 
-int ProcIsRunning() {
+int IsRunning() {
   return is_proc_running;
-}
-
-void Init() {
-  SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
-  SetSyscallHandler(SYSCALL_EXIT, HandleSyscallExit);
-  SetSyscallHandler(SYSCALL_PROC_RUN, HandleSyscallProcRun);
-
-  proc_list = new LinkedList<ProcContext*>();
 }
 
 bool IsKernel() {
