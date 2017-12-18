@@ -25,9 +25,7 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
   bool success = false;
 
   // TODO make filename absolute or relative on PATH
-  printk("calling findfile\n");
   Inode* inode = FindFile(root_directory, filename);
-  printk("done calling findfile\n");
   if (inode) {
     File* file = inode->Open();
     if (file) {
@@ -67,13 +65,6 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
         current_proc->ss = GDT_USER_DS + 3;
         //current_proc->rsp = user_stack_bottom;
 
-        //printk("page table debug for rsp:\n");
-        //PagePrintTableInfo(current_proc->rsp - 0x100);
-        //PagePrintTableInfo(current_proc->rsp + 0x100);
-        //PagePrintTableInfo(current_proc->rsp);
-        /*printk("page table debug for rip:\n");
-        PagePrintTableInfo(current_proc->rip);*/
-
         RestoreState(current_proc);
         success = true;
       }
@@ -88,10 +79,6 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
   if (!success) {
     printk("HandleSyscallExec failed to exec file \"%s\"\n", filename);
   }
-
-  /*printk("exec handler returning\n");
-  int asdf = 1;
-  while (asdf) {}*/
 }
 
 void InitExec(Inode* new_root_directory) {

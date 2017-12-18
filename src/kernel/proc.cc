@@ -47,6 +47,9 @@ ProcContext* GetCurrentProc() {
 
 
 
+
+
+
 // called once during kernel initialization
 void Init() {
   SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
@@ -333,29 +336,22 @@ static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_
   }
 }
 
-// TODO delet this
-// Initializes a ProcQueue structure (mainly sets head to NULL).
-// Called once for each ProcQueue during driver initialization
-/*void ProcInitQueue(struct ProcQueue* queue) {
-  queue->head = 0;
-}*/
+BlockedQueue::BlockedQueue() {}
+BlockedQueue::~BlockedQueue() {}
 
 // Unblocks one process from the ProcQueue,
 // moving it back to the scheduler.
 // Called by interrupt handler?
 // Returns whether or not a proc was unblocked
-int UnblockHead(ProcQueue* queue) {
+bool BlockedQueue::UnblockHead() {
   BEGIN_CS();
 
-  int removed_proc = 0;
-  struct ProcContext* unblocked = queue->head;
-  if (unblocked) {
-    queue->head = unblocked->blocked_next;
-    unblocked->blocked_next = 0;
+  bool removed_proc = false;
+  if (!queue_.IsEmpty()) {
+    removed_proc = true;
+
+    ProcContext* unblocked = queue_.Remove();
     unblocked->is_blocked = 0;
-    removed_proc = 1;
-  } else {
-    // this queue is empty
   }
 
   END_CS();
@@ -364,38 +360,26 @@ int UnblockHead(ProcQueue* queue) {
 
 // Unblocks all processes from the ProcQueue,
 // moving them all back to the scheduler
-void UnblockAll(ProcQueue* queue) {
+void BlockedQueue::UnblockAll() {
   BEGIN_CS();
-  while (UnblockHead(queue));
+  while (UnblockHead());
   END_CS();
 }
 
 // Blocks the current process.
 // Called by system call handler.
 //void ProcBlockOn(struct ProcQueue* queue, int enable_ints) {
-void BlockOn(ProcQueue* queue) {
-  BEGIN_CS(); // appending to the queue must be atomic, it can be edited by interrupt handlers
-  /*int interrupts_were_enabled = are_interrupts_enabled();
-  cli();*/
-
-  if (queue->head) {
-    struct ProcContext* last_in_queue = queue->head;
-    while (last_in_queue->blocked_next) {
-      last_in_queue = last_in_queue->blocked_next;
-    }
-    last_in_queue->blocked_next = current_proc;
-  } else {
-    queue->head = current_proc;
-  }
-
+void BlockedQueue::BlockCurrentProc() {
+  // appending to the queue must be atomic, it can be edited by interrupt handlers
+  BEGIN_CS();
+  queue_.Add(current_proc);
   current_proc->is_blocked = 1;
-
   END_CS();
 
   ProcYield(); // i can do nested syscalls, right?
 }
 
-void ProcPrint() {
+void Print() {
   if (proc_list->IsEmpty()) {
     printk("ProcPrint() no processes\n");
   } else {

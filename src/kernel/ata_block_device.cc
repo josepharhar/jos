@@ -11,7 +11,7 @@
 
 // global used for interrupt handling
 static Queue<ATARequest> request_queue = Queue<ATARequest>();
-static ProcQueue proc_queue = {0};
+Proc::BlockedQueue* proc_queue = 0;
 
 static ATABlockDevice* irq_to_device[256];
 
@@ -59,7 +59,7 @@ void ATABlockDevice::InterruptHandler() {
   kfree(request);
 
   // unblock the process which made the request
-  ProcUnblockHead(&proc_queue);
+  proc_queue->UnblockHead();
   
   // consume another request if there is one
   if (!request_queue.IsEmpty()) {
@@ -86,7 +86,7 @@ static uint8_t PollStatus(uint16_t status_port) {
 
 int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   // assert context is a process
-  if (!ProcIsRunning()) {
+  if (!Proc::IsRunning()) {
     printk("ATABlockDevice::ReadBlock() must be called from a blockable context\n");
     return 1;
   }
@@ -111,7 +111,7 @@ int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   }
   
   // block this process until interrupt happens and buffer is read into
-  ProcBlockOn(&proc_queue);
+  proc_queue->BlockCurrentProc();
   
   END_CS();
   return 0;
@@ -234,7 +234,7 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
   device->ata_master = ata_master;
   device->irq = irq;
   device->num_sectors = num_sectors;
-  ProcInitQueue(&device->proc_queue);
+  device->proc_queue = new Proc::BlockedQueue();
 
   IRQSetHandler(&GlobalInterruptHandler, device->irq, device);
 

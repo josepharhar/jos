@@ -34,7 +34,7 @@
 static char keyboard_input_buffer[KEYBOARD_BUFFER_SIZE] = {0};
 static int buffer_free_index = 0;
 static int buffer_drain_index = 0;
-static ProcQueue proc_queue;
+static Proc::BlockedQueue* proc_queue = 0;
 
 static char scancode_map[0x100] = {0};
 static char scancode_map_shift[0x100] = {0};
@@ -233,21 +233,21 @@ static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
       buffer_free_index = next_free_index;
 
       // consume - unblock a process
-      ProcUnblockHead(&proc_queue); // TODO use ProcUnblockAll instead?
+      proc_queue->UnblockHead();
     }
   }
 }
 
 // blocking keyboard character reader
 char KeyboardRead() {
-  if (!current_proc) {
+  if (!Proc::IsRunning()) {
     printk("KeyboardRead() called without current_proc\n");
     return '\0';
   }
 
   // TODO shouldn't we try to consume before blocking?
   //      if there is already input in the buffer we shouldn't block
-  ProcBlockOn(&proc_queue);
+  proc_queue->BlockCurrentProc();
 
   if (buffer_free_index == buffer_drain_index) {
     printk("KeyboardRead() proc unblocked with empty buffer!\nthis should never happen!\n");
@@ -316,7 +316,7 @@ void KeyboardInit() {
 
   buffer_free_index = 0;
   buffer_drain_index = 0;
-  ProcInitQueue(&proc_queue);
+  proc_queue = new Proc::BlockedQueue();
 
   IRQSetHandler(&HandleKeyboardInterrupt, PIC1_OFFSET + 1, 0);
 }

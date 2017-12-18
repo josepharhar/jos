@@ -74,43 +74,47 @@ void Yield();
 void Exit();
 int IsRunning();  // returns 1 if threading system is running, else 0
 
-void Print();
 ProcContext* Clone(CloneOptions* clone_options,
                    uint64_t new_rip,
                    uint64_t new_stack);
 
-// TODO delet this
-/*struct ProcQueue {
-  struct ProcContext* head;
-};*/
-typedef stdj::Queue<ProcContext*> ProcQueue;
+class BlockedQueue {
+ public:
+  BlockedQueue();
+  ~BlockedQueue();
 
-// TODO delet this
-// Initializes a ProcQueue structure (mainly sets head to NULL).
-// Called once for each ProcQueue during driver initialization.
-// void ProcInitQueue(struct ProcQueue* queue);
+  BlockedQueue(const BlockedQueue& other) = delete;
+  BlockedQueue& operator=(const BlockedQueue& other) = delete;
 
-// Unblocks one process from the ProcQueue,
-// moving it back to the scheduler.
-// Called by interrupt handler?
-// Returns whether or not a proc was unblocked
-int UnblockHead(ProcQueue* queue);
+  BlockedQueue(BlockedQueue&& other) = delete;
+  BlockedQueue& operator=(BlockedQueue&& other) = delete;
 
-// Unblocks all processes from the ProcQueue,
-// moving them all back to the scheduler.
-// Called by interrupt handler?
-void UnblockAll(ProcQueue* queue);
+  // Unblocks one process from the ProcQueue,
+  // moving it back to the scheduler.
+  // Called by interrupt handler?
+  // Returns whether or not a proc was unblocked
+  bool UnblockHead();
 
-// Blocks the current process.
-// Called by system call handler.
-// void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-void BlockOn(ProcQueue* queue);
+  // Unblocks all processes from the ProcQueue,
+  // moving them all back to the scheduler.
+  // Called by interrupt handler?
+  void UnblockAll();
+
+  // Blocks the current process.
+  // Called by system call handler.
+  // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
+  void BlockCurrentProc();
+
+ private:
+  stdj::Queue<ProcContext*> queue_;
+};
 
 // TODO shouldn't these be private?
 uint64_t* GetStackSaveState();
 void RestoreState(ProcContext* proc);
 void SaveState(ProcContext* proc);
 
+void Print();
 bool IsKernel();
 
 }  // namespace Proc

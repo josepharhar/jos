@@ -55,6 +55,10 @@ class Queue {
     return size;
   }
 
+  bool IsEmpty() const {
+    return Size() == 0;
+  }
+
  private:
   struct QueueEntry {
     T value;
