@@ -75,8 +75,11 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
   ProcContext* new_proc = new ProcContext();
   new_proc->rip = (uint64_t) entry_point;
   new_proc->cs = 0x8; // kernel or user, for privilege level
-  new_proc->rsp = (uint64_t) StackAllocate(); // TODO consider stack overflow, its only 2MB virt
-                                              // TODO free this when changing proc to user?
+
+  // TODO consider stack overflow, its only 2MB virt
+  // TODO free this when changing proc to user?
+  new_proc->rsp = (uint64_t) StackAllocate();
+
   new_proc->ss = 0; // for kernel
   new_proc->rflags = INTERRUPT_ENABLE_BIT;
   new_proc->pid = new_proc_id++;
@@ -276,7 +279,9 @@ static void HandleSyscallProcRun(uint64_t syscall_number, uint64_t param_1, uint
 }
 
 static void HandleSyscallYield(uint64_t syscall_number, uint64_t param_1, uint64_t param_2, uint64_t param_3) {
-  //TODO investigate more   printk("HandleSyscallYield() are_interrupts_enabled: %d\n", are_interrupts_enabled());
+  //TODO investigate this more
+  //    printk("HandleSyscallYield() are_interrupts_enabled: %d\n", are_interrupts_enabled());
+  
   // switch contexts
   if (!current_proc || !next_proc) {
     printk("HandleSyscallYield() current_proc: %p, next_proc: %p\n", current_proc, next_proc);
@@ -317,7 +322,8 @@ static void HandleSyscallExit(uint64_t syscall_number, uint64_t param_1, uint64_
 
   // free current_proc resources
   // TODO free page table
-  StackFree((void*) current_proc->rsp); // StackFree() takes any address within the stack
+  // StackFree() takes any address within the stack
+  StackFree((void*) current_proc->rsp);
   kfree(current_proc);
 
   // set current_proc to the proc prior to current_proc in the list

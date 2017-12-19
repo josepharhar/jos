@@ -117,6 +117,9 @@ void SaveState(ProcContext* proc);
 void Print();
 bool IsKernel();
 
+// Loads a program from memory to replace the current process's program
+void ExecCurrentProc();
+
 }  // namespace Proc
 
 #endif  // PROC_H_

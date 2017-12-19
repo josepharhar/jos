@@ -42,7 +42,7 @@ void ProcKeyboard(void* arg) {
     char input = KeyboardRead();
     if (input == '\\') {
       printk("\n");
-      ProcPrint();
+      Proc::Print();
     } else {
       printk("%c", input);
     }
@@ -163,7 +163,7 @@ void KernelMain() {
   PitInit();
 
   InitSyscall();
-  ProcInit();
+  Proc::Init();
   IOInit();
 
   //InitFork();
@@ -178,13 +178,13 @@ void KernelMain() {
   Inode* root_directory = superblock->GetRootInode();
   InitExec(root_directory);*/
 
-  ProcCreateKthread(ProcInit, 0);
+  Proc::CreateKthread(ProcInit, 0);
 
   printk("calling procrun....\n");
-  ProcRun();
+  Proc::Run();
 
   printk("\nKernelMain() ran out of processes to run. calling ProcPrint()\n");
-  ProcPrint();
+  Proc::Print();
 
   while (1) {
     asm volatile("hlt");
