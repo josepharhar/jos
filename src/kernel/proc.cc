@@ -19,13 +19,16 @@
 // ss, rsp, rflags, cs, rip
 // https://users.csc.calpoly.edu/~bellardo/courses/2174/454/notes/CPE454-Week02-2.pdf
 
+// stack save state from irq_nasm
+extern uint64_t stack_save_state_address[];
+
 namespace Proc {
 
 static bool is_proc_running = false;
 static uint64_t new_proc_id = 1;
 
 static ProcContext* current_proc = 0;
-static ProcContext* next_proc = 0;  // set by ProcReschedule()
+static ProcContext* next_proc = 0;  // set by Reschedule()
 static ProcContext* main_proc = 0;  // context of thread that called ProcRun()
 
 static LinkedList<ProcContext*>* proc_list = nullptr;
@@ -37,6 +40,21 @@ static void AssertRunning() {
 
 ProcContext* GetCurrentProc() {
   return current_proc;
+}
+
+extern "C" {
+static void HandleSyscallYield(uint64_t syscall_number,
+                               uint64_t param_1,
+                               uint64_t param_2,
+                               uint64_t param_3);
+static void HandleSyscallExit(uint64_t syscall_number,
+                              uint64_t param_1,
+                              uint64_t param_2,
+                              uint64_t param_3);
+static void HandleSyscallProcRun(uint64_t syscall_number,
+                                 uint64_t param_1,
+                                 uint64_t param_2,
+                                 uint64_t param_3);
 }
 
 // called once during kernel initialization
@@ -79,9 +97,9 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
   // set first C argument to new proc function to void* arg
   new_proc->rdi = (uint64_t)arg;
 
-  // push ProcExit() onto stack
+  // push Exit() onto stack
   uint64_t* stack_pointer = (uint64_t*)new_proc->rsp;
-  *stack_pointer = (uint64_t)&ProcExit;
+  *stack_pointer = (uint64_t)&Exit;
 
   // add new_proc to linked list
   proc_list->Add(new_proc);
@@ -93,9 +111,9 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
 ProcContext* Clone(CloneOptions* clone_options,
                    uint64_t new_rip,
                    uint64_t new_stack) {
+  // TODO use this more in other functions
   AssertRunning();
 
-  SaveState(current_proc);  // update current_proc registers
   ProcContext* new_proc = new ProcContext(*current_proc);
 
   // TODO create more clone() settings to set new proc's registers?
@@ -160,7 +178,7 @@ static ProcContext* GetNextUnblockedProc() {
 void Reschedule() {
   if (!current_proc || proc_list->IsEmpty()) {
     // there are no processes to schedule. this shouldn't happen, right?
-    printk("ProcReschedule() current_proc: %p, proc_list->IsEmpty(): %p\n",
+    printk("Reschedule() current_proc: %p, proc_list->IsEmpty(): %p\n",
            current_proc, proc_list->IsEmpty());
     return;
   }
@@ -197,7 +215,6 @@ void Exit() {
   Syscall(SYSCALL_EXIT);
 }
 
-extern uint64_t stack_save_state_address[];
 // TODO make static?
 uint64_t* GetStackSaveState() {
   return (uint64_t*)stack_save_state_address[0];
@@ -266,7 +283,6 @@ static void HandleSyscallProcRun(uint64_t syscall_number,
     printk("HandleSyscallProcRun() current_proc: %p\n", current_proc);
     return;
   }
-  printk("HandleSyscallProcRun\n");
 
   is_proc_running = 1;
 
@@ -290,9 +306,6 @@ static void HandleSyscallYield(uint64_t syscall_number,
            current_proc, next_proc);
     return;
   }
-
-  // save context put on stack by irq_syscall
-  SaveState(current_proc);
 
   current_proc = next_proc;
   next_proc = 0;
@@ -319,7 +332,7 @@ static void HandleSyscallExit(uint64_t syscall_number,
   // TODO in order to round robin correctly,
   // set current_proc to the proc prior to current_proc in the list
   // remove current_proc
-  // call ProcReschedule()
+  // call Reschedule()
   // current_proc = next_proc
   // restore current_proc
 
@@ -343,7 +356,7 @@ static void HandleSyscallExit(uint64_t syscall_number,
     RestoreState(main_proc);
     kfree(main_proc);
   } else {
-    ProcReschedule();
+    Reschedule();
     current_proc = next_proc;
     next_proc = 0;
     RestoreState(current_proc);
@@ -392,7 +405,7 @@ void BlockedQueue::BlockCurrentProc() {
   current_proc->is_blocked = 1;
   END_CS();
 
-  ProcYield();  // i can do nested syscalls, right?
+  Yield();  // i can do nested syscalls, right?
 }
 
 void Print() {
@@ -414,6 +427,49 @@ int IsRunning() {
 bool IsKernel() {
   uint64_t privilege_level = (current_proc->rflags >> 12) & 3;
   return privilege_level == 0;  // zero is kernel, 3 is user
+}
+
+// Loads a program from memory to replace the current process's program
+void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
+  // TODO create a new page table for this process
+  //   and recursively free the current one and its frames in user space
+  // TODO blow away/sanitize current_proc's registers
+  // TODO allocate user stack
+  // TODO set to user mode? only if already user or supposed to be user?
+  // TODO sanitize user proc's input
+
+  // allocate user stack
+  // printk("allocating user stack from %p to %p\n", USER_STACK_TOP,
+  // USER_STACK_BOTTOM);
+  AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
+  uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096;  // TODO
+  // put Exit() on stack
+  // TODO Exit() location must come from user executable, not this one
+  uint64_t* stack_pointer = (uint64_t*)user_stack_bottom;
+  /*printk("putting Exit on stack at %p\n", user_stack_bottom);
+  *stack_pointer = (uint64_t) &Exit;*/
+
+  // allocate and fill user text/data
+  AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
+  memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
+         elf_info.file_size);
+
+  current_proc->rip = elf_info.instruction_pointer;
+  // current_proc->rflags |= (3 << 12);
+  // TODO
+  current_proc->cs = GDT_USER_CS + 3;
+  current_proc->ss = GDT_USER_DS + 3;
+  // current_proc->rsp = user_stack_bottom;
+
+  RestoreState(current_proc);
+}
+
+uint64_t GetCurrentPid() {
+  return current_proc->pid;
+}
+
+void SaveStateToCurrentProc() {
+  SaveState(current_proc);
 }
 
 }  // namespace Proc

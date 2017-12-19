@@ -2,7 +2,6 @@
 #define ELF_H_
 
 #include "stdint.h"
-#include "proc.h"
 
 struct ELFInfo {
   bool success;

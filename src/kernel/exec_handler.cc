@@ -34,38 +34,7 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
 
       ELFInfo elf_info = ELFGetInfo(file_data, file->GetSize());
       if (elf_info.success) {
-        SaveState(current_proc);
-
-        // TODO create a new page table for this process and recursively free the current one and its frames in user space
-        // TODO blow away/sanitize current_proc's registers
-        // TODO allocate user stack
-        // TODO set to user mode? only if already user or supposed to be user?
-
-        // TODO sanitize/security.cc this
-
-        // allocate user stack
-        //printk("allocating user stack from %p to %p\n", USER_STACK_TOP, USER_STACK_BOTTOM);
-        AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
-        uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096; // TODO
-        // put ProcExit() on stack
-        // TODO ProcExit() location must come from user executable, not this one
-        uint64_t* stack_pointer = (uint64_t*) user_stack_bottom;
-        /*printk("putting procexit on stack at %p\n", user_stack_bottom);
-        *stack_pointer = (uint64_t) &ProcExit;*/
-
-        // allocate and fill user text/data
-        AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
-        memcpy((void*) elf_info.load_address, file_data + elf_info.file_offset,
-            elf_info.file_size);
-        
-        current_proc->rip = elf_info.instruction_pointer;
-        //current_proc->rflags |= (3 << 12);
-        // TODO
-        current_proc->cs = GDT_USER_CS + 3;
-        current_proc->ss = GDT_USER_DS + 3;
-        //current_proc->rsp = user_stack_bottom;
-
-        RestoreState(current_proc);
+        Proc::ExecCurrentProc(elf_info, file_data);
         success = true;
       }
 

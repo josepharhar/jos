@@ -5,6 +5,8 @@
 #include "page_table.h"
 #include "clone.h"
 #include "jqueue.h"
+#include "elf.h"
+#include "stdint.h"
 
 namespace Proc {
 
@@ -14,8 +16,8 @@ class ProcContext {
   ~ProcContext() {}
 
   // TODO should this be copyable?
-  // ProcContext(const ProcContext& other) = delete;
-  // ProcContext& operator=(const ProcContext& other) = delete;
+  ProcContext(const ProcContext& other) = default;
+  ProcContext& operator=(const ProcContext& other) = default;
 
   ProcContext(ProcContext&& other) = delete;
   ProcContext& operator=(ProcContext&& other) = delete;
@@ -118,7 +120,13 @@ void Print();
 bool IsKernel();
 
 // Loads a program from memory to replace the current process's program
-void ExecCurrentProc();
+void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data);
+
+uint64_t GetCurrentPid();
+
+// Loads register values put on stack by irq_syscall
+// This is called once every time an interrupt happens
+void SaveStateToCurrentProc();
 
 }  // namespace Proc
 

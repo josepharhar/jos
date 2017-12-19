@@ -9,6 +9,7 @@
 #include "serial.h"
 #include "idt.h"
 #include "user.h"
+#include "proc.h"
 
 #define NUM_IRQ_HANDLERS 256 // 256 supported interrupt handlers
 
@@ -192,6 +193,8 @@ static void PICRemap(int offset1, int offset2) {
 extern uint64_t cr2_register[];
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
+  Proc::SaveStateToCurrentProc();
+
   switch (interrupt_number) {
     case 8: // #DF double fault - error is always zero
     case 10: //  #TS invalid TSS - error is selector that triggered fault
@@ -218,6 +221,7 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
+  Proc::SaveStateToCurrentProc();
 
   IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
   irq_handler.handler(interrupt_number, irq_handler.arg);

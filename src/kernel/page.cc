@@ -384,9 +384,8 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     printk("    error.protection_violation: %p\n", error.protection_violation);
     printk("  faulting_address: %p\n", faulting_address);
     printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
-    SaveState(current_proc);
-    printk("  pid: %d\n", current_proc->pid);
-    printk("  rip: %p\n", current_proc->rip);
+    printk("  pid: %d\n", Proc::GetCurrentPid());
+    //printk("  rip: %p\n", current_proc->rip);
     printk("  halting\n");
     HALT_LOOP();
   }
