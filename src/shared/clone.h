@@ -13,7 +13,7 @@ struct CloneOptions {
     return *((CloneOptions*)options);
   }
 } __attribute__((packed));
-static_assert(sizeof(CloneOptions) == sizeof(uint64_t));
+static_assert(sizeof(CloneOptions) == sizeof(uint64_t), "bad CloneOptions size");
 
 typedef void (*CloneCallback)();
 

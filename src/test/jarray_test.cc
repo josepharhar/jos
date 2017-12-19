@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 
+#include "test.h"
+
 #include "shared/jarray.h"
 
 static bool IsEqual(std::vector<int> vector, stdj::Array<int> array) {
@@ -17,9 +19,7 @@ static bool IsEqual(std::vector<int> vector, stdj::Array<int> array) {
   return true;
 }
 
-int main(int argc, char** argv) {
-  // TODO
-
+void TestBasicVector() {
   std::vector<int> vector;
   stdj::Array<int> array;
   assert(IsEqual(vector, array));
@@ -47,6 +47,33 @@ int main(int argc, char** argv) {
   vector.erase(vector.begin() + 0);
   array.Remove(0);
   assert(IsEqual(vector, array));
+}
+
+void TestGetNext() {
+  stdj::Array<int> array;
+  array.Add(1);
+
+  ASSERT_EQ(array.GetNextValue(1), 1);
+  ASSERT_EQ(array.GetPreviousValue(1), 1);
+
+  array.Add(10);
+  ASSERT_EQ(array.GetNextValue(1), 10);
+  ASSERT_EQ(array.GetNextValue(10), 1);
+  ASSERT_EQ(array.GetPreviousValue(1), 10);
+  ASSERT_EQ(array.GetPreviousValue(10), 1);
+
+  array.Add(100);
+  ASSERT_EQ(array.GetNextValue(1), 10);
+  ASSERT_EQ(array.GetNextValue(10), 100);
+  ASSERT_EQ(array.GetNextValue(100), 1);
+  ASSERT_EQ(array.GetPreviousValue(1), 100);
+  ASSERT_EQ(array.GetPreviousValue(10), 1);
+  ASSERT_EQ(array.GetPreviousValue(100), 10);
+}
+
+int main(int argc, char** argv) {
+  TestBasicVector();
+  TestGetNext();
 
   return 0;
 }

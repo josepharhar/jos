@@ -12,6 +12,7 @@
 #include "string.h"
 #include "frame.h"
 #include "ref_counted.h"
+#include "jarray.h"
 
 #define INTERRUPT_ENABLE_BIT (1 << 9)
 
@@ -31,8 +32,9 @@ static ProcContext* current_proc = 0;
 static ProcContext* next_proc = 0;  // set by Reschedule()
 static ProcContext* main_proc = 0;  // context of thread that called ProcRun()
 
-static LinkedList<ProcContext*>* proc_list = nullptr;
+static stdj::Array<ProcContext*>* proc_list = nullptr;
 
+// TODO use this more?
 static void AssertRunning() {
   DCHECK(proc_list);
   DCHECK(is_proc_running);
@@ -62,7 +64,7 @@ void Init() {
   SetSyscallHandler(SYSCALL_YIELD, HandleSyscallYield);
   SetSyscallHandler(SYSCALL_EXIT, HandleSyscallExit);
   SetSyscallHandler(SYSCALL_PROC_RUN, HandleSyscallProcRun);
-  proc_list = new LinkedList<ProcContext*>();
+  proc_list = new stdj::Array<ProcContext*>();
 }
 
 // starts system, returns when all threads are complete
@@ -155,7 +157,7 @@ static ProcContext* GetNextUnblockedProc() {
   ProcContext* proc = current_proc;
 
   do {
-    proc = proc_list->GetNext(proc);
+    proc = proc_list->GetNextValue(proc);
 
     if (!proc->is_blocked) {
       END_CS();
@@ -336,10 +338,10 @@ static void HandleSyscallExit(uint64_t syscall_number,
   // current_proc = next_proc
   // restore current_proc
 
-  struct ProcContext* current_proc_prev = proc_list->GetPrevious(current_proc);
+  ProcContext* current_proc_prev = proc_list->GetPreviousValue(current_proc);
 
   // remove current_proc from linked list
-  proc_list->Remove(current_proc);
+  proc_list->Remove(proc_list->GetIndexOfValue(current_proc));
 
   // free current_proc resources
   // TODO free page table
@@ -409,14 +411,10 @@ void BlockedQueue::BlockCurrentProc() {
 }
 
 void Print() {
-  if (proc_list->IsEmpty()) {
-    printk("ProcPrint() no processes\n");
-  } else {
-    ProcContext* proc = proc_list->Get(0);
-    do {
-      printk("pid %d is_blocked %d\n", proc->pid, proc->is_blocked);
-      proc = proc_list->GetNext(proc);
-    } while (proc != proc_list->Get(0));
+  printk("Proc::Print() printing procs:\n");
+  for (uint64_t i = 0; i < proc_list->Size(); i++) {
+    ProcContext* proc = proc_list->Get(i);
+    printk("pid: %d, is_blocked: %d\n", proc->pid, proc->is_blocked);
   }
 }
 

@@ -3,10 +3,11 @@
 
 #include "stdint.h"
 #include "page_table.h"
-#include "clone.h"
-#include "jqueue.h"
 #include "elf.h"
 #include "stdint.h"
+
+#include "shared/clone.h"
+#include "shared/jqueue.h"
 
 namespace Proc {
 

@@ -1,6 +1,8 @@
 #ifndef LINKED_LIST_H_
 #define LINKED_LIST_H_
 
+// TODO delete this
+
 #include "list.h"
 
 template <typename T>

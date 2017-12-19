@@ -2,6 +2,7 @@
 #define SHARED_JARRAY_H_
 
 #include "string.h"
+#include "dcheck.h"
 
 namespace stdj {
 
@@ -29,14 +30,14 @@ class Array {
   Array<T>(Array<T>&& other) = delete;
   Array<T>& operator=(Array<T>&& other) = delete;
 
-  T Get(uint64_t index) {
+  T Get(uint64_t index) const {
     if (index >= size_) {
       // TODO assert
     }
     return array_[index];
   }
 
-  T* Data() { return array_; }
+  T* Data() const { return array_; }
 
   void Add(T value) {
     if (size_ + 1 > array_size_) {
@@ -67,6 +68,39 @@ class Array {
   }
 
   uint64_t Size() const { return size_; }
+
+  bool IsEmpty() const { return Size() == 0; }
+
+  // Gets the next value in the list given a value, and loops around to the
+  // front of the list when it hits the end.
+  T GetNextValue(T value) const {
+    int value_index = GetIndexOfValue(value);
+    DCHECK(value_index != -1);
+    value_index++;
+    if (value_index >= size_) {
+      value_index = 0;
+    }
+    return array_[value_index];
+  }
+
+  T GetPreviousValue(T value) const {
+    int value_index = GetIndexOfValue(value);
+    DCHECK(value_index != -1);
+    value_index--;
+    if (value_index == -1) {
+      value_index = size_ - 1;
+    }
+    return array_[value_index];
+  }
+
+  int GetIndexOfValue(T value) const {
+    for (int i = 0; i < size_; i++) {
+      if (array_[i] == value) {
+        return i;
+      }
+    }
+    return -1;
+  }
 
  private:
   T* array_;
