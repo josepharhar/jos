@@ -193,7 +193,9 @@ static void PICRemap(int offset1, int offset2) {
 extern uint64_t cr2_register[];
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
-  Proc::SaveStateToCurrentProc();
+  if (Proc::IsRunning()) {
+    Proc::SaveStateToCurrentProc();
+  }
 
   switch (interrupt_number) {
     case 8: // #DF double fault - error is always zero
@@ -221,7 +223,9 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
-  Proc::SaveStateToCurrentProc();
+  if (Proc::IsRunning()) {
+    Proc::SaveStateToCurrentProc();
+  }
 
   IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
   irq_handler.handler(interrupt_number, irq_handler.arg);
