@@ -111,7 +111,9 @@ int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   }
   
   // block this process until interrupt happens and buffer is read into
+  printk("ReadBlock() calling BlockCurrentProc()\n");
   proc_queue->BlockCurrentProc();
+  printk("ReadBlock() DONE calling BlockCurrentProc()\n");
   
   END_CS();
   return 0;

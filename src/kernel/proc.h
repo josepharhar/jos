@@ -62,6 +62,8 @@ class ProcContext {
   // struct ProcContext* blocked_next;
   int is_blocked;
   uint64_t pid;
+
+  void PrintValues();
 };
 
 void Init();  // initializes proc system, only call once

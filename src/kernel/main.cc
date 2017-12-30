@@ -123,8 +123,11 @@ void PrintDir(Inode* inode) {
 }*/
 
 void ProcInit(void* arg) {
+  printk("Hello from Init process\n");
+
   // TODO this is awful
   ATABlockDevice* block_device = CreateATADevice();
+  printk("init calling Superblock::Create...\n");
   Superblock* superblock = Superblock::Create(block_device);
   Inode* root_directory = superblock->GetRootInode();
   InitExec(root_directory);
