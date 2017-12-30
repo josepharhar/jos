@@ -250,9 +250,7 @@ void SaveState(struct ProcContext* proc) {
 
 // TODO make static
 void RestoreState(struct ProcContext* proc) {
-  // printk("RestoreState() restoring rip %p\n", proc->rip);
   uint64_t* stack_save_state = GetStackSaveState();
-  // printk("RestoreState() stack_save_state: %p\n", stack_save_state);
   stack_save_state[1] = proc->rbp;
   stack_save_state[2] = proc->r15;
   stack_save_state[3] = proc->r14;
@@ -280,15 +278,15 @@ static void HandleSyscallProcRun(uint64_t syscall_number,
                                  uint64_t param_1,
                                  uint64_t param_2,
                                  uint64_t param_3) {
-  // save "real" state into main_proc, and load first proc in current_proc
-  if (!current_proc) {
-    printk("HandleSyscallProcRun() current_proc: %p\n", current_proc);
+  if (!current_proc || is_proc_running) {
+    printk("HandleSyscallProcRun() current_proc: %p is_proc_running: %d\n",
+           current_proc, is_proc_running);
     return;
   }
 
-  is_proc_running = 1;
+  is_proc_running = true;
 
-  // main_proc = (ProcContext*) kcalloc(sizeof(ProcContext));
+  // save "real" state into main_proc, and load first proc in current_proc
   main_proc = new ProcContext();
   SaveState(main_proc);
   RestoreState(current_proc);
@@ -298,10 +296,6 @@ static void HandleSyscallYield(uint64_t syscall_number,
                                uint64_t param_1,
                                uint64_t param_2,
                                uint64_t param_3) {
-  // TODO investigate this more
-  //    printk("HandleSyscallYield() are_interrupts_enabled: %d\n",
-  //    are_interrupts_enabled());
-
   // switch contexts
   if (!current_proc || !next_proc) {
     printk("HandleSyscallYield() current_proc: %p, next_proc: %p\n",
@@ -467,7 +461,30 @@ uint64_t GetCurrentPid() {
 }
 
 void SaveStateToCurrentProc() {
+  if (!IsRunning()) {
+    return;
+  }
+
+  ProcContext fake_proc;
+  SaveState(&fake_proc);
+  //if (fake_proc.cs != current_proc->cs) {
+  if (fake_proc.rip == 0) {
+    // TODO sometimes garbage data gets in from SaveState(). WHY???
+    //   this check should not be necessary.
+    return;
+  }
+
   SaveState(current_proc);
+}
+
+void ProcContext::PrintValues() {
+  printk("Printing ProcContext values:\n");
+  printk("   rbp: %p\n", rbp);
+  printk("   rip: %p\n", rip);
+  printk("    cs: %p\n", cs);
+  printk("rflags: %p\n", rflags);
+  printk("   rsp: %p\n", rsp);
+  printk("    ss: %p\n", ss);
 }
 
 }  // namespace Proc

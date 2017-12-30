@@ -36,6 +36,8 @@ void HandleSyscall(uint64_t interrupt_number,
                    uint64_t param_1,
                    uint64_t param_2,
                    uint64_t param_3) {
+  Proc::SaveStateToCurrentProc();
+
   if (syscall_number < MAX_NUM_SYSCALLS) {
     syscall_handlers[syscall_number](syscall_number, param_1, param_2, param_3);
   } else {

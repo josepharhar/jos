@@ -12,8 +12,8 @@ void proc_testing();
 void class_testing();
 int main() {
   Puts("Hello from init\n");
-  //proc_testing();
-  class_testing();
+  proc_testing();
+  //class_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();
@@ -62,7 +62,6 @@ extern char new_stack[];
 //static int asdf = 130;
 extern int asdf;
 void proc_testing() {
-  Puts("Hello from init\n");
   printu("main() pid: %d\n", getpid());
 
   /*uint64_t rsp;

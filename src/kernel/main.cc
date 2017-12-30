@@ -123,13 +123,14 @@ void PrintDir(Inode* inode) {
 }*/
 
 void ProcInit(void* arg) {
+  printk("Hello from Init process\n");
+
   // TODO this is awful
   ATABlockDevice* block_device = CreateATADevice();
   Superblock* superblock = Superblock::Create(block_device);
   Inode* root_directory = superblock->GetRootInode();
   InitExec(root_directory);
 
-  printk("ProcInit() going to Exec()\n");
   // exec will put this proc into user mode
   //Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
