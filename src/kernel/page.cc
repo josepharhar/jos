@@ -18,6 +18,8 @@
 #define USER_ACCESSIBLE true
 #define NOT_USER_ACCESSIBLE false
 
+static bool initialized = false;
+
 // from paging initialization in boot.asm
 extern uint64_t p4_table[];
 extern uint64_t p3_table[];
@@ -247,6 +249,15 @@ static struct PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, 
   }*/
 }
 
+static void CheckInitialized() {
+  if (!initialized) {
+    printk("Paging function used before PageInit(), halting...\n");
+    while (1) {
+      asm volatile ("hlt");
+    }
+  }
+}
+
 void PageInit() {
   // set kernel heap break
   struct VirtualAddress kernel_heap_break_struct = {0};
@@ -257,11 +268,15 @@ void PageInit() {
   struct VirtualAddress kernel_stacks_break_struct = {0};
   kernel_stacks_break_struct.p4_index = P4_KERNEL_STACKS + 1; // +1 to go past end of stacks space
   kernel_stacks_break = FromVirtualAddress(kernel_stacks_break_struct);
+
+  initialized = true;
 }
 
 // operates on the kernel heap
 // allocates consecutives pages in the virtual address space
 void* PageAllocateContiguous(int num_pages) {
+  CheckInitialized();
+
   if (kernel_heap_break + num_pages * PAGE_SIZE_BYTES >= kernel_stacks_break) {
     // not enough virtual address space left in heap
     return 0;
@@ -275,6 +290,8 @@ void* PageAllocateContiguous(int num_pages) {
 }
 
 void* PageAllocate() {
+  CheckInitialized();
+
   if (kernel_heap_break + PAGE_SIZE_BYTES >= kernel_stacks_break) {
     // not enough virtual address space left in heap
     return 0;
@@ -290,6 +307,8 @@ void* PageAllocate() {
 
 // operates on the kernel heap
 void PageFreeContiguous(void* page, int num_pages) {
+  CheckInitialized();
+
   uint8_t* pointer = (uint8_t*) page;
   for (int i = 0; i < num_pages; i++) {
     PageFree(pointer + PAGE_SIZE_BYTES * i);
@@ -298,6 +317,8 @@ void PageFreeContiguous(void* page, int num_pages) {
 
 // operates on the kernel heap
 void PageFree(void* page) {
+  CheckInitialized();
+
   // free the underlying frame
   // mark page as invalid in table
   struct PageTableEntry* p1_entry = GetP1Entry((uint64_t) page, DO_NOT_CREATE_ENTRIES);
@@ -320,6 +341,8 @@ void PageFree(void* page) {
 }
 
 void* StackAllocate() {
+  CheckInitialized();
+
   if (kernel_stacks_break - STACK_SIZE_BYTES <= kernel_heap_break) {
     // ran out of virtual addresses
     printk("StackAllocate() ran out of virtual addresses\n");
@@ -339,6 +362,8 @@ void* StackAllocate() {
 }
 
 void StackFree(void* stack_pointer) {
+  CheckInitialized();
+
   // any address within the stack is valid, align to 2MB to find the stack
   uint64_t stack = (uint64_t) stack_pointer;
   stack -= stack % STACK_SIZE_BYTES;
@@ -392,9 +417,17 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
 
   if (!p1_entry) {
     printk("page fault couldn't find p1 entry\n");
-    printk("  faulting_address: %p\n", faulting_address);
     printk("  error_code: %p\n", error_code);
+    printk("    error.write: %p\n", error.write);
+    printk("    error.user: %p\n", error.user);
+    printk("    error.protection_violation: %p\n", error.protection_violation);
+    printk("  faulting_address: %p\n", faulting_address);
+    printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
+    printk("  pid: %d\n", Proc::GetCurrentPid());
+    //printk("  rip: %p\n", current_proc->rip);
+    printk("  halting\n");
     HALT_LOOP();
+    //return;
   }
 
   SetAddress(p1_entry, FrameAllocateSafe()); // allocate a new frame of actual data to resolve this fault

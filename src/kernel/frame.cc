@@ -13,6 +13,8 @@
 static uint64_t* free_frame = (uint64_t*) NULL_FRAME_PTR;
 static uint64_t* free_region = (uint64_t*) NULL_FRAME_PTR;
 
+static bool initialized = false;
+
 // rounds up address to align to FRAME_SIZE_BYTES
 uint64_t AlignAddressUp(uint64_t address) {
   uint64_t leftover = address % FRAME_SIZE_BYTES;
@@ -81,9 +83,18 @@ void FrameInit(struct TagsInfo tags_info) {
   uint8_t* last_region_pointer = start_pointer + REGION_MAX_SIZE_BYTES * (num_regions - 1);
   *((uint64_t*) last_region_pointer) = NULL_FRAME;
   free_region = (uint64_t*)  avl_two_start;
+
+  initialized = true;
 }
 
 void* FrameAllocate() {
+  if (!initialized) {
+    printk("FrameAllocate() called before FrameInit(), halting...\n");
+    while (1) {
+      asm volatile ("hlt");
+    }
+  }
+
   if (free_frame != NULL_FRAME_PTR) {
     // use this frame
     uint64_t* return_value = free_frame;

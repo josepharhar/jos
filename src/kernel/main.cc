@@ -147,8 +147,6 @@ void KernelMain() {
 
   IRQInit();
 
-  KeyboardInit();
-
   // TODO fix serial - why does it take a while to register keyboard input?
   // should i use serial keyboard input instead of the device thing?
   // if i use serial keyboard input then i think it could solve the problem
@@ -157,9 +155,12 @@ void KernelMain() {
   // better. :(
   // SerialInit();
 
+  // initialize memory management and dynamic memory allocation
   TagsInfo tags_info = ReadTags();
   FrameInit(tags_info);
   PageInit();
+
+  KeyboardInit();
 
   PitInit();
 
