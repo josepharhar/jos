@@ -412,7 +412,7 @@ void Print() {
   }
 }
 
-int IsRunning() {
+bool IsRunning() {
   return is_proc_running;
 }
 
@@ -467,10 +467,10 @@ void SaveStateToCurrentProc() {
 
   ProcContext fake_proc;
   SaveState(&fake_proc);
-  //if (fake_proc.cs != current_proc->cs) {
   if (fake_proc.rip == 0) {
     // TODO sometimes garbage data gets in from SaveState(). WHY???
-    //   this check should not be necessary.
+    //   This check is hacky and should not be necessary.
+    //   Is this happening because the kernel is getting interrupted?
     return;
   }
 

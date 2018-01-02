@@ -16,7 +16,6 @@ class ProcContext {
   ProcContext() {}
   ~ProcContext() {}
 
-  // TODO should this be copyable?
   ProcContext(const ProcContext& other) = default;
   ProcContext& operator=(const ProcContext& other) = default;
 
@@ -77,7 +76,7 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg);
 void Reschedule();
 void Yield();
 void Exit();
-int IsRunning();  // returns 1 if threading system is running, else 0
+bool IsRunning();  // returns 1 if threading system is running, else 0
 
 ProcContext* Clone(CloneOptions* clone_options,
                    uint64_t new_rip,
