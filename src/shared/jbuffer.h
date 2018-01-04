@@ -56,7 +56,7 @@ class Buffer {
 
   // Returns number of entries read
   uint64_t Read(T* dest_buffer, uint64_t read_size) {
-    if (SizeUsed() > read_size) {
+    if (read_size > SizeUsed()) {
       read_size = SizeUsed();
     }
 
@@ -76,9 +76,9 @@ class Buffer {
 
     // update is_full_
     if (read_size > 0 && read_index_ == write_index_) {
-      is_full_ = true;
-    } else {
       is_full_ = false;
+    } else {
+      is_full_ = true;
     }
 
     return read_size;
@@ -89,8 +89,8 @@ class Buffer {
   uint64_t SizeUsed() const {
     if (read_index_ == write_index_) {
       return is_full_ ? size_ : 0;
-    } else if (read_index_ > write_index_) {
-      return read_index_ - write_index_;
+    } else if (write_index_ > read_index_) {
+      return write_index_ - read_index_;
     } else {
       return (Size() - read_index_) + write_index_;
     }
