@@ -5,6 +5,7 @@
 #include "page_table.h"
 #include "elf.h"
 #include "stdint.h"
+#include "pipe.h"
 
 #include "shared/clone.h"
 #include "shared/jqueue.h"
@@ -61,6 +62,8 @@ class ProcContext {
   // struct ProcContext* blocked_next;
   int is_blocked;
   uint64_t pid;
+
+  stdj::Map<int, Pipe*, -1> fd_map_;
 
   void PrintValues();
 };
