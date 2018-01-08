@@ -125,18 +125,31 @@ ProcContext* Clone(CloneOptions* clone_options,
     new_proc->rip = new_rip;
   }
 
+  // set stack registers
   if (new_stack) {
     new_proc->rsp = new_stack;
     new_proc->rbp = new_stack;
   }
 
+  // copy page table
   if (clone_options->copy_page_table) {
     new_proc->page_table = current_proc->page_table->Clone();
     new_proc->cr3 = new_proc->page_table->p4_entry();
   }
 
+  // set new pid
   new_proc->pid = new_proc_id++;
 
+  // copy file descriptors
+  FdMap* new_fd_map = &new_proc->fd_map_;
+  for (int i = 0; i < new_fd_map->Size(); i++) {
+    ipc::Pipe* pipe_to_copy = new_fd_map->GetAt(i);
+    ipc::File* file = pipe_to_copy->GetFile();
+    ipc::Pipe* new_pipe = file->Open(pipe_to_copy->GetMode());
+    new_fd_map->Set(new_fd_map->GetKeyAt(i), new_pipe);
+  }
+
+  // add new proc to the master list of procs
   proc_list->Add(new_proc);
 
   return new_proc;

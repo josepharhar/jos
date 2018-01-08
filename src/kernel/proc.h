@@ -13,6 +13,8 @@
 
 namespace Proc {
 
+typedef stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> FdMap;
+
 class ProcContext {
  public:
   ProcContext() {}
@@ -64,7 +66,7 @@ class ProcContext {
   int is_blocked;
   uint64_t pid;
 
-  stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> fd_map_;
+  FdMap fd_map_;
 
   void PrintValues();
 };

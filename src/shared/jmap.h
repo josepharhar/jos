@@ -35,6 +35,17 @@ class Map {
   Map& operator=(Map&& other) = delete;
 
   void Set(K key, V value) {
+    // check for duplicates first
+    Entry* entry = head_;
+    while (entry) {
+      if (entry->key == key) {
+        entry->value = value;
+        return;
+      }
+      entry = entry->next;
+    }
+
+    // no duplicates, create a new entry.
     Entry* new_entry = new Entry();
     new_entry->key = key;
     new_entry->value = value;
@@ -53,6 +64,17 @@ class Map {
 
     // Could not find the key.
     return NullV;
+  }
+
+  K GetKeyAt(int index) const {
+    Entry* entry = GetEntryAt(index);
+    // TODO error checking, entry can be null but there is no NullV to return.
+    return entry->key;
+  }
+
+  V GetAt(int index) const {
+    Entry* entry = GetEntryAt(index);
+    return entry ? entry->value : NullV;
   }
 
   bool ContainsKey(K key) const {
@@ -87,12 +109,35 @@ class Map {
     }
   }
 
+  int Size() const {
+    int size = 0;
+    Entry* entry = head_;
+    while (entry) {
+      entry = entry->next;
+      size++;
+    }
+    return size;
+  }
+
  private:
   struct Entry {
     K key;
     V value;
     Entry* next;
   };
+
+  Entry* GetEntryAt(int index) const {
+    int current_index = 0;
+    Entry* current_entry = head_;
+    while (current_entry) {
+      if (current_index == index) {
+        return current_entry;
+      }
+      current_entry = current_entry->next;
+      current_index++;
+    }
+    return 0;
+  }
 
   Entry* head_;
 };
