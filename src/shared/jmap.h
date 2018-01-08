@@ -16,7 +16,19 @@ class Map {
     }
   }
 
-  Map(const Map& other) = delete;
+  Map(const Map& other) {
+    // TODO test this
+    head_ = 0;
+    if (!other.head_) {
+      return;
+    }
+    head_ = new Entry(*other.head_);
+    Entry* entry = head_;
+    while (entry->next) {
+      entry->next = new Entry(*entry->next);
+      entry = entry->next;
+    }
+  }
   Map& operator=(const Map& other) = delete;
 
   Map(Map&& other) = delete;

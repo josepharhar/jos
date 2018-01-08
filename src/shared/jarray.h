@@ -59,12 +59,19 @@ class Array {
     size_++;
   }
 
-  void Remove(uint64_t index) {
+  void RemoveAt(uint64_t index) {
     if (index >= size_) {
       // TODO assert
     }
     memmove(array_ + index, array_ + index + 1, size_ - index);
     size_--;
+  }
+
+  void RemoveValue(T value) {
+    int index = GetIndexOfValue(value);
+    if (index != -1) {
+      RemoveAt(index);
+    }
   }
 
   uint64_t Size() const { return size_; }
@@ -100,6 +107,10 @@ class Array {
       }
     }
     return -1;
+  }
+
+  bool Contains(T value) const {
+    return GetIndexOfValue(value) != -1;
   }
 
  private:

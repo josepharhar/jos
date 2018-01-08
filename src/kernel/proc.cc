@@ -335,7 +335,7 @@ static void HandleSyscallExit(uint64_t syscall_number,
   ProcContext* current_proc_prev = proc_list->GetPreviousValue(current_proc);
 
   // remove current_proc from linked list
-  proc_list->Remove(proc_list->GetIndexOfValue(current_proc));
+  proc_list->RemoveAt(proc_list->GetIndexOfValue(current_proc));
 
   // free current_proc resources
   // TODO free page table
