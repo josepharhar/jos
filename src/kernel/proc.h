@@ -11,6 +11,8 @@
 #include "shared/clone.h"
 #include "shared/jqueue.h"
 
+#define MAX_FDS 4096
+
 namespace Proc {
 
 typedef stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> FdMap;
@@ -69,6 +71,7 @@ class ProcContext {
   FdMap fd_map_;
 
   void PrintValues();
+  int GetNewFd();
 };
 
 void Init();  // initializes proc system, only call once
@@ -135,6 +138,11 @@ uint64_t GetCurrentPid();
 // Loads register values put on stack by irq_syscall
 // This is called once every time an interrupt happens
 void SaveStateToCurrentProc();
+
+// Returns new fd allocated for current proc
+int AddPipeToCurrentProc(Pipe* pipe);
+
+Pipe* GetPipeForFdFromCurrentProc(int fd);
 
 }  // namespace Proc
 

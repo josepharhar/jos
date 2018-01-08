@@ -180,6 +180,8 @@ void KernelMain() {
   Inode* root_directory = superblock->GetRootInode();
   InitExec(root_directory);*/
 
+  ipc::Init();
+
   Proc::CreateKthread(ProcInit, 0);
 
   printk("calling procrun....\n");

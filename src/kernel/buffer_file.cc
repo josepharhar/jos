@@ -11,6 +11,7 @@ ipc::Pipe* BufferFile::Open(ipc::Mode mode) {
 
 void BufferFile::Close(ipc::Pipe* pipe) {
   pipes_.RemoveValue(pipe);
+  delete pipe;
 }
 
 int BufferFile::GetNumPipes() {
