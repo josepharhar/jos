@@ -501,7 +501,7 @@ void ProcContext::PrintValues() {
 }
 
 int ProcContext::GetNewFd() {
-  for (int i = 0; i < MAX_FDS, i++) {
+  for (int i = 0; i < MAX_FDS; i++) {
     if (!fd_map_.ContainsKey(i)) {
       return i;
     }
@@ -510,7 +510,7 @@ int ProcContext::GetNewFd() {
 }
 
 // Returns new fd allocated for current proc
-int AddPipeToCurrentProc(Pipe* pipe) {
+int AddPipeToCurrentProc(ipc::Pipe* pipe) {
   int new_fd = current_proc->GetNewFd();
   if (new_fd == -1) {
     // ran out of fds
@@ -520,7 +520,7 @@ int AddPipeToCurrentProc(Pipe* pipe) {
   return new_fd;
 }
 
-Pipe* GetPipeForFdFromCurrentProc(int fd) {
+ipc::Pipe* GetPipeForFdFromCurrentProc(int fd) {
   return current_proc->fd_map_.Get(fd);
 }
 

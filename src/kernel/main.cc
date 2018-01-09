@@ -24,6 +24,7 @@
 #include "clone_handler.h"
 #include "getpid_handler.h"
 #include "pit.h"
+#include "ipc_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];

@@ -3,6 +3,8 @@
 #include "syscall_handler.h"
 #include "syscall.h"
 #include "proc.h"
+#include "shared/ipc.h"
+#include "buffer_file.h"
 
 namespace ipc {
 
@@ -10,20 +12,22 @@ static void HandleSyscallWrite(uint64_t interrupt_number,
                                uint64_t param_1,
                                uint64_t param_2,
                                uint64_t param_3) {
-  int fd = (int)param_1;
   // TODO security this
-  uint8_t* write_buffer = (uint8_t*)param_2;
-  uint64_t write_size = param_3;
+  SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
-  Pipe* pipe = proc::GetPipeForFdFromCurrentProc(fd);
-  pipe->Write(write_buffer, write_size);
+  Pipe* pipe = Proc::GetPipeForFdFromCurrentProc(params->fd);
+  params->size_writeback = pipe->Write(params->buffer, params->size);
 }
 
 static void HandleSyscallRead(uint64_t interrupt_number,
                               uint64_t param_1,
                               uint64_t param_2,
                               uint64_t param_3) {
-  int fd = (int)param_1;
+  // TODO security this
+  SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
+
+  Pipe* pipe = Proc::GetPipeForFdFromCurrentProc(params->fd);
+  params->size_writeback = pipe->Read(params->buffer, params->size);
 }
 
 static void HandleSyscallPipe(uint64_t interrupt_number,
@@ -40,8 +44,8 @@ static void HandleSyscallPipe(uint64_t interrupt_number,
   Pipe* read_pipe = new_file->Open(RDONLY);
   Pipe* write_pipe = new_file->Open(WRONLY);
 
-  int read_fd = AddPipeToCurrentProc(read_pipe);
-  int write_fd = AddPipeToCurrentProc(write_pipe);
+  int read_fd = Proc::AddPipeToCurrentProc(read_pipe);
+  int write_fd = Proc::AddPipeToCurrentProc(write_pipe);
 
   pipefd[0] = read_fd;
   pipefd[1] = write_fd;
