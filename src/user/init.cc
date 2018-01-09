@@ -5,6 +5,7 @@
 #include "printu.h"
 #include "clone.h"
 #include "getpid.h"
+#include "shared/ipc.h"
 
 // TODO the first piece of code in this file is what gets run by
 // exec(), make it always look for main() somehow instead
@@ -14,6 +15,7 @@ int main() {
   Puts("Hello from init\n");
   proc_testing();
   //class_testing();
+  //ipc_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();
@@ -102,4 +104,28 @@ static void NewProc() {
   }
 
   // TODO ending process causes page fault
+}
+
+
+static void ipcnewproc() {
+  printu("Hello from ipcnewproc(), pid: %d\n", getpid());
+}
+
+void ipc_testing() {
+  printu("ipc_testing()\n");
+
+  char buffer1[100];
+  char buffer2[100];
+
+  int fds[2];
+  pipe(fds);
+  // TODO
+  //write(fds[1], "asdf", 
+
+  CloneOptions clone_options;
+  clone_options.copy_page_table = 1;
+  clone_options.start_at_callback = 1;
+  printu("calling clone()...\n");
+  clone(&clone_options, ipcnewproc, 0);
+  printu("ipc_testing returned from clone(), pid: %d\n", getpid());
 }
