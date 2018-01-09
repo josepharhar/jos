@@ -34,7 +34,7 @@
 static char keyboard_input_buffer[KEYBOARD_BUFFER_SIZE] = {0};
 static int buffer_free_index = 0;
 static int buffer_drain_index = 0;
-static Proc::BlockedQueue* proc_queue = 0;
+static proc::BlockedQueue* proc_queue = 0;
 
 static char scancode_map[0x100] = {0};
 static char scancode_map_shift[0x100] = {0};
@@ -240,7 +240,7 @@ static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
 
 // blocking keyboard character reader
 char KeyboardRead() {
-  if (!Proc::IsRunning()) {
+  if (!proc::IsRunning()) {
     printk("KeyboardRead() called without current_proc\n");
     return '\0';
   }
@@ -316,7 +316,7 @@ void KeyboardInit() {
 
   buffer_free_index = 0;
   buffer_drain_index = 0;
-  proc_queue = new Proc::BlockedQueue();
+  proc_queue = new proc::BlockedQueue();
 
   IRQSetHandler(&HandleKeyboardInterrupt, PIC1_OFFSET + 1, 0);
 }

@@ -23,7 +23,7 @@
 // stack save state from irq_nasm
 extern uint64_t stack_save_state_address[];
 
-namespace Proc {
+namespace proc {
 
 static bool is_proc_running = false;
 static uint64_t new_proc_id = 1;
@@ -418,7 +418,7 @@ void BlockedQueue::BlockCurrentProc() {
 }
 
 void Print() {
-  printk("Proc::Print() printing procs:\n");
+  printk("proc::Print() printing procs:\n");
   for (uint64_t i = 0; i < proc_list->Size(); i++) {
     ProcContext* proc = proc_list->Get(i);
     printk("pid: %d, is_blocked: %d\n", proc->pid, proc->is_blocked);
@@ -524,4 +524,4 @@ ipc::Pipe* GetPipeForFdFromCurrentProc(int fd) {
   return current_proc->fd_map_.Get(fd);
 }
 
-}  // namespace Proc
+}  // namespace proc

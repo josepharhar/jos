@@ -43,7 +43,7 @@ void ProcKeyboard(void* arg) {
     char input = KeyboardRead();
     if (input == '\\') {
       printk("\n");
-      Proc::Print();
+      proc::Print();
     } else {
       printk("%c", input);
     }
@@ -166,7 +166,7 @@ void KernelMain() {
   PitInit();
 
   InitSyscall();
-  Proc::Init();
+  proc::Init();
   IOInit();
 
   //InitFork();
@@ -183,13 +183,13 @@ void KernelMain() {
 
   ipc::Init();
 
-  Proc::CreateKthread(ProcInit, 0);
+  proc::CreateKthread(ProcInit, 0);
 
   printk("calling procrun....\n");
-  Proc::Run();
+  proc::Run();
 
   printk("\nKernelMain() ran out of processes to run. calling ProcPrint()\n");
-  Proc::Print();
+  proc::Print();
 
   while (1) {
     asm volatile("hlt");

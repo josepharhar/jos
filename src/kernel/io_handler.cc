@@ -11,12 +11,12 @@ static void HandleSyscallGetc(uint64_t syscall_number,
                               uint64_t param_1,
                               uint64_t param_2,
                               uint64_t param_3) {
-  if (!Proc::IsRunning()) {
+  if (!proc::IsRunning()) {
     printk("HandleSyscallGetc() must be called from a blocking context\n");
   } else {
     // since the calling process will be currently loaded in memory with its page table,
     // we can write directly into its memory
-    if (Proc::IsKernel() || IsAddressInUserspace(param_1)) {
+    if (proc::IsKernel() || IsAddressInUserspace(param_1)) {
       char input = KeyboardRead();
       char* write_address = (char*) param_1;
       *write_address = input;

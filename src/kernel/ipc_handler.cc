@@ -15,7 +15,7 @@ static void HandleSyscallWrite(uint64_t interrupt_number,
   // TODO security this
   SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
-  Pipe* pipe = Proc::GetPipeForFdFromCurrentProc(params->fd);
+  Pipe* pipe = proc::GetPipeForFdFromCurrentProc(params->fd);
   params->size_writeback = pipe->Write(params->buffer, params->size);
 }
 
@@ -26,7 +26,7 @@ static void HandleSyscallRead(uint64_t interrupt_number,
   // TODO security this
   SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
-  Pipe* pipe = Proc::GetPipeForFdFromCurrentProc(params->fd);
+  Pipe* pipe = proc::GetPipeForFdFromCurrentProc(params->fd);
   params->size_writeback = pipe->Read(params->buffer, params->size);
 }
 
@@ -44,8 +44,8 @@ static void HandleSyscallPipe(uint64_t interrupt_number,
   Pipe* read_pipe = new_file->Open(RDONLY);
   Pipe* write_pipe = new_file->Open(WRONLY);
 
-  int read_fd = Proc::AddPipeToCurrentProc(read_pipe);
-  int write_fd = Proc::AddPipeToCurrentProc(write_pipe);
+  int read_fd = proc::AddPipeToCurrentProc(read_pipe);
+  int write_fd = proc::AddPipeToCurrentProc(write_pipe);
 
   pipefd[0] = read_fd;
   pipefd[1] = write_fd;

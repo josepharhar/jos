@@ -11,7 +11,7 @@
 
 // global used for interrupt handling
 static Queue<ATARequest> request_queue = Queue<ATARequest>();
-Proc::BlockedQueue* proc_queue = 0;
+proc::BlockedQueue* proc_queue = 0;
 
 static ATABlockDevice* irq_to_device[256];
 
@@ -86,7 +86,7 @@ static uint8_t PollStatus(uint16_t status_port) {
 
 int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   // assert context is a process
-  if (!Proc::IsRunning()) {
+  if (!proc::IsRunning()) {
     printk("ATABlockDevice::ReadBlock() must be called from a blockable context\n");
     return 1;
   }
@@ -234,7 +234,7 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
   device->ata_master = ata_master;
   device->irq = irq;
   device->num_sectors = num_sectors;
-  device->proc_queue = new Proc::BlockedQueue();
+  device->proc_queue = new proc::BlockedQueue();
 
   IRQSetHandler(&GlobalInterruptHandler, device->irq, device);
 

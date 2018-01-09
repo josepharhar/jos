@@ -72,7 +72,7 @@ class ATABlockDevice : public BlockDevice {
   uint16_t ata_master; // ata controller master address TODO what is this
   bool is_master; // flag, master = 1, slave = 0
   uint8_t irq; // irq # for this controller TODO how do i use this
-  Proc::BlockedQueue* proc_queue;
+  proc::BlockedQueue* proc_queue;
   uint64_t num_sectors;
   Queue<ATARequest> request_queue;
 };

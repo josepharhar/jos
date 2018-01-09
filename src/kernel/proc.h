@@ -13,7 +13,7 @@
 
 #define MAX_FDS 4096
 
-namespace Proc {
+namespace proc {
 
 typedef stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> FdMap;
 
@@ -144,6 +144,6 @@ int AddPipeToCurrentProc(ipc::Pipe* pipe);
 
 ipc::Pipe* GetPipeForFdFromCurrentProc(int fd);
 
-}  // namespace Proc
+}  // namespace proc
 
 #endif  // PROC_H_

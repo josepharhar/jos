@@ -34,7 +34,7 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
 
       ELFInfo elf_info = ELFGetInfo(file_data, file->GetSize());
       if (elf_info.success) {
-        Proc::ExecCurrentProc(elf_info, file_data);
+        proc::ExecCurrentProc(elf_info, file_data);
         success = true;
       }
 
