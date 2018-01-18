@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 static int fds[2];
 
 static void Parent() {
+  printf("Parent() calling sleep(1)...\n");
+  sleep(1);
+  printf("Parent() calling write()...\n");
   int bytes_written = write(fds[1], "asdf", 4);
   printf("Parent() wrote %d bytes\n", bytes_written);
 
@@ -13,6 +17,7 @@ static void Parent() {
 
 static void Child() {
   char buf[100] = {0};
+  printf("Child() calling read()...\n");
   int bytes_read = read(fds[0], buf, 100);
   printf("Child() read %d bytes: \"%s\"\n", bytes_read, buf);
 
@@ -22,6 +27,7 @@ static void Child() {
 
 static void ChildChild() {
   char buf[100] = {0};
+  printf("ChildChild() calling read()...\n");
   int bytes_read = read(fds[0], buf, 100);
   printf("ChildChild() read %d bytes: \"%s\"\n", bytes_read, buf);
 }
