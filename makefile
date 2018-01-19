@@ -37,15 +37,42 @@ SHARED_OBJECTS = $(SHARED_OBJECTS_CXX) $(SHARED_OBJECTS_C) $(SHARED_OBJECTS_GAS)
 
 USER_SOURCE_DIR = src/user
 USER_BUILD_DIR = build/user
-USER_SOURCES_CXX = $(shell find $(USER_SOURCE_DIR) -name "*.cc")
-USER_SOURCES_C = $(shell find $(USER_SOURCE_DIR) -name "*.c")
-USER_SOURCES_GAS = $(shell find $(USER_SOURCE_DIR) -name "*.s")
-USER_SOURCES_NASM = $(shell find $(USER_SOURCE_DIR) -name "*.asm")
-USER_OBJECTS_CXX = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_CXX:$(USER_SOURCE_DIR)/%.cc=%.o))
-USER_OBJECTS_C = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_C:$(USER_SOURCE_DIR)/%.c=%.o))
-USER_OBJECTS_GAS = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_GAS:$(USER_SOURCE_DIR)/%.s=%.o))
-USER_OBJECTS_NASM = $(addprefix $(USER_BUILD_DIR)/,$(USER_SOURCES_NASM:$(USER_SOURCE_DIR)/%.asm=%.o))
-USER_OBJECTS = $(USER_OBJECTS_CXX) $(USER_OBJECTS_C) $(USER_OBJECTS_GAS) $(USER_OBJECTS_NASM)
+
+USER_LIB_SOURCE_DIR = $(USER_SOURCE_DIR)/lib
+USER_LIB_BUILD_DIR = $(USER_BUILD_DIR)/lib
+USER_LIB_SOURCES_CXX = $(shell find $(USER_LIB_SOURCE_DIR) -name "*.cc")
+USER_LIB_SOURCES_C = $(shell find $(USER_LIB_SOURCE_DIR) -name "*.c")
+USER_LIB_SOURCES_GAS = $(shell find $(USER_LIB_SOURCE_DIR) -name "*.s")
+USER_LIB_SOURCES_NASM = $(shell find $(USER_LIB_SOURCE_DIR) -name "*.asm")
+USER_LIB_OBJECTS_CXX = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_CXX:$(USER_LIB_SOURCE_DIR)/%.cc=%.o))
+USER_LIB_OBJECTS_C = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_C:$(USER_LIB_SOURCE_DIR)/%.c=%.o))
+USER_LIB_OBJECTS_GAS = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_GAS:$(USER_LIB_SOURCE_DIR)/%.s=%.o))
+USER_LIB_OBJECTS_NASM = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_NASM:$(USER_LIB_SOURCE_DIR)/%.asm=%.o))
+USER_LIB_OBJECTS = $(USER_LIB_OBJECTS_CXX) $(USER_LIB_OBJECTS_C) $(USER_LIB_OBJECTS_GAS) $(USER_LIB_OBJECTS_NASM)
+
+USER_EXE_SOURCE_DIR = $(USER_SOURCE_DIR)/exe
+USER_EXE_BUILD_DIR = $(USER_BUILD_DIR)/exe
+IMAGE_USER_EXE_BUILD_DIR = image/user
+USER_EXE_SOURCES_CXX = $(shell find $(USER_EXE_SOURCE_DIR) -name "*.cc")
+USER_EXE_SOURCES_C = $(shell find $(USER_EXE_SOURCE_DIR) -name "*.c")
+USER_EXE_OBJECTS_CXX = $(addprefix $(USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_CXX:$(USER_EXE_SOURCE_DIR)/%.cc=%.o))
+USER_EXE_OBJECTS_C = $(addprefix $(USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_C:$(USER_EXE_SOURCE_DIR)/%.c=%.o))
+USER_EXES_CXX = $(addprefix $(USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_CXX:$(USER_EXE_SOURCE_DIR)/%.cc=%.o))
+USER_EXES_C = $(addprefix $(USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_C:$(USER_EXE_SOURCE_DIR)/%.c=%.o))
+IMAGE_USER_EXES_CXX = $(addprefix $(IMAGE_USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_CXX:$(USER_EXE_SOURCE_DIR)/%.cc=%))
+IMAGE_USER_EXES_C = $(addprefix $(IMAGE_USER_EXE_BUILD_DIR)/,$(USER_EXE_SOURCES_C:$(USER_EXE_SOURCE_DIR)/%.cc=%))
+USER_EXE_OBJECTS = $(USER_EXE_OBJECTS_CXX) $(USER_EXE_OBJECTS_C) $(USER_EXE_OBJECTS_GAS) $(USER_EXE_OBJECTS_NASM)
+#USER_EXES = $(USER_EXES_CXX) $(USER_EXES_C)
+IMAGE_USER_EXES = $(IMAGE_USER_EXES_CXX) $(IMAGE_USER_EXES_C)
+
+# TODO use this to make tests build and run automatically on linux host?
+USER_TEST_SOURCE_DIR = $(USER_SOURCE_DIR)/test
+USER_TEST_BUILD_DIR = $(USER_BUILD_DIR)/test
+USER_TEST_SOURCES_CXX = $(shell find $(USER_TEST_SOURCE_DIR) -name "*.cc")
+USER_TEST_OBJECTS_CXX = $(addprefix $(USER_TEST_BUILD_DIR)/,$(USER_TEST_SOURCES_CXX:$(USER_TEST_SOURCE_DIR)/%.cc=%.o))
+USER_TEST_OBJECTS = $(USER_TEST_OBJECTS_CXX)
+# TODO add C/GAS/NASM?
+
 
 TEST_SOURCE_DIR = src/test
 TEST_BUILD_DIR = build/test
@@ -66,7 +93,8 @@ run: os.img
 	#qemu-system-x86_64 -curses -serial stdio -drive format=raw,file=os.img -s
 	#qemu-system-x86_64 -serial stdio -drive format=raw,file=os.img -s
 
-os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
+#os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
+os.img: image/boot/kernel.bin image/boot/grub/grub.cfg $(IMAGE_USER_EXES)
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
@@ -91,7 +119,7 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
 
 
 image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
-	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(UTIL_KERNEL_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
+	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@ -g
@@ -109,25 +137,41 @@ $(KERNEL_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
 
 
-# TODO support multiple user executables
-image/user:
-	mkdir image/user
-image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
-	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
-
-$(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.asm
+$(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
 
-$(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.s
+$(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.s
 	$(GAS) -g -c $< -o $@
 
-$(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.c $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
+# TODO make variable for USER_HEADERS and KERNEL_HEADERS so i dont have to do this
+$(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.c $(USER_EXE_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-$(USER_BUILD_DIR)/%.o: $(USER_SOURCE_DIR)/%.cc $(USER_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
+$(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.cc $(USER_EXE_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-$(USER_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
+image/user/%: $(USER_SOURCE_DIR)/linker.ld $(USER_EXE_BUILD_DIR)/%.o $(USER_LIB_OBJECTS) $(SHARED_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
+	$(LD) -n -o $@ -T $^
+
+
+#image/user:
+#	mkdir image/user
+#image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
+#	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
+
+$(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.asm
+	$(NASM) $< -o $@
+
+$(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.s
+	$(GAS) -g -c $< -o $@
+
+$(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.c $(USER_LIB_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
+	$(CC) $(CC_FLAGS) -c $< -o $@
+
+$(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.cc $(USER_LIB_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(USER_LIB_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 
