@@ -150,14 +150,9 @@ $(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.c $(USER_EXE_SOURCE_DIR)/*.h
 $(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.cc $(USER_EXE_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-image/user/%: $(USER_SOURCE_DIR)/linker.ld $(USER_EXE_BUILD_DIR)/%.o $(USER_LIB_OBJECTS) $(SHARED_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
+$(IMAGE_USER_EXE_BUILD_DIR)/%: $(USER_SOURCE_DIR)/linker.ld $(USER_EXE_BUILD_DIR)/%.o $(USER_LIB_OBJECTS) $(SHARED_OBJECTS) $(USER_BUILD_DIR)/lib/cxx_util.o
 	$(LD) -n -o $@ -T $^
 
-
-#image/user:
-#	mkdir image/user
-#image/user/init: $(USER_SOURCE_DIR)/linker.ld $(USER_OBJECTS) $(SHARED_OBJECTS) image/user $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
-#	$(LD) -n -o $@ -T $< $(USER_OBJECTS) $(SHARED_OBJECTS) $(UTIL_OBJECTS) $(USER_BUILD_DIR)/cxx_util.o
 
 $(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@

@@ -2,7 +2,6 @@
 #define KERNEL_IPC_H_
 
 #include "stdint.h"
-#include "kernel/proc.h"
 
 namespace ipc {
 
@@ -43,7 +42,7 @@ class Pipe {
  private:
   File* file_;
   Mode mode_;
-  proc::BlockedQueue blocked_queue_;
+  // TODO include issues proc::BlockedQueue blocked_queue_;
 };
 
 }  // namespace ipc

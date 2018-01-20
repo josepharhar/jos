@@ -5,7 +5,7 @@
 #include "page_table.h"
 #include "elf.h"
 #include "stdint.h"
-#include "ipc.h"
+#include "kernel/ipc.h"
 #include "jmap.h"
 
 #include "shared/clone.h"
