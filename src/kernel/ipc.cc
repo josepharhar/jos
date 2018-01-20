@@ -15,4 +15,12 @@ Mode Pipe::GetMode() {
   return mode_;
 }
 
+int Pipe::Write(const uint8_t* source_buffer, int write_size) {
+  GetFile()->Write(this, source_buffer, write_size);
+}
+
+int Pipe::Read(uint8_t* dest_buffer, int read_size) {
+  GetFile()->Read(this, dest_buffer, read_size);
+}
+
 }  // namespace ipc

@@ -95,8 +95,10 @@ class Buffer {
       return (Size() - read_index_) + write_index_;
     }
   }
+  uint64_t ReadSizeAvailable const { return SizeUsed(); }
 
   uint64_t SizeRemaining() const { return Size() - SizeUsed(); }
+  uint64_t WriteSizeAvailable const { return SizeRemaining(); }
 
  private:
   T* buffer_;

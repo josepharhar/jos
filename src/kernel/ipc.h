@@ -3,6 +3,10 @@
 
 #include "stdint.h"
 
+namespace proc {
+class BlockedQueue;
+}
+
 namespace ipc {
 
 enum Mode {
@@ -24,15 +28,24 @@ class File {
   virtual void Close(Pipe* pipe) = 0;
   // Gets the number of pipes currently open accessing this file.
   virtual int GetNumPipes() = 0;
+  // Reads or writes to the underlying file. Will block the current process if
+  // there is no data to be read or written. I don't know why I added the pipe
+  // parameter.
+  virtual int Write(Pipe* pipe,
+                    const uint8_t* source_buffer,
+                    int write_size) = 0;
+  virtual int Read(Pipe* pipe, uint8_t* dest_buffer, int read_size) = 0;
 };
 
+// one ipc::Pipe per file descriptor per process
 class Pipe {
  public:
   Pipe(File* file, Mode mode);
   virtual ~Pipe();
 
-  virtual int Write(const uint8_t* source_buffer, int write_size) = 0;
-  virtual int Read(uint8_t* dest_buffer, int read_size) = 0;
+  // these pass through to ipc::File::Write/Read
+  int Write(const uint8_t* source_buffer, int write_size);
+  int Read(uint8_t* dest_buffer, int read_size);
 
   // Returns the ipc::File which owns this Pipe
   File* GetFile();
@@ -42,7 +55,6 @@ class Pipe {
  private:
   File* file_;
   Mode mode_;
-  // TODO include issues proc::BlockedQueue blocked_queue_;
 };
 
 }  // namespace ipc
