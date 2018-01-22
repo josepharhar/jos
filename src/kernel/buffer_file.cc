@@ -31,6 +31,7 @@ int BufferFile::Write(ipc::Pipe* pipe,
     while (!read_request_queue_.IsEmpty() && buffer_.ReadSizeAvailable()) {
       // TODO CANT DO THIS BECAUSE THE PROCESS WHICH THIS READ REQUEST CAME FROM IS NOT IN MEMORY AND WE HAVE TO SWITCH PAGE TABLES TO IT TO ACCESS ITS MEMORY
       // man 7 pipe
+      // TODO access the page table to figure out the physical address, and use the identity map to fulfill this request?
       RdWrRequest read_request = read_request_queue_.Remove();
       Read(read_request.pipe, read_request.buffer, read_request.size);
       read_request_queue_.UnblockHead();
