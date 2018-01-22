@@ -1,6 +1,6 @@
 #include "buffer_file.h"
 
-BufferFile::BufferFile() {}
+BufferFile::BufferFile() : buffer_(4096) {}
 BufferFile::~BufferFile() {}
 
 ipc::Pipe* BufferFile::Open(ipc::Mode mode) {
@@ -34,7 +34,8 @@ int BufferFile::Write(ipc::Pipe* pipe,
       // TODO access the page table to figure out the physical address, and use the identity map to fulfill this request?
       RdWrRequest read_request = read_request_queue_.Remove();
       Read(read_request.pipe, read_request.buffer, read_request.size);
-      read_request_queue_.UnblockHead();
+      //read_request_queue_.UnblockHead();
+      read_blocked_queue_.UnblockHead();
     }
 
     return size_written;
@@ -43,8 +44,12 @@ int BufferFile::Write(ipc::Pipe* pipe,
   // block this process until there is space to write.
   RdWrRequest write_request;
   write_request.pipe = pipe;
-  write_request.buffer = source_buffer;
-  write_request.
+  write_request.buffer = (uint8_t*)source_buffer;
+  // TODO finish this
+  //write_request.
+  
+  // TODO
+  return -1;
 }
 
 int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
@@ -52,5 +57,5 @@ int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
 }
 
 BufferPipe::BufferPipe(ipc::File* file, ipc::Mode mode)
-    : ipc::Pipe(file, mode), buffer_(4096) {}
+    : ipc::Pipe(file, mode) {}
 BufferPipe::~BufferPipe() {}

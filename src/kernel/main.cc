@@ -132,6 +132,15 @@ void ProcInit(void* arg) {
   Inode* root_directory = superblock->GetRootInode();
   InitExec(root_directory);
 
+  // TODO delet this
+  printk("testing PageTable::GetPhysicalAddress()\n");
+  uint64_t* addr = (uint64_t*)kmalloc(sizeof(uint64_t));
+  *addr = 1234;
+  printk("virtual address %p: %d\n", addr, *addr);
+  PageTable page_table((uint64_t)Getcr3());
+  uint64_t* physical_address = (uint64_t*)page_table.GetPhysicalAddress((uint64_t)addr);
+  printk("physical address %p: %d\n", physical_address, *physical_address);
+
   // exec will put this proc into user mode
   //Exec("/user/init");
   // TODO make exec use absolute and relative filepaths

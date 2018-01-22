@@ -12,6 +12,10 @@ class PageTable {
 
   uint64_t p4_entry();
 
+  // Given a virtual address, returns the physical address it is mapped to.
+  // Returns NULL_FRAME from frame.h if the requested address is not mapped.
+  uint64_t GetPhysicalAddress(uint64_t virtual_address);
+
  private:
   uint64_t p4_entry_;  // value held in cr3 register, pointer to table
 };

@@ -3,6 +3,22 @@
 #include "kmalloc.h"
 #include "page.h"
 #include "string.h"
+#include "frame.h"
+#include "printk.h"
+
+// TODO combine this with the one from page.cc
+struct VirtualAddress {
+  uint64_t physical_frame_offset : 12;
+  uint64_t p1_index : 9;  // index into p1 table
+  uint64_t p2_index : 9;
+  uint64_t p3_index : 9;
+  uint64_t p4_index : 9;
+  uint64_t sign_extended : 16;
+} __attribute__((packed));
+static struct VirtualAddress ToVirtualAddress(uint64_t address) {
+  struct VirtualAddress* pointer = (struct VirtualAddress*)&address;
+  return *pointer;
+}
 
 // TODO combine this with the one from page.cc
 // http://os.phil-opp.com/entering-longmode.html#paging
@@ -24,6 +40,25 @@ struct PageTableEntry {
   uint64_t GetAddress() { return address << 12; }
   void SetAddress(void* pointer) { address = ((uint64_t)pointer) >> 12; }
 } __attribute__((packed));
+static struct PageTableEntry ToPageTableEntry(uint64_t entry) {
+  struct PageTableEntry* pointer = (struct PageTableEntry*)&entry;
+  return *pointer;
+}
+static uint64_t FromPageTableEntry(struct PageTableEntry table_entry) {
+  uint64_t* pointer = (uint64_t*)&table_entry;
+  return *pointer;
+}
+/*static uint64_t GetAddress(struct PageTableEntry* table_entry) {
+  return table_entry->address << 12;
+}
+static void SetAddress(struct PageTableEntry* table_entry, void* pointer) {
+  uint64_t address = (uint64_t)pointer;
+  table_entry->address = address >> 12;
+}*/
+// flags for demand paging
+// used in PageTableEntry.available2
+#define PAGE_NOT_ALLOCATED 0  // pointer in this entry is not valid
+#define PAGE_ALLOCATED 1      // pointer in this entry is valid
 
 PageTable::PageTable(uint64_t p4_entry) : p4_entry_(p4_entry) {}
 
@@ -65,4 +100,38 @@ PageTable* PageTable::Clone() {
 
 uint64_t PageTable::p4_entry() {
   return p4_entry_;
+}
+
+// TODO this overlaps a lot of logic with GetP1Entry from page.cc
+// TODO this should definitely be unit tested
+uint64_t PageTable::GetPhysicalAddress(uint64_t raw_virtual_address) {
+  VirtualAddress virtual_address = ToVirtualAddress(raw_virtual_address);
+
+  // TODO p4_entry_ is a bad variable name
+  PageTableEntry* p4_entry =
+      (PageTableEntry*)(p4_entry_ + virtual_address.p4_index);
+  if (p4_entry->available2 != PAGE_ALLOCATED) {
+    printk("4444\n");
+    return NULL_FRAME;
+  }
+
+  PageTableEntry* p3_entry = (PageTableEntry*)p4_entry->GetAddress();
+  if (p3_entry->available2 != PAGE_ALLOCATED) {
+    printk("3333\n");
+    return NULL_FRAME;
+  }
+
+  PageTableEntry* p2_entry = (PageTableEntry*)p3_entry->GetAddress();
+  if (p2_entry->available2 != PAGE_ALLOCATED) {
+    printk("2222\n");
+    return NULL_FRAME;
+  }
+
+  PageTableEntry* p1_entry = (PageTableEntry*)p2_entry->GetAddress();
+  if (p1_entry->available2 != PAGE_ALLOCATED) {
+    printk("1111\n");
+    return NULL_FRAME;
+  }
+
+  return p1_entry->GetAddress() + virtual_address.physical_frame_offset;
 }

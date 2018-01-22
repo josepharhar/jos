@@ -20,9 +20,12 @@ class BufferFile : public ipc::File {
   void Close(ipc::Pipe* pipe) override;
   int GetNumPipes() override;
 
+  int Write(ipc::Pipe* pipe, const uint8_t* source_buffer, int write_size) override;
+  int Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) override;
+
  private:
   struct RdWrRequest {
-    Pipe* pipe;
+    ipc::Pipe* pipe;
     uint8_t* buffer;
     int size;
   };
@@ -46,9 +49,6 @@ class BufferPipe : public ipc::Pipe {
   BufferPipe& operator=(const BufferPipe& other) = delete;
   BufferPipe(BufferPipe&& other) = delete;
   BufferPipe& operator=(BufferPipe&& other) = delete;
-
-  int Write(const uint8_t* source_buffer, int write_size) override;
-  int Read(uint8_t* dest_buffer, int read_size) override;
 };
 
 #endif  // BUFFER_FILE_H_
