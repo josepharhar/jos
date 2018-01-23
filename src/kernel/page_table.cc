@@ -108,38 +108,26 @@ PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, bool user_acce
 // TODO this overlaps a lot of logic with GetP1Entry from page.cc
 // TODO this should definitely be unit tested
 uint64_t PageTable::GetPhysicalAddress(uint64_t address) {
-  /*printk("PageTable::GetPhysicalAddress() address: %p\n", address);
-  printk("GetP1Entry: ");
-  printk("%p\n", GetP1Entry(address, 0, 0, 0));*/
-
   VirtualAddress virtual_address = VirtualAddress::FromPointer(address);
 
   PageTableEntry* p4_entry =
       (PageTableEntry*)(((uint64_t*)cr3_) + virtual_address.p4_index);
   if (p4_entry->available2 != PAGE_ALLOCATED) {
-    /*printk("p4_entry->avl2 != PAGE_ALLOCATED.\n");
-    printk("  p4_entry->GetAddress(): %p\n", p4_entry->GetAddress());
-    printk("  p4_entry->present: %d\n", p4_entry->present);
-    printk("  p4_entry->available2: %d\n", p4_entry->available2);
-    while (1) asm volatile ("hlt");*/
     return NULL_FRAME;
   }
 
   PageTableEntry* p3_entry = (PageTableEntry*)p4_entry->GetAddress();
   if (p3_entry->available2 != PAGE_ALLOCATED) {
-    printk("3333\n");
     return NULL_FRAME;
   }
 
   PageTableEntry* p2_entry = (PageTableEntry*)p3_entry->GetAddress();
   if (p2_entry->available2 != PAGE_ALLOCATED) {
-    printk("2222\n");
     return NULL_FRAME;
   }
 
   PageTableEntry* p1_entry = (PageTableEntry*)p2_entry->GetAddress();
   if (p1_entry->available2 != PAGE_ALLOCATED) {
-    printk("1111\n");
     return NULL_FRAME;
   }
 
