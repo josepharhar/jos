@@ -10,14 +10,14 @@ class PageTable {
 
   PageTable* Clone();
 
-  uint64_t p4_entry();
+  uint64_t cr3();
 
   // Given a virtual address, returns the physical address it is mapped to.
   // Returns NULL_FRAME from frame.h if the requested address is not mapped.
   uint64_t GetPhysicalAddress(uint64_t virtual_address);
 
  private:
-  uint64_t p4_entry_;  // value held in cr3 register, pointer to table
+  uint64_t cr3_;
 };
 
 #endif  // KERNEL_PAGE_TABLE_H_

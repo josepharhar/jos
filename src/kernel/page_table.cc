@@ -14,11 +14,12 @@ struct VirtualAddress {
   uint64_t p3_index : 9;
   uint64_t p4_index : 9;
   uint64_t sign_extended : 16;
+
+  static VirtualAddress FromPointer(uint64_t address) {
+    VirtualAddress* pointer = (VirtualAddress*)&address;
+    return *pointer;
+  }
 } __attribute__((packed));
-static struct VirtualAddress ToVirtualAddress(uint64_t address) {
-  struct VirtualAddress* pointer = (struct VirtualAddress*)&address;
-  return *pointer;
-}
 
 // TODO combine this with the one from page.cc
 // http://os.phil-opp.com/entering-longmode.html#paging
@@ -60,7 +61,7 @@ static void SetAddress(struct PageTableEntry* table_entry, void* pointer) {
 #define PAGE_NOT_ALLOCATED 0  // pointer in this entry is not valid
 #define PAGE_ALLOCATED 1      // pointer in this entry is valid
 
-PageTable::PageTable(uint64_t p4_entry) : p4_entry_(p4_entry) {}
+PageTable::PageTable(uint64_t p4_entry) : cr3_(p4_entry) {}
 
 // TODO free page table in destructor
 PageTable::~PageTable() = default;
@@ -95,23 +96,32 @@ static void* CopyPageTableLevel(void* old_table_void, int level) {
 }
 
 PageTable* PageTable::Clone() {
-  return new PageTable((uint64_t)CopyPageTableLevel((void*)p4_entry_, 4));
+  return new PageTable((uint64_t)CopyPageTableLevel((void*)cr3_, 4));
 }
 
-uint64_t PageTable::p4_entry() {
-  return p4_entry_;
+uint64_t PageTable::cr3() {
+  return cr3_;
 }
+
+PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, bool user_accessible, bool debug);
 
 // TODO this overlaps a lot of logic with GetP1Entry from page.cc
 // TODO this should definitely be unit tested
-uint64_t PageTable::GetPhysicalAddress(uint64_t raw_virtual_address) {
-  VirtualAddress virtual_address = ToVirtualAddress(raw_virtual_address);
+uint64_t PageTable::GetPhysicalAddress(uint64_t address) {
+  /*printk("PageTable::GetPhysicalAddress() address: %p\n", address);
+  printk("GetP1Entry: ");
+  printk("%p\n", GetP1Entry(address, 0, 0, 0));*/
 
-  // TODO p4_entry_ is a bad variable name
+  VirtualAddress virtual_address = VirtualAddress::FromPointer(address);
+
   PageTableEntry* p4_entry =
-      (PageTableEntry*)(p4_entry_ + virtual_address.p4_index);
+      (PageTableEntry*)(((uint64_t*)cr3_) + virtual_address.p4_index);
   if (p4_entry->available2 != PAGE_ALLOCATED) {
-    printk("4444\n");
+    /*printk("p4_entry->avl2 != PAGE_ALLOCATED.\n");
+    printk("  p4_entry->GetAddress(): %p\n", p4_entry->GetAddress());
+    printk("  p4_entry->present: %d\n", p4_entry->present);
+    printk("  p4_entry->available2: %d\n", p4_entry->available2);
+    while (1) asm volatile ("hlt");*/
     return NULL_FRAME;
   }
 

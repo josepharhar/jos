@@ -114,7 +114,7 @@ void* FrameAllocateSafe() {
 
 // gets the pointer to the p1 entry corresponding to this address
 // if create, then allocates entries along the way
-static struct PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, bool user_accessible = false, bool debug = false) {
+/*static struct*/ PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, bool user_accessible = false, bool debug = false) {
   struct VirtualAddress virtual_address = ToVirtualAddress(faulting_address);
 
   // TODO delet this

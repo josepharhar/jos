@@ -134,7 +134,7 @@ ProcContext* Clone(CloneOptions* clone_options,
   // copy page table
   if (clone_options->copy_page_table) {
     new_proc->page_table = current_proc->page_table->Clone();
-    new_proc->cr3 = new_proc->page_table->p4_entry();
+    new_proc->cr3 = new_proc->page_table->cr3();
   }
 
   // set new pid
