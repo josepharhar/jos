@@ -144,8 +144,7 @@ int AddPipeToCurrentProc(ipc::Pipe* pipe);
 
 ipc::Pipe* GetPipeForFdFromCurrentProc(int fd);
 
-uint64_t GetPhysicalAddressForVirtualAddressForCurrentProc(
-    uint64_t virtual_address);
+ProcContext* GetCurrentProc();
 
 }  // namespace proc
 

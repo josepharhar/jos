@@ -1,5 +1,7 @@
 #include "buffer_file.h"
 
+#include "kernel/page.h"
+
 BufferFile::BufferFile() : buffer_(4096) {}
 BufferFile::~BufferFile() {}
 
@@ -19,7 +21,7 @@ int BufferFile::GetNumPipes() {
 }
 
 int BufferFile::Write(ipc::Pipe* pipe,
-                      const uint8_t* source_physical_address,
+                      const uint8_t* source_buffer,
                       int write_size) {
   uint64_t write_size_available = buffer_.WriteSizeAvailable();
   if (write_size_available) {
@@ -27,13 +29,20 @@ int BufferFile::Write(ipc::Pipe* pipe,
 
     // unblock block processes that are trying to read.
     // TODO is this defined behavior in linux/unix/POSIX?
+    // based on manual linux testing, the LAST proc to block gets it.
     // man 7 pipe
     //int size_read = 0;
     while (!read_request_queue_.IsEmpty() && buffer_.ReadSizeAvailable()) {
       // TODO CANT DO THIS BECAUSE THE PROCESS WHICH THIS READ REQUEST CAME FROM IS NOT IN MEMORY AND WE HAVE TO SWITCH PAGE TABLES TO IT TO ACCESS ITS MEMORY
       // TODO access the page table to figure out the physical address, and use the identity map to fulfill this request?
       RdWrRequest read_request = read_request_queue_.Remove();
-      Read(read_request.pipe, read_request.physical_address, read_request.size);
+
+      // TODO
+      Setcr3(read_request.proc->cr3);
+      //memcpy();
+      Setcr3(proc::GetCurrentProc()->cr3);
+
+      Read(read_request.pipe, read_request.buffer, read_request.size);
       //read_request_queue_.UnblockHead();
       read_blocked_queue_.UnblockHead();
     }
@@ -44,15 +53,16 @@ int BufferFile::Write(ipc::Pipe* pipe,
   // block this process until there is space to write.
   RdWrRequest write_request;
   write_request.pipe = pipe;
-  write_request.physical_address = (uint8_t*)source_buffer;
+  write_request.buffer = (uint8_t*)source_buffer;
   write_request.size = write_size;
+  write_request.proc = proc::GetCurrentProc();
   
   // TODO
   return -1;
 }
 
-int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_physical_address, int read_size) {
-  return (int)buffer_.Read(dest_physical_address, (uint64_t)read_size);
+int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
+  return (int)buffer_.Read(dest_buffer, (uint64_t)read_size);
 }
 
 BufferPipe::BufferPipe(ipc::File* file, ipc::Mode mode)

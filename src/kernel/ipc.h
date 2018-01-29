@@ -32,8 +32,8 @@ class File {
   // there is no data to be read or written. I don't know why I added the pipe
   // parameter.
   virtual int Write(Pipe* pipe,
-                    const uint8_t* source_physical_address,
-                    int write_physical_address) = 0;
+                    const uint8_t* source_buffer,
+                    int write_buffer) = 0;
   virtual int Read(Pipe* pipe, uint8_t* dest_buffer, int read_size) = 0;
 };
 
@@ -44,8 +44,8 @@ class Pipe {
   virtual ~Pipe();
 
   // these pass through to ipc::File::Write/Read
-  int Write(const uint8_t* source_physical_address, int write_size);
-  int Read(uint8_t* dest_physical_address, int read_size);
+  int Write(const uint8_t* source_buffer, int write_size);
+  int Read(uint8_t* dest_buffer, int read_size);
 
   // Returns the ipc::File which owns this Pipe
   File* GetFile();

@@ -26,8 +26,9 @@ class BufferFile : public ipc::File {
  private:
   struct RdWrRequest {
     ipc::Pipe* pipe;
-    uint8_t* physical_address;
+    uint8_t* buffer;
     int size;
+    proc::ProcContext* proc;
   };
 
   stdj::Array<ipc::Pipe*> pipes_;
