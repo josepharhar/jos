@@ -58,11 +58,23 @@ void class_testing() {
 }
 
 
-static void NewProc();
-extern char new_stack[];
+static int asdf = 130;
+static char new_stack[4096];
 
-//static int asdf = 130;
-extern int asdf;
+static void NewProc() {
+  Puts("Hello from NewProc()\n");
+  printu("NewProc pid: %d\n", getpid());
+  close(1234);
+  asdf = 4880;
+  printu("%p: %d\n", &asdf, asdf);
+
+  while (1) {
+    Putc(Getc());
+  }
+
+  // TODO ending process causes page fault
+}
+
 void proc_testing() {
   printu("main() pid: %d\n", getpid());
 
@@ -77,7 +89,7 @@ void proc_testing() {
   printu("calling clone\n");
   asdf = 248;
   CloneOptions options;
-  options.copy_page_table = 1;
+  options.copy_page_table = 0;
   // TODO make start_at_callback = 0 work
   options.start_at_callback = 1;
   //clone(&options, NewProc, new_stack + 2048);
@@ -86,26 +98,12 @@ void proc_testing() {
   close(1234);
 
   printu("%p: %d\n", &asdf, asdf);
-
-  while (1) {
-    Putc(Getc());
-  }
-}
-
-int asdf = 130;
-char new_stack[4096];
-static void NewProc() {
-  Puts("Hello from NewProc()\n");
-  printu("NewProc pid: %d\n", getpid());
-  close(1234);
-  asdf = 4880;
+  Putc(Getc());
   printu("%p: %d\n", &asdf, asdf);
 
   while (1) {
     Putc(Getc());
   }
-
-  // TODO ending process causes page fault
 }
 
 

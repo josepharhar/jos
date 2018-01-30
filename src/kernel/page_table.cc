@@ -64,7 +64,7 @@ static void SetAddress(struct PageTableEntry* table_entry, void* pointer) {
 #define PAGE_ALLOCATED 1      // pointer in this entry is valid
 
 static void* CopyPageTableLevel(void* old_table_void, int level) {
-  PageTableEntry* new_table = (PageTableEntry*)kmalloc(PAGE_SIZE_BYTES);
+  PageTableEntry* new_table = (PageTableEntry*)FrameAllocate();
   PageTableEntry* old_table = (PageTableEntry*)old_table_void;
   for (int i = 0; i < PAGE_SIZE_BYTES / sizeof(PageTableEntry); i++) {
     new_table[i] = old_table[i];
@@ -82,7 +82,7 @@ static void* CopyPageTableLevel(void* old_table_void, int level) {
     if (level == 1) {
       // copy physical frame
       void* old_frame = (void*)old_table[i].GetAddress();
-      void* new_frame = kmalloc(PAGE_SIZE_BYTES);
+      void* new_frame = FrameAllocate();
       memcpy(new_frame, old_frame, PAGE_SIZE_BYTES);
       new_table[i].SetAddress(new_frame);
     } else {
