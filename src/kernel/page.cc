@@ -409,9 +409,10 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     printk("  faulting_address: %p\n", faulting_address);
     printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
     printk("  pid: %d\n", proc::GetCurrentPid());
-    //printk("  rip: %p\n", current_proc->rip);
+    printk("  rip: %p\n", proc::GetCurrentProc()->rip);
     printk("  halting\n");
     HALT_LOOP();
+    //return;
   }
 
   if (!p1_entry) {

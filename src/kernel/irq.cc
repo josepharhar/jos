@@ -218,6 +218,11 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
   }
 
   IRQEndOfInterrupt(interrupt_number);
+
+  /*if (proc::GetCurrentProc()->pid == 2) {
+    int one = 1;
+    while (one);
+  }*/
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
@@ -250,6 +255,11 @@ void c_interrupt_handler(uint64_t interrupt_number) {
 
   // this should only be called for PIC interrupts? TODO
   IRQEndOfInterrupt(interrupt_number);
+
+  /*if (proc::GetCurrentProc()->pid == 2) {
+    int one = 1;
+    while (one);
+  }*/
 }
 
 void IRQInit() {
