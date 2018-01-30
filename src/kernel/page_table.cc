@@ -6,6 +6,8 @@
 #include "frame.h"
 #include "printk.h"
 
+namespace page {
+
 // TODO combine this with the one from page.cc
 struct VirtualAddress {
   uint64_t physical_frame_offset : 12;
@@ -61,11 +63,6 @@ static void SetAddress(struct PageTableEntry* table_entry, void* pointer) {
 #define PAGE_NOT_ALLOCATED 0  // pointer in this entry is not valid
 #define PAGE_ALLOCATED 1      // pointer in this entry is valid
 
-PageTable::PageTable(uint64_t p4_entry) : cr3_(p4_entry) {}
-
-// TODO free page table in destructor
-PageTable::~PageTable() = default;
-
 static void* CopyPageTableLevel(void* old_table_void, int level) {
   PageTableEntry* new_table = (PageTableEntry*)kmalloc(PAGE_SIZE_BYTES);
   PageTableEntry* old_table = (PageTableEntry*)old_table_void;
@@ -74,44 +71,44 @@ static void* CopyPageTableLevel(void* old_table_void, int level) {
 
     if (level == 4 && i < P4_USERSPACE_START) {
       // don't copy inner stuff, its the same for the kernel
+      continue;
+    }
+
+    if (!old_table[i].GetAddress()) {
+      // this page table entry doesn't point to anything.
+      continue;
+    }
+
+    if (level == 1) {
+      // copy physical frame
+      void* old_frame = (void*)old_table[i].GetAddress();
+      void* new_frame = kmalloc(PAGE_SIZE_BYTES);
+      memcpy(new_frame, old_frame, PAGE_SIZE_BYTES);
+      new_table[i].SetAddress(new_frame);
     } else {
-      uint64_t old_lower_level_pointer = new_table[i].GetAddress();
-      if (old_lower_level_pointer) {
-        if (level == 1) {
-          // copy physical frame
-          void* old_frame = (void*)old_lower_level_pointer;
-          void* new_frame = kmalloc(PAGE_SIZE_BYTES);
-          memcpy(new_frame, old_frame, PAGE_SIZE_BYTES);
-          new_table[i].SetAddress(new_frame);
-        } else {
-          // copy page table level
-          void* new_lower_level_pointer =
-              CopyPageTableLevel((void*)old_lower_level_pointer, level - 1);
-          new_table[i].SetAddress(new_lower_level_pointer);
-        }
-      }
+      // copy page table level
+      new_table[i].SetAddress(
+          CopyPageTableLevel((void*)old_table[i].GetAddress(), level - 1));
     }
   }
   return new_table;
 }
 
-PageTable* PageTable::Clone() {
-  return new PageTable((uint64_t)CopyPageTableLevel((void*)cr3_, 4));
+uint64_t CopyPageTable(uint64_t cr3) {
+  return (uint64_t)CopyPageTableLevel((void*)cr3, 4);
 }
 
-uint64_t PageTable::cr3() {
-  return cr3_;
+void DeletePageTable(uint64_t cr3) {
+  // TODO
 }
-
-PageTableEntry* GetP1Entry(uint64_t faulting_address, int create, bool user_accessible, bool debug);
 
 // TODO this overlaps a lot of logic with GetP1Entry from page.cc
 // TODO this should definitely be unit tested
-uint64_t PageTable::GetPhysicalAddress(uint64_t address) {
+uint64_t GetPhysicalAddress(uint64_t cr3, uint64_t address) {
   VirtualAddress virtual_address = VirtualAddress::FromPointer(address);
 
   PageTableEntry* p4_entry =
-      (PageTableEntry*)(((uint64_t*)cr3_) + virtual_address.p4_index);
+      (PageTableEntry*)(((uint64_t*)cr3) + virtual_address.p4_index);
   if (p4_entry->available2 != PAGE_ALLOCATED) {
     return NULL_FRAME;
   }
@@ -133,3 +130,5 @@ uint64_t PageTable::GetPhysicalAddress(uint64_t address) {
 
   return p1_entry->GetAddress() + virtual_address.physical_frame_offset;
 }
+
+}  // namespace page

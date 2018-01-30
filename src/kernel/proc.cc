@@ -93,8 +93,6 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
   new_proc->rflags = INTERRUPT_ENABLE_BIT;
   new_proc->pid = new_proc_id++;
   new_proc->cr3 = (uint64_t)Getcr3();
-  new_proc->page_table =
-      new PageTable(new_proc->cr3);  // TODO make these refcounted?
 
   // set first C argument to new proc function to void* arg
   new_proc->rdi = (uint64_t)arg;
@@ -133,8 +131,7 @@ ProcContext* Clone(CloneOptions* clone_options,
 
   // copy page table
   if (clone_options->copy_page_table) {
-    new_proc->page_table = current_proc->page_table->Clone();
-    new_proc->cr3 = new_proc->page_table->cr3();
+    new_proc->cr3 = page::CopyPageTable(current_proc->cr3);
   }
 
   // set new pid

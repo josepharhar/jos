@@ -61,12 +61,6 @@ void class_testing() {
 static void NewProc();
 extern char new_stack[];
 
-static uint64_t* Getcr3() {
-  uint64_t cr3_value;
-  GET_REGISTER("cr3", cr3_value);
-  return (uint64_t*) cr3_value;
-}
-
 //static int asdf = 130;
 extern int asdf;
 void proc_testing() {
@@ -89,7 +83,7 @@ void proc_testing() {
   //clone(&options, NewProc, new_stack + 2048);
   clone(&options, NewProc, 0);
   printu("main() done calling clone\n");
-  printu("main() cr3: %p\n", Getcr3());
+  close(1234);
 
   printu("%p: %d\n", &asdf, asdf);
 
@@ -103,7 +97,7 @@ char new_stack[4096];
 static void NewProc() {
   Puts("Hello from NewProc()\n");
   printu("NewProc pid: %d\n", getpid());
-  printu("NewProc cr3: %p\n", Getcr3());
+  close(1234);
   asdf = 4880;
   printu("%p: %d\n", &asdf, asdf);
 

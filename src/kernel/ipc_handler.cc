@@ -5,6 +5,8 @@
 #include "proc.h"
 #include "shared/ipc.h"
 #include "buffer_file.h"
+#include "page.h"
+#include "printk.h"
 
 namespace ipc {
 
@@ -56,6 +58,8 @@ static void HandleSyscallClose(uint64_t interrupt_number,
                                uint64_t param_2,
                                uint64_t param_3) {
   int fd = (int)param_1;
+
+  printk("kernel pid: %d cr3: %p\n", proc::GetCurrentProc()->pid, Getcr3());
 }
 
 void Init() {

@@ -61,7 +61,6 @@ class ProcContext {
   uint64_t gs;
 
   uint64_t cr3;
-  PageTable* page_table;
 
   // software context
   // struct ProcContext* blocked_next;

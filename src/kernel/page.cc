@@ -95,10 +95,9 @@ uint64_t* Getcr3() {
   return (uint64_t*) cr3_value;
 }
 
-void Setcr3(uint64_t cr3) {
-  // TODO do safety checks here?
-  //printk("Setcr3 %p\n", cr3);
-  //SET_REGISTER("cr3", cr3);
+void Setcr3(uint64_t new_cr3) {
+  uint64_t cr3_value = new_cr3;
+  SET_REGISTER("cr3", cr3_value);
 }
 
 // wrapper for frame allocator that halts when memory runs out

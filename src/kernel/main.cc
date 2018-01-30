@@ -133,13 +133,20 @@ void ProcInit(void* arg) {
   InitExec(root_directory);
 
   // TODO delet this
-  printk("testing PageTable::GetPhysicalAddress()\n");
+  /*printk("testing PageTable::GetPhysicalAddress()\n");
   uint64_t* addr = (uint64_t*)kmalloc(sizeof(uint64_t));
   *addr = 1234;
   printk("virtual address %p: %d\n", addr, *addr);
   PageTable page_table((uint64_t)Getcr3());
   uint64_t* physical_address = (uint64_t*)page_table.GetPhysicalAddress((uint64_t)addr);
-  printk("physical address %p: %d\n", physical_address, *physical_address);
+  printk("physical address %p: %d\n", physical_address, *physical_address);*/
+
+  uint64_t new_cr3 = page::CopyPageTable((uint64_t)Getcr3());
+  if (page::GetPhysicalAddress((uint64_t)Getcr3(), 100) !=
+      page::GetPhysicalAddress(new_cr3, 100)) {
+    printk("WTF\n");
+    while (1) asm volatile ("hlt");
+  }
 
   // exec will put this proc into user mode
   //Exec("/user/init");
