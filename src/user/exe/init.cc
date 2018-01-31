@@ -91,15 +91,15 @@ void proc_testing() {
   CloneOptions options;
   options.copy_page_table = 1;
   // TODO make start_at_callback = 0 work
-  options.start_at_callback = 0;
+  options.start_at_callback = 1;
   //clone(&options, NewProc, new_stack + 2048);
   clone(&options, NewProc, 0);
   printu("main() done calling clone\n");
   close(1234);
 
   printu("%p: %d\n", &asdf, asdf);
-  Putc(Getc());
-  printu("%p: %d\n", &asdf, asdf);
+  /*Putc(Getc());
+  printu("%p: %d\n", &asdf, asdf);*/
 
   while (1) {
     Putc(Getc());

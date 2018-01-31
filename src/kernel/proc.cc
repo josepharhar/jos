@@ -468,7 +468,7 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   // TODO
   current_proc->cs = GDT_USER_CS + 3;
   current_proc->ss = GDT_USER_DS + 3;
-  // current_proc->rsp = user_stack_bottom;
+  current_proc->rsp = user_stack_bottom;
 
   RestoreState(current_proc);
 }

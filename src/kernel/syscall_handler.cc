@@ -43,9 +43,4 @@ void HandleSyscall(uint64_t interrupt_number,
   } else {
     printk("syscall number too large to handle: %lld\n", syscall_number);
   }
-
-  if (proc::GetCurrentPid() == 2) {
-    int one = 1;
-    while (one);
-  }
 }
