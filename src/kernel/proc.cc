@@ -98,6 +98,8 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
   new_proc->rdi = (uint64_t)arg;
 
   // push Exit() onto stack
+  // TODO i bet this doesn't work
+  //  https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64
   uint64_t* stack_pointer = (uint64_t*)new_proc->rsp;
   *stack_pointer = (uint64_t)&Exit;
 
@@ -122,6 +124,7 @@ ProcContext* Clone(CloneOptions* clone_options,
   if (clone_options->start_at_callback) {
     new_proc->rip = new_rip;
   }
+  printk("new_proc->rip: %p\n", new_proc->rip);
 
   // set stack registers
   if (new_stack) {
@@ -133,6 +136,10 @@ ProcContext* Clone(CloneOptions* clone_options,
   if (clone_options->copy_page_table) {
     new_proc->cr3 = page::CopyPageTable(current_proc->cr3);
   }
+  printk("current_proc->rip virt: %p phys: %p\n", current_proc->rip, page::GetPhysicalAddress(current_proc->cr3, current_proc->rip));
+  printk("    new_proc->rip virt: %p phys: %p\n", new_proc->rip, page::GetPhysicalAddress(new_proc->cr3, new_proc->rip));
+  printk("current_proc->rsp virt: %p phys: %p\n", current_proc->rsp, page::GetPhysicalAddress(current_proc->cr3, current_proc->rsp));
+  printk("    new_proc->rsp virt: %p phys: %p\n", new_proc->rsp, page::GetPhysicalAddress(new_proc->cr3, new_proc->rsp));
 
   // set new pid
   new_proc->pid = new_proc_id++;
