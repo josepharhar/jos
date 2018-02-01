@@ -13,6 +13,7 @@
 #include "frame.h"
 #include "ref_counted.h"
 #include "jarray.h"
+#include "shared/exit.h"
 
 #define INTERRUPT_ENABLE_BIT (1 << 9)
 
@@ -339,7 +340,10 @@ static void HandleSyscallExit(uint64_t syscall_number,
         "HandleSyscallExit() current_proc: %p, next_proc: %p, "
         "proc_list->IsEmpty(): %p\n",
         current_proc, next_proc, proc_list->IsEmpty());
-    return;
+    // TODO this should be able to to rescheduling and stuff on its own?
+    //   this shouldnt happen when a user proc just decides to exit.
+    HALT_LOOP();
+    // return;
   }
 
   // TODO in order to round robin correctly,
@@ -450,11 +454,11 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   // allocate user stack
   // printk("allocating user stack from %p to %p\n", USER_STACK_TOP,
   // USER_STACK_BOTTOM);
-  AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
+  /*AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
   uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096;  // TODO
   // put Exit() on stack
   // TODO Exit() location must come from user executable, not this one
-  uint64_t* stack_pointer = (uint64_t*)user_stack_bottom;
+  uint64_t* stack_pointer = (uint64_t*)user_stack_bottom;*/
   /*printk("putting Exit on stack at %p\n", user_stack_bottom);
   *stack_pointer = (uint64_t) &Exit;*/
 
@@ -468,7 +472,18 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   // TODO
   current_proc->cs = GDT_USER_CS + 3;
   current_proc->ss = GDT_USER_DS + 3;
-  current_proc->rsp = user_stack_bottom;
+
+  uint64_t* stack_pointer = (uint64_t*)USER_STACK_HIGH;
+  //*stack_pointer = (uint64_t)&exit_void;
+  /*printk("elf_info.instruction_pointer: %p\n", elf_info.instruction_pointer);
+  printk("&exit_void: %p\n", &exit_void);
+  HALT_LOOP();*/
+  *stack_pointer = elf_info.instruction_pointer;
+  stack_pointer--;
+  *stack_pointer = (uint64_t)stack_pointer; // saved rbp?
+  current_proc->rbp = (uint64_t)stack_pointer;
+  // no params on stack, so rsp = rbp?
+  current_proc->rsp = current_proc->rbp;
 
   RestoreState(current_proc);
 }

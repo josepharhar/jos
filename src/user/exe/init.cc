@@ -12,7 +12,7 @@
 void proc_testing();
 void class_testing();
 int main() {
-  Puts("Hello from init\n");
+  Puts("Hello from USER init main()\n");
   proc_testing();
   //class_testing();
   //ipc_testing();
