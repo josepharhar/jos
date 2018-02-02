@@ -289,6 +289,12 @@ void RestoreState(struct ProcContext* proc) {
   stack_save_state[18] = proc->rflags;
   stack_save_state[19] = proc->rsp;
   stack_save_state[20] = proc->ss;
+
+  if (proc->cr3 != (uint64_t)Getcr3()) {
+    printk("ASDF\n");
+    //while (1);
+  }
+
   Setcr3(proc->cr3);
 }
 
