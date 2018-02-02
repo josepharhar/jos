@@ -104,31 +104,40 @@ void DeletePageTable(uint64_t cr3) {
 
 // TODO this overlaps a lot of logic with GetP1Entry from page.cc
 // TODO this should definitely be unit tested
+// TODO make this work for identity map huge pages
 uint64_t GetPhysicalAddress(uint64_t cr3, uint64_t address) {
   VirtualAddress virtual_address = VirtualAddress::FromPointer(address);
 
   PageTableEntry* p4_entry =
       (PageTableEntry*)(((uint64_t*)cr3) + virtual_address.p4_index);
-  //if (p4_entry->available2 != PAGE_ALLOCATED) {
   if (!p4_entry->present) {
+    if (p4_entry->available2 == PAGE_ALLOCATED) {
+      printk("expected avl2 to say allocated since present bit is set\n");
+    }
     return NULL_FRAME;
   }
 
   PageTableEntry* p3_entry = (PageTableEntry*)p4_entry->GetAddress();
-  //if (p3_entry->available2 != PAGE_ALLOCATED) {
   if (!p3_entry->present) {
+    if (p3_entry->available2 == PAGE_ALLOCATED) {
+      printk("expected avl2 to say allocated since present bit is set\n");
+    }
     return NULL_FRAME;
   }
 
   PageTableEntry* p2_entry = (PageTableEntry*)p3_entry->GetAddress();
-  //if (p2_entry->available2 != PAGE_ALLOCATED) {
   if (!p2_entry->present) {
+    if (p2_entry->available2 == PAGE_ALLOCATED) {
+      printk("expected avl2 to say allocated since present bit is set\n");
+    }
     return NULL_FRAME;
   }
 
   PageTableEntry* p1_entry = (PageTableEntry*)p2_entry->GetAddress();
-  //if (p1_entry->available2 != PAGE_ALLOCATED) {
   if (!p1_entry->present) {
+    if (p1_entry->available2 == PAGE_ALLOCATED) {
+      printk("expected avl2 to say allocated since present bit is set\n");
+    }
     return NULL_FRAME;
   }
 

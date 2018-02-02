@@ -290,10 +290,44 @@ void RestoreState(struct ProcContext* proc) {
   stack_save_state[19] = proc->rsp;
   stack_save_state[20] = proc->ss;
 
-  if (proc->cr3 != (uint64_t)Getcr3()) {
+  uint64_t old_cr3 = (uint64_t)Getcr3();
+  uint64_t new_cr3 = proc->cr3;
+  if (proc->cr3 != old_cr3) {
     printk("changing cr3 from %p to %p\n", proc->cr3, Getcr3());
-    Setcr3(proc->cr3);
-    printk("successfully changed cr3\n");
+
+    uint64_t rbp;
+    uint64_t rsp;
+    GET_REGISTER("rsp", rsp);
+    GET_REGISTER("rbp", rbp);
+    uint64_t rsp_val = *((uint64_t*)rsp);
+    uint64_t rbp_val = *((uint64_t*)rbp);
+
+    SET_REGISTER("cr3", new_cr3);
+
+    uint64_t new_rsp_val = *((uint64_t*)rsp);
+    uint64_t new_rbp_val = *((uint64_t*)rbp);
+
+
+    printk("rbp: %p, *rbp: %p\n", rbp, rbp_val);
+    printk("rsp: %p, *rsp: %p\n", rsp, rsp_val);
+    printk("*new_rbp: %p\n", new_rbp_val);
+    printk("*new_rsp: %p\n", new_rsp_val);
+
+    /*printk("rbp: %p, old_cr3 phys: %p,\n  new_cr3 phys: %p\n",
+        rbp, page::GetPhysicalAddress(old_cr3, rbp),
+        page::GetPhysicalAddress(proc->cr3, rbp));*/
+
+    /*printk("rsp: %p, old_cr3 phys: %p,\n  new_cr3 phys: %p\n",
+        rsp, page::GetPhysicalAddress(old_cr3, rsp),
+        page::GetPhysicalAddress(proc->cr3, rsp));*/
+
+    //Setcr3(proc->cr3);
+    //Setcr3(old_cr3);
+    printk("SUCCESSFULLY CHANGED CR3\n");
+
+    /*printk("halting\n");
+    while (1) asm volatile ("hlt");*/
+
     return;
   }
 
