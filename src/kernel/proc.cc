@@ -293,9 +293,10 @@ void RestoreState(struct ProcContext* proc) {
   if (proc->cr3 != (uint64_t)Getcr3()) {
     printk("ASDF\n");
     //while (1);
-  }
+  } else {
 
   Setcr3(proc->cr3);
+  }
 }
 
 static void HandleSyscallProcRun(uint64_t syscall_number,
