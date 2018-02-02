@@ -137,10 +137,10 @@ ProcContext* Clone(CloneOptions* clone_options,
   if (clone_options->copy_page_table) {
     new_proc->cr3 = page::CopyPageTable(current_proc->cr3);
   }
-  printk("current_proc->rip virt: %p phys: %p\n", current_proc->rip, page::GetPhysicalAddress(current_proc->cr3, current_proc->rip));
+  /*printk("current_proc->rip virt: %p phys: %p\n", current_proc->rip, page::GetPhysicalAddress(current_proc->cr3, current_proc->rip));
   printk("    new_proc->rip virt: %p phys: %p\n", new_proc->rip, page::GetPhysicalAddress(new_proc->cr3, new_proc->rip));
   printk("current_proc->rsp virt: %p phys: %p\n", current_proc->rsp, page::GetPhysicalAddress(current_proc->cr3, current_proc->rsp));
-  printk("    new_proc->rsp virt: %p phys: %p\n", new_proc->rsp, page::GetPhysicalAddress(new_proc->cr3, new_proc->rsp));
+  printk("    new_proc->rsp virt: %p phys: %p\n", new_proc->rsp, page::GetPhysicalAddress(new_proc->cr3, new_proc->rsp));*/
 
   // set new pid
   new_proc->pid = new_proc_id++;
@@ -291,12 +291,11 @@ void RestoreState(struct ProcContext* proc) {
   stack_save_state[20] = proc->ss;
 
   if (proc->cr3 != (uint64_t)Getcr3()) {
-    printk("ASDF\n");
+    printk("changing cr3 from %p to %p\n", proc->cr3, Getcr3());
     //while (1);
-  } else {
+  }
 
   Setcr3(proc->cr3);
-  }
 }
 
 static void HandleSyscallProcRun(uint64_t syscall_number,
