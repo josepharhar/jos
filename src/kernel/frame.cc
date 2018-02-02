@@ -106,6 +106,8 @@ void* FrameAllocate() {
   // ran out of free frames in this region
   if (free_region == NULL_FRAME_PTR) {
     // ran out of free regions, fail
+    printk("RAN OUT OF MEMORY, NO MORE FREE REGIONS. halting.\n");
+    while (1) asm volatile ("hlt");
     return NULL_FRAME_PTR;
   }
 

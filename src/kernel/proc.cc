@@ -292,7 +292,9 @@ void RestoreState(struct ProcContext* proc) {
 
   if (proc->cr3 != (uint64_t)Getcr3()) {
     printk("changing cr3 from %p to %p\n", proc->cr3, Getcr3());
-    //while (1);
+    Setcr3(proc->cr3);
+    printk("successfully changed cr3\n");
+    return;
   }
 
   Setcr3(proc->cr3);
@@ -488,8 +490,8 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   stack_pointer--;
   *stack_pointer = (uint64_t)stack_pointer; // saved rbp?
   current_proc->rbp = (uint64_t)stack_pointer;
-  // no params on stack, so rsp = rbp?
-  current_proc->rsp = current_proc->rbp;
+  current_proc->rsp = (uint64_t)stack_pointer;
+  current_proc->rsp--;
 
   RestoreState(current_proc);
 }

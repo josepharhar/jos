@@ -91,7 +91,7 @@ void proc_testing() {
   CloneOptions options;
   options.copy_page_table = 1;
   // TODO make start_at_callback = 0 work
-  options.start_at_callback = 1;
+  options.start_at_callback = 0;
   //clone(&options, NewProc, new_stack + 2048);
   clone(&options, NewProc, 0);
   printu("main() done calling clone\n");
