@@ -83,6 +83,7 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg);
 
 void Reschedule();
 void Yield();
+void YieldNoNesting();
 void Exit();
 bool IsRunning();  // returns 1 if threading system is running, else 0
 
@@ -116,6 +117,7 @@ class BlockedQueue {
   // Called by system call handler.
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
   void BlockCurrentProc();
+  void BlockCurrentProcNoNesting();
 
  private:
   stdj::Queue<ProcContext*> queue_;

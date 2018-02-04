@@ -28,6 +28,7 @@ class BufferFile : public ipc::File {
     ipc::Pipe* pipe;
     uint8_t* buffer;
     int size;
+    // TODO make this a weak_ptr in case it gets deleted?
     proc::ProcContext* proc;
   };
 

@@ -222,6 +222,13 @@ void Yield() {
   Syscall(SYSCALL_YIELD);
 }
 
+void YieldNoNesting() {
+  Reschedule();
+  current_proc = next_proc;
+  next_proc = 0;
+  RestoreState(current_proc);
+}
+
 void Exit() {
   Reschedule();
   Syscall(SYSCALL_EXIT);
@@ -313,6 +320,9 @@ static void HandleSyscallYield(uint64_t syscall_number,
     return;
   }
 
+  printk("HandleSyscallYield\n");
+  printk("  current pid: %d, rip: %p\n", current_proc->pid, current_proc->rip);
+  printk("     next pid: %d, rip: %p\n", next_proc->pid, next_proc->rip);
   current_proc = next_proc;
   next_proc = 0;
 
@@ -412,6 +422,16 @@ void BlockedQueue::BlockCurrentProc() {
   END_CS();
 
   Yield();  // i can do nested syscalls, right?
+}
+
+void BlockedQueue::BlockCurrentProcNoNesting() {
+  // appending to the queue must be atomic, it can be edited by interrupt
+  // handlers
+  BEGIN_CS();
+  queue_.Add(current_proc);
+  current_proc->is_blocked = 1;
+  END_CS();
+  YieldNoNesting();
 }
 
 void Print() {
