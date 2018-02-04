@@ -18,7 +18,7 @@ static void HandleSyscallWrite(uint64_t interrupt_number,
   SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
   Pipe* pipe = proc::GetPipeForFdFromCurrentProc(params->fd);
-  params->size_writeback = pipe->Write(params->buffer, params->size);
+  pipe->Write(params->buffer, params->size, &(params->size_writeback));
 }
 
 static void HandleSyscallRead(uint64_t interrupt_number,
@@ -29,7 +29,7 @@ static void HandleSyscallRead(uint64_t interrupt_number,
   SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
   Pipe* pipe = proc::GetPipeForFdFromCurrentProc(params->fd);
-  params->size_writeback = pipe->Read(params->buffer, params->size);
+  pipe->Read(params->buffer, params->size, &(params->size_writeback));
 }
 
 static void HandleSyscallPipe(uint64_t interrupt_number,

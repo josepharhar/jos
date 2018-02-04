@@ -30,11 +30,15 @@ class File {
   virtual int GetNumPipes() = 0;
   // Reads or writes to the underlying file. Will block the current process if
   // there is no data to be read or written. I don't know why I added the pipe
-  // parameter.
-  virtual int Write(Pipe* pipe,
-                    const uint8_t* source_buffer,
-                    int write_buffer) = 0;
-  virtual int Read(Pipe* pipe, uint8_t* dest_buffer, int read_size) = 0;
+  // parameter. Returns -1 on error, RDWR_BLOCKED on blocking
+  virtual void Write(Pipe* pipe,
+                     const uint8_t* source_buffer,
+                     int write_buffer,
+                     int* size_writeback) = 0;
+  virtual void Read(Pipe* pipe,
+                    uint8_t* dest_buffer,
+                    int read_size,
+                    int* size_writeback) = 0;
 };
 
 // one ipc::Pipe per file descriptor per process
@@ -44,8 +48,8 @@ class Pipe {
   virtual ~Pipe();
 
   // these pass through to ipc::File::Write/Read
-  int Write(const uint8_t* source_buffer, int write_size);
-  int Read(uint8_t* dest_buffer, int read_size);
+  void Write(const uint8_t* source_buffer, int write_size, int* size_writeback);
+  void Read(uint8_t* dest_buffer, int read_size, int* size_writeback);
 
   // Returns the ipc::File which owns this Pipe
   File* GetFile();

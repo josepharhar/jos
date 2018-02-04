@@ -8,6 +8,7 @@ int write(int fd, const void* write_buffer, int write_size) {
   params.buffer = (uint8_t*)write_buffer;
   params.size = write_size;
   params.size_writeback = -1;
+
   Syscall(SYSCALL_WRITE, (uint64_t)&params, 0, 0);
   return params.size_writeback;
 }
@@ -18,6 +19,7 @@ int read(int fd, void* read_buffer, int read_size) {
   params.buffer = (uint8_t*)read_buffer;
   params.size = read_size;
   params.size_writeback = -1;
+
   Syscall(SYSCALL_READ, (uint64_t)&params, 0, 0);
   return params.size_writeback;
 }

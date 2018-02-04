@@ -20,8 +20,14 @@ class BufferFile : public ipc::File {
   void Close(ipc::Pipe* pipe) override;
   int GetNumPipes() override;
 
-  int Write(ipc::Pipe* pipe, const uint8_t* source_buffer, int write_size) override;
-  int Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) override;
+  void Write(ipc::Pipe* pipe,
+             const uint8_t* source_buffer,
+             int write_size,
+             int* size_writeback) override;
+  void Read(ipc::Pipe* pipe,
+            uint8_t* dest_buffer,
+            int read_size,
+            int* size_writeback) override;
 
  private:
   struct RdWrRequest {
@@ -30,6 +36,7 @@ class BufferFile : public ipc::File {
     int size;
     // TODO make this a weak_ptr in case it gets deleted?
     proc::ProcContext* proc;
+    int* size_writeback;
   };
 
   stdj::Array<ipc::Pipe*> pipes_;

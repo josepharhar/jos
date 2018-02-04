@@ -21,9 +21,10 @@ int BufferFile::GetNumPipes() {
   return pipes_.Size();
 }
 
-int BufferFile::Write(ipc::Pipe* pipe,
-                      const uint8_t* source_buffer,
-                      int write_size) {
+void BufferFile::Write(ipc::Pipe* pipe,
+                       const uint8_t* source_buffer,
+                       int write_size,
+                       int* size_writeback) {
   uint64_t write_size_available = buffer_.WriteSizeAvailable();
   if (write_size_available) {
     int size_written = (int)buffer_.Write(source_buffer, (uint64_t)write_size);
@@ -42,14 +43,16 @@ int BufferFile::Write(ipc::Pipe* pipe,
       }
 
       Setcr3(read_request.proc->cr3);
-      buffer_.Read(read_request.buffer, bytes_to_read);
+      *(read_request.size_writeback) =
+          (int)buffer_.Read(read_request.buffer, bytes_to_read);
       Setcr3(proc::GetCurrentProc()->cr3);
 
       printk("BufferFile::Write unblocking a proc\n");
       read_blocked_queue_.UnblockHead();
     }
 
-    return size_written;
+    *size_writeback = size_written;
+    return;
   }
 
   // block this process until there is space to write.
@@ -58,17 +61,18 @@ int BufferFile::Write(ipc::Pipe* pipe,
   write_request.buffer = (uint8_t*)source_buffer;
   write_request.size = write_size;
   write_request.proc = proc::GetCurrentProc();
+  write_request.size_writeback = size_writeback;
   write_request_queue_.Add(write_request);
 
-  // this will make syscall yield
   write_blocked_queue_.BlockCurrentProcNoNesting();
-  // TODO is this reachable?
-  printk("BufferFile::Write this is supposed to be non-reachable!\n");
-  return -1;
 }
 
-int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
-  printk("BufferFile::Read dest_buffer: %p, read_size: %d\n", dest_buffer, read_size);
+void BufferFile::Read(ipc::Pipe* pipe,
+                      uint8_t* dest_buffer,
+                      int read_size,
+                      int* size_writeback) {
+  printk("BufferFile::Read dest_buffer: %p, read_size: %d\n", dest_buffer,
+         read_size);
   uint64_t read_size_available = buffer_.ReadSizeAvailable();
   if (read_size_available) {
     int size_read = (int)buffer_.Read(dest_buffer, (uint64_t)read_size);
@@ -83,13 +87,14 @@ int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
       }
 
       Setcr3(write_request.proc->cr3);
-      buffer_.Write(write_request.buffer, bytes_to_write);
+      *(write_request.size_writeback) =
+          (int)buffer_.Write(write_request.buffer, bytes_to_write);
       Setcr3(proc::GetCurrentProc()->cr3);
 
       write_blocked_queue_.UnblockHead();
     }
 
-    return size_read;
+    *size_writeback = size_read;
   }
 
   // block this process until there is stuff to read.
@@ -98,13 +103,10 @@ int BufferFile::Read(ipc::Pipe* pipe, uint8_t* dest_buffer, int read_size) {
   read_request.buffer = dest_buffer;
   read_request.size = read_size;
   read_request.proc = proc::GetCurrentProc();
+  read_request.size_writeback = size_writeback;
   read_request_queue_.Add(read_request);
 
-  // this will make syscall yield
   read_blocked_queue_.BlockCurrentProcNoNesting();
-  // TODO is this reachable?
-  printk("BufferFile::Read this is supposed to be non-reachable!\n");
-  return -1;
 }
 
 BufferPipe::BufferPipe(ipc::File* file, ipc::Mode mode)
