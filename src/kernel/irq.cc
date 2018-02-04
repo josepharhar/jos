@@ -10,6 +10,7 @@
 #include "idt.h"
 #include "user.h"
 #include "proc.h"
+#include "kernel/time.h"
 
 #define NUM_IRQ_HANDLERS 256 // 256 supported interrupt handlers
 
@@ -233,8 +234,7 @@ void c_interrupt_handler(uint64_t interrupt_number) {
   switch (interrupt_number) {
     case PIC1_OFFSET:
       // programmable interrupt timer interrupt
-      // should anything ever be done for this?
-      //printk("PIC timer interrupt\n");
+      time::TimerInterrupt();
       break;
 
     /*case PIC1_OFFSET + 1:
@@ -278,7 +278,9 @@ void IRQInit() {
   (idt_table + 13)->ist = 1; // #GP general protection fault
   (idt_table + 14)->ist = 2; // #PF page fault
   (idt_table + 8)->ist = 3;  // #DF double fault
-  (idt_table + 0x80)->type_attr = (1 << 7) | TRAP_GATE | (3 << 5); // enable interrupts for system calls, allow user mode
+  //(idt_table + 0x80)->type_attr = (1 << 7) | TRAP_GATE | (3 << 5); // enable interrupts for system calls, allow user mode
+  // INTERRUPT_GATE disables interrupts during system calls because that would just make things too hard.
+  (idt_table + 0x80)->type_attr = (1 << 7) | INTERRUPT_GATE | (3 << 5); // allow user mode
   //(idt_table + 0x80)->ist = 5;
   load_idt();
 
