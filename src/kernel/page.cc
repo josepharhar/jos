@@ -360,6 +360,13 @@ void* StackAllocate() {
   return (void*) new_stack_bottom;
 }
 
+void TouchMemory(uint64_t start_address, uint64_t end_address) {
+  while (start_address < end_address) {
+    GetP1Entry(start_address, CREATE_ENTRIES, true);
+    start_address += 4096;
+  }
+}
+
 void StackFree(void* stack_pointer) {
   CheckInitialized();
 

@@ -320,9 +320,9 @@ static void HandleSyscallYield(uint64_t syscall_number,
     return;
   }
 
-  printk("HandleSyscallYield\n");
+  /*printk("HandleSyscallYield\n");
   printk("  current pid: %d, rip: %p\n", current_proc->pid, current_proc->rip);
-  printk("     next pid: %d, rip: %p\n", next_proc->pid, next_proc->rip);
+  printk("     next pid: %d, rip: %p\n", next_proc->pid, next_proc->rip);*/
   current_proc = next_proc;
   next_proc = 0;
 
@@ -482,6 +482,12 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   current_proc->cs = GDT_USER_CS + 3;
   current_proc->ss = GDT_USER_DS + 3;
   // current_proc->rsp = user_stack_bottom;
+
+  uint64_t user_stack_low = 0xC000000000000000;
+  uint64_t user_stack_high = 0xC000000000100000;
+  TouchMemory(user_stack_low, user_stack_high);
+  current_proc->rbp = user_stack_high - 4096;
+  current_proc->rsp = current_proc->rbp;
 
   RestoreState(current_proc);
 }

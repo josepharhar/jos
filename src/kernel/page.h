@@ -26,6 +26,8 @@ void PageFree(void* page);
 void* StackAllocate();
 void StackFree(void* stack);
 
+void TouchMemory(uint64_t start_address, uint64_t end_address);
+
 bool IsAddressInUserspace(uint64_t address);
 
 void HandlePageFault(uint64_t error_code, uint64_t faulting_address);
