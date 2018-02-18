@@ -134,6 +134,10 @@ ProcContext* Clone(CloneOptions* clone_options,
     new_proc->cr3 = page::CopyPageTable(current_proc->cr3);
   }
 
+  // set new stack
+  new_proc->rsp = 
+  new_proc->rbp = new_proc->rsp;
+
   // set new pid
   new_proc->pid = new_proc_id++;
 
