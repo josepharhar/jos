@@ -7,8 +7,7 @@
 extern "C" {
 #endif
 
-int printk(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
-int vprintk(const char* format, va_list list);
+int printk(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 
 #ifdef __cplusplus
 }

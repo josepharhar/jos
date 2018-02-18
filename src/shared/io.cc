@@ -12,7 +12,7 @@ void Putc(char output) {
   Syscall(SYSCALL_PUTC, output);
 }
 
-void Puts(char* string) {
+void Puts(const char* string) {
   while (*string) {
     Putc(*string);
     string++;

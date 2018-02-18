@@ -1,6 +1,8 @@
 #include "dcheck.h"
 
 #include "printk.h"
+#include "vga.h"
+#include "vprintf.h"
 
 void DCHECKFailed(const char* condition) {
   printk("DCHECK failed: %s\n", condition);
@@ -12,9 +14,11 @@ void DCHECKFailed(const char* condition) {
 
 void DCHECKFailedMessage(const char* condition, const char* format, ...) {
   printk("DCHECK failed: %s\n  ", condition);
+
+  // TODO why is this calling vprintk manually?
   va_list list;
   va_start(list, format);
-  vprintk(format, list);
+  vprintf(format, list, VGA_display_char, VGA_display_str);
   va_end(list);
   printk("\n");
 

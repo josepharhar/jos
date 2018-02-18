@@ -3,6 +3,6 @@
 
 char Getc();
 void Putc(char output);
-void Puts(char* string);
+void Puts(const char* string);
 
 #endif  // IO_H_

@@ -1,6 +1,8 @@
 #include "dcheck.h"
 
 #include "printu.h"
+#include "io.h"
+#include "vprintf.h"
 
 void DCHECKFailed(const char* condition) {
   printu("DCHECK failed: %s\n", condition);
@@ -8,9 +10,12 @@ void DCHECKFailed(const char* condition) {
 
 void DCHECKFailedMessage(const char* condition, const char* format, ...) {
   printu("DCHECK failed: %s\n  ", condition);
+
+  // TODO why is this calling vprint directly?
   va_list list;
   va_start(list, format);
-  vprintu(format, list);
+  vprintf(format, list, Putc, Puts);
   va_end(list);
+
   printu("\n");
 }
