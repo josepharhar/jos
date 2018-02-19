@@ -6,6 +6,13 @@ global cr2_register
 cr2_register:
   dq 0
 
+irq_temp:
+  dq 0
+
+global irq_error_code
+irq_error_code:
+  dq 0
+
 
 global irq0_handler
 irq0_handler:
@@ -103,13 +110,36 @@ irq13_handler:
 
 global irq14_handler
 irq14_handler:
-  push rsi
+  ; save rsi
+  mov [irq_temp],rsi
+
+  ; use rsi to save cr2
   mov rsi,cr2
   mov [cr2_register],rsi
-  mov rsi,[rsp+8]
+
+  ; use rsi to save error code
+  mov rsi,[rsp]
+  mov [irq_error_code],rsi
+  ; pop error code
+  add rsp,8
+
+  ; restore rsi
+  mov rsi,[irq_temp]
+
+  ; save rdi and use it for irq#
   push rdi
   mov rdi,14
-  jmp irq_2param
+
+  ; use 1param since we popped error code
+  jmp irq_1param
+
+;  push rsi
+;  mov rsi,cr2
+;  mov [cr2_register],rsi
+;  mov rsi,[rsp+8]
+;  push rdi
+;  mov rdi,14
+;  jmp irq_2param
 
 global irq15_handler
 irq15_handler:

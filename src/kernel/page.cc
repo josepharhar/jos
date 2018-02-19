@@ -408,8 +408,10 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     printk("    error.protection_violation: %p\n", error.protection_violation);
     printk("  faulting_address: %p\n", faulting_address);
     printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
-    printk("  pid: %d\n", proc::GetCurrentPid());
-    //printk("  rip: %p\n", current_proc->rip);
+    if (proc::IsRunning()) {
+      printk("  rip: %p,  pid: %d\n", proc::GetCurrentProc()->rip, proc::GetCurrentProc()->pid);
+      printk("  rsp: %p, rbp: %p\n", proc::GetCurrentProc()->rsp, proc::GetCurrentProc()->rbp);
+    }
     printk("  halting\n");
     HALT_LOOP();
   }

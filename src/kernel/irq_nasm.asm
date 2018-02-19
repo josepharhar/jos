@@ -12,6 +12,41 @@ extern HandleSyscall
 ; r8:  syscall param 2
 ; r9:  syscall param 3
 
+;saved_rax:
+;  dq 0
+;saved_rbx:
+;  dq 0
+;saved_rcx:
+;  dq 0
+;saved_rdx:
+;  dq 0
+;saved_rbp:
+;  dq 0
+;saved_rsp:
+;  dq 0
+;saved_rsi:
+;  dq 0
+;saved_rdi:
+;  dq 0
+;saved_r8:
+;  dq 0
+;saved_r9:
+;  dq 0
+;saved_r10:
+;  dq 0
+;saved_r11:
+;  dq 0
+;saved_r12:
+;  dq 0
+;saved_r13:
+;  dq 0
+;saved_r14:
+;  dq 0
+;saved_r15:
+;  dq 0
+;saved_error_code:
+;  dq 0
+
 irq_1param:
   ; push everything except rdi
   ; rdi already has interrupt number
@@ -30,8 +65,15 @@ irq_1param:
   push r15
   push rbp
 
+  mov r9, [stack_save_state_address]
+  push r9
+  mov [stack_save_state_address], rsp
+
   cld
   call c_interrupt_handler
+
+  pop r9
+  mov [stack_save_state_address], r9
 
   ; pop all registers to restore state
   ; rdi must be last since it was already pushed
@@ -62,6 +104,7 @@ irq_2param:
   push rbx
   push rcx
   push rdx
+  ;push rsi
   push r8
   push r9
   push r10
@@ -72,8 +115,16 @@ irq_2param:
   push r15
   push rbp
 
+  ; TODO fix this for 2param
+  ;mov r9, [stack_save_state_address]
+  ;push r9
+  ;mov [stack_save_state_address], rsp
+
   cld
   call c_interrupt_handler_2param
+
+  ;pop r9
+  ;mov [stack_save_state_address], r9
 
   ; pop all registers to restore state
   ; rsi must be last since it was pushed first
@@ -87,6 +138,7 @@ irq_2param:
   pop r10
   pop r9
   pop r8
+  ;pop rsi
   pop rdx
   pop rcx
   pop rbx

@@ -47,6 +47,10 @@ static IRQHandlerTableEntry irq_handler_table[NUM_IRQ_HANDLERS];
 void IRQHandlerEmpty(uint64_t interrupt_number, void* arg) {}
 void IRQHandlerDefault(uint64_t interrupt_number, void* arg) {
   printk("IRQHandlerDefault() interrupt_number: %lld, halting...\n", interrupt_number);
+  if (proc::IsRunning()) {
+    printk("  pid: %d, rip: %p\n", proc::GetCurrentProc()->pid, proc::GetCurrentProc()->rip);
+    printk("  rsp: %p, rbp: %p\n", proc::GetCurrentProc()->rsp, proc::GetCurrentProc()->rbp);
+  }
   asm volatile ("hlt");
   //HALT_LOOP();
 }
@@ -192,6 +196,7 @@ static void PICRemap(int offset1, int offset2) {
 }
 
 extern uint64_t cr2_register[];
+extern uint64_t irq_error_code[];
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
   proc::SaveStateToCurrentProc();
@@ -224,8 +229,11 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 void c_interrupt_handler(uint64_t interrupt_number) {
   proc::SaveStateToCurrentProc();
 
-  IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
-  irq_handler.handler(interrupt_number, irq_handler.arg);
+  // TODO this is hacky, properly register page fault instead
+  if (interrupt_number != 14) {
+    IRQHandlerTableEntry irq_handler = irq_handler_table[interrupt_number];
+    irq_handler.handler(interrupt_number, irq_handler.arg);
+  }
 
   // tables of interrupts:
   // http://wiki.osdev.org/Interrupts#Standard_ISA_IRQs
@@ -245,6 +253,11 @@ void c_interrupt_handler(uint64_t interrupt_number) {
       // COM1 (serial) interrupt
       printk("interrupt %d calling SerialHandleInterrupt()\n", interrupt_number);
       SerialHandleInterrupt();
+      break;
+
+    case 14:
+      // page fault using new error code saving method
+      HandlePageFault(*irq_error_code, *cr2_register);
       break;
   }
 
