@@ -7,12 +7,12 @@
 #include "page_table.h"
 
 static void HandleSyscallClone(uint64_t interrupt_number,
-                               uint64_t options,
-                               uint64_t callback,
-                               uint64_t new_stack) {
+                               uint64_t options_ptr,
+                               uint64_t param_2,
+                               uint64_t param_3) {
   // TODO security this
-  CloneOptions* clone_options = (CloneOptions*)options;
-  proc::Clone(clone_options, callback, new_stack);
+  CloneOptions* clone_options = (CloneOptions*)options_ptr;
+  proc::Clone(clone_options);
 }
 
 void InitClone() {

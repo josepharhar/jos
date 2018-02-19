@@ -67,12 +67,13 @@ void proc_testing() {
   asdf = 1;
 
   printu("calling clone\n");
-  CloneOptions options;
+  /*CloneOptions options;
   options.copy_page_table = 1;
   // TODO make start_at_callback = 0 work
   options.start_at_callback = 1;
   // clone(&options, NewProc, new_stack + 2048);
-  clone(&options, NewProc, 0);
+  clone(&options, NewProc, 0);*/
+  clone(&NewProc, new_stack + 2048, CLONE_FILES);
 
   asdf = 2;
   printu("proc_testing() set asdf = 2\n");
@@ -103,11 +104,8 @@ void ipc_testing() {
 
   pipe(fds);
 
-  CloneOptions clone_options;
-  clone_options.copy_page_table = 1;
-  clone_options.start_at_callback = 1;
   printu("calling clone()...\n");
-  clone(&clone_options, ipcnewproc, 0);
+  clone(ipcnewproc, new_stack + 2048, CLONE_FILES);
   printu("ipc_testing returned from clone(), pid: %d\n", getpid());
 
   printu("ipc_testing() going to block on reading...\n");

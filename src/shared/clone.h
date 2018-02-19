@@ -3,20 +3,18 @@
 
 #include "stdint.h"
 
-struct CloneOptions {
-  uint64_t copy_page_table : 1;
-  uint64_t start_at_callback : 1;
-  uint64_t unused : 62;
+#define CLONE_FILES (1 << 0) // copy fd table
+#define CLONE_VM (1 << 1) // don't copy page table
 
-  uint64_t Serialize() { return *((uint64_t*)this); }
-  static CloneOptions Deserialize(uint64_t options) {
-    return *((CloneOptions*)options);
-  }
+struct CloneOptions {
+  bool copy_page_table;
+  bool copy_fds;
+  uint64_t callback;
+  uint64_t new_stack;
 } __attribute__((packed));
-static_assert(sizeof(CloneOptions) == sizeof(uint64_t), "bad CloneOptions size");
 
 typedef void (*CloneCallback)();
 
-void clone(CloneOptions* options, CloneCallback callback, void* new_stack);
+void clone(CloneCallback callback, void* new_stack, int flags);
 
 #endif  // SHARED_CLONE_H_

@@ -108,9 +108,7 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
 }
 
 // this is intended for user processes for clone()
-ProcContext* Clone(CloneOptions* clone_options,
-                   uint64_t new_rip,
-                   uint64_t new_stack) {
+ProcContext* Clone(CloneOptions* clone_options) {
   // TODO use this more in other functions
   AssertRunning();
 
@@ -118,25 +116,22 @@ ProcContext* Clone(CloneOptions* clone_options,
 
   // TODO create more clone() settings to set new proc's registers?
 
-  // TODO consolidate start_at_callback and new_rip
-  if (clone_options->start_at_callback) {
-    new_proc->rip = new_rip;
+  if (clone_options->callback) {
+    new_proc->rip = clone_options->callback;
+  } else {
+    new_proc->rip = current_proc->rip;
   }
 
   // set stack registers
-  if (new_stack) {
-    new_proc->rsp = new_stack;
-    new_proc->rbp = new_stack;
+  if (clone_options->new_stack) {
+    new_proc->rsp = clone_options->new_stack;
+    new_proc->rbp = clone_options->new_stack;
   }
 
   // copy page table
   if (clone_options->copy_page_table) {
     new_proc->cr3 = page::CopyPageTable(current_proc->cr3);
   }
-
-  // set new stack
-  new_proc->rsp = 
-  new_proc->rbp = new_proc->rsp;
 
   // set new pid
   new_proc->pid = new_proc_id++;
