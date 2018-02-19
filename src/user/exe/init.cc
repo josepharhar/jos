@@ -13,11 +13,13 @@
 void proc_testing();
 void class_testing();
 void ipc_testing();
+void stack_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
   // proc_testing();
   // class_testing();
-  ipc_testing();
+  // ipc_testing();
+  stack_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();
@@ -114,6 +116,41 @@ void ipc_testing() {
   int bytes_read = read(fds[0], buffer, 4);
   printu("ipc_testing() read() returned, bytes_read: %d, buffer: %s\n",
          bytes_read, buffer);
+
+  while (1) {
+    Putc(Getc());
+  }
+}
+
+static char new_stack_1[8192];
+static void stackforkproc() {
+  uint64_t rsp;
+  GET_REGISTER("rsp", rsp);
+  printu("stackforkproc() begin. rsp: %p, pid: %d\n", rsp, getpid());
+
+  while (1) {
+    Putc(Getc());
+  }
+}
+static void stackcloneproc() {
+  uint64_t rsp;
+  GET_REGISTER("rsp", rsp);
+  printu("stackcloneproc() begin. rsp: %p, pid: %d\n", rsp, getpid());
+
+  printu("stackcloneproc() calling clone()...\n");
+  clone(stackforkproc, 0, CLONE_FILES);
+  printu("stackcloneproc() done calling clone()\n");
+
+  while (1) {
+    Putc(Getc());
+  }
+}
+void stack_testing() {
+  printu("stack_testing() begin\n");
+
+  printu("stack_testing() calling clone()...\n");
+  clone(stackcloneproc, new_stack_1 + 1024, CLONE_FILES);
+  printu("stack_testing() returned from clone()\n");
 
   while (1) {
     Putc(Getc());
