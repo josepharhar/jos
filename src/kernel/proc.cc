@@ -320,9 +320,9 @@ static void HandleSyscallYield(uint64_t syscall_number,
     return;
   }
 
-  printk("HandleSyscallYield\n");
+  /*printk("HandleSyscallYield\n");
   printk("  current pid: %d, rip: %p\n", current_proc->pid, current_proc->rip);
-  printk("     next pid: %d, rip: %p\n", next_proc->pid, next_proc->rip);
+  printk("     next pid: %d, rip: %p\n", next_proc->pid, next_proc->rip);*/
   current_proc = next_proc;
   next_proc = 0;
 
