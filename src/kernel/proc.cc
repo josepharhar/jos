@@ -207,7 +207,7 @@ void Reschedule() {
     }
     // TODO reduce number of instructions between block checking and hlt()
     if (!next_proc) {
-      hlt();
+      asm volatile ("hlt");
     }
   } while (!next_proc);
 
@@ -538,6 +538,21 @@ int AddPipeToCurrentProc(ipc::Pipe* pipe) {
 
 ipc::Pipe* GetPipeForFdFromCurrentProc(int fd) {
   return current_proc->fd_map_.Get(fd);
+}
+
+void PreemptProc() {
+  if (!IsRunning()) {
+    return;
+  }
+
+  if (proc_list->Size() < 2) {
+    return;
+  }
+
+  Reschedule();
+  current_proc = next_proc;
+  next_proc = 0;
+  RestoreState(current_proc);
 }
 
 }  // namespace proc

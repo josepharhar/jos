@@ -2,16 +2,16 @@
 
 #include "irq.h"
 #include "printk.h"
+#include "proc.h"
 
 static uint64_t time = 0;
 
 static void HandlePitInterrupt(uint64_t interrupt_number, void* arg) {
-  //printk("Programmable Interrupt Timer interrupt\n");
+  // printk("Programmable Interrupt Timer interrupt\n");
   time++;
 
-  // TODO make this switch processes
-  // TODO verify this doesn't interrupt any other IRQ handlers.
-  //   already verified it doesn't interrupt keyboard handling IRQ.
+  // preemptive multitasking
+  proc::PreemptProc();
 }
 
 void PitInit() {

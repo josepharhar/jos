@@ -129,7 +129,7 @@ static void stackforkproc() {
   printu("stackforkproc() begin. rsp: %p, pid: %d\n", rsp, getpid());
 
   while (1) {
-    Putc(Getc());
+    printu("pid: %d\n", getpid());
   }
 }
 static void stackcloneproc() {
@@ -142,7 +142,7 @@ static void stackcloneproc() {
   printu("stackcloneproc() done calling clone()\n");
 
   while (1) {
-    Putc(Getc());
+    printu("pid: %d\n", getpid());
   }
 }
 void stack_testing() {
