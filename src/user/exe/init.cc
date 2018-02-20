@@ -16,10 +16,10 @@ void ipc_testing();
 void stack_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
-  // proc_testing();
+  proc_testing();
   // class_testing();
   // ipc_testing();
-  stack_testing();
+  // stack_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();
@@ -128,8 +128,9 @@ static void stackforkproc() {
   GET_REGISTER("rsp", rsp);
   printu("stackforkproc() begin. rsp: %p, pid: %d\n", rsp, getpid());
 
+  int pid = getpid();
   while (1) {
-    //printu("pid: %d\n", getpid());
+    //printu("pid: %d\n", pid);
   }
 }
 static void stackcloneproc() {
@@ -141,8 +142,9 @@ static void stackcloneproc() {
   clone(stackforkproc, 0, CLONE_FILES);
   printu("stackcloneproc() done calling clone()\n");
 
+  int pid = getpid();
   while (1) {
-    //printu("pid: %d\n", getpid());
+    //printu("pid: %d\n", pid);
   }
 }
 void stack_testing() {

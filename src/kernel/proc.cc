@@ -505,9 +505,9 @@ void SaveStateToCurrentProc() {
     return;
   }
 
-  if (fake_proc.rip != current_proc->rip && current_proc->pid == 1) {
+  /*if (fake_proc.rip != current_proc->rip && current_proc->pid == 1) {
     printk("pid1 rip %p -> %p on int %d\n", current_proc->rip, fake_proc.rip, GetLastInterruptNumber());
-  }
+  }*/
 
   SaveState(current_proc);
 }

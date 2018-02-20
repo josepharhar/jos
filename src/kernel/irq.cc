@@ -211,9 +211,9 @@ static void PostInterrupt() {
     return;
   }
 
-  if (proc::GetCurrentProc()->pid == 1) {
+  /*if (proc::GetCurrentProc()->pid == 1) {
     printk("Restoring pid1 on int %d, rip: %p\n", GetLastInterruptNumber(), proc::GetCurrentProc()->rip);
-  }
+  }*/
 }
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
