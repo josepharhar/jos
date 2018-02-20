@@ -13,6 +13,7 @@
 #include "frame.h"
 #include "ref_counted.h"
 #include "jarray.h"
+#include "irq.h"
 
 #define INTERRUPT_ENABLE_BIT (1 << 9)
 
@@ -384,20 +385,19 @@ BlockedQueue::~BlockedQueue() {}
 // Unblocks one process from the ProcQueue,
 // moving it back to the scheduler.
 // Called by interrupt handler?
-// Returns whether or not a proc was unblocked
-bool BlockedQueue::UnblockHead() {
+// Returns unblocked pid or zero
+int BlockedQueue::UnblockHead() {
   BEGIN_CS();
 
-  bool removed_proc = false;
+  int removed_pid = 0;
   if (!queue_.IsEmpty()) {
-    removed_proc = true;
-
     ProcContext* unblocked = queue_.Remove();
     unblocked->is_blocked = 0;
+    removed_pid = unblocked->pid;
   }
 
   END_CS();
-  return removed_proc;
+  return removed_pid;
 }
 
 // Unblocks all processes from the ProcQueue,
@@ -505,7 +505,7 @@ void SaveStateToCurrentProc() {
   }
 
   if (fake_proc.rip != current_proc->rip && current_proc->pid == 1) {
-    printk("pid1 rip %p -> %p\n", current_proc->rip, fake_proc.rip);
+    printk("pid1 rip %p -> %p on int %d\n", current_proc->rip, fake_proc.rip, GetLastInterruptNumber());
   }
 
   SaveState(current_proc);

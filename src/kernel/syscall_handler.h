@@ -15,9 +15,7 @@ void InitSyscall();
 extern "C" {
 #endif
 
-void HandleSyscall(uint64_t interrupt_number,
-                   uint64_t error_code,
-                   uint64_t syscall_num,
+void HandleSyscall(uint64_t syscall_num,
                    uint64_t syscall_param_1,
                    uint64_t syscall_param_2,
                    uint64_t syscall_param_3);

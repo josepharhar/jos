@@ -233,7 +233,7 @@ static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
       buffer_free_index = next_free_index;
 
       // consume - unblock a process
-      proc_queue->UnblockHead();
+      printk("KeyboardRead() calling proc_queue->UnblockHead(): %d\n", proc_queue->UnblockHead());
     }
   }
 }
@@ -247,7 +247,9 @@ char KeyboardRead() {
 
   // TODO shouldn't we try to consume before blocking?
   //      if there is already input in the buffer we shouldn't block
+  printk("KeyboardRead() calling proc_queue->BlockCurrentProc()...\n");
   proc_queue->BlockCurrentProc();
+  printk("KeyboardRead() returned from proc_queue->BlockCurrentProc()\n");
 
   if (buffer_free_index == buffer_drain_index) {
     printk("KeyboardRead() proc unblocked with empty buffer!\nthis should never happen!\n");

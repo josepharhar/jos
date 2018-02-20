@@ -146,9 +146,7 @@ static void stackcloneproc() {
   }
 }
 void stack_testing() {
-  printu("stack_testing() begin\n");
-
-  printu("stack_testing() calling clone()...\n");
+  printu("stack_testing() begin. calling clone()...\n");
   clone(stackcloneproc, new_stack_1 + 1024, CLONE_FILES);
   printu("stack_testing() returned from clone()\n");
 

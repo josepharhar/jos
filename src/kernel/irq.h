@@ -23,6 +23,13 @@ void IRQSetHandler(IRQHandler handler, uint64_t interrupt_number, void* arg);
 
 void c_interrupt_handler(uint64_t interrupt_number);
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code);
+void c_syscall_handler(uint64_t interrupt_number,
+                       uint64_t error_code,
+                       uint64_t syscall_number,
+                       uint64_t param_1,
+                       uint64_t param_2,
+                       uint64_t param_3);
+uint64_t GetLastInterruptNumber();
 
 void IRQHandlerEmpty(uint64_t interrupt_number, void* arg);
 void IRQHandlerDefault(uint64_t interrupt_number, void* arg);

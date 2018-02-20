@@ -11,6 +11,7 @@
 #include "user.h"
 #include "proc.h"
 #include "kernel/time.h"
+#include "syscall_handler.h"
 
 #define NUM_IRQ_HANDLERS 256 // 256 supported interrupt handlers
 
@@ -198,8 +199,25 @@ static void PICRemap(int offset1, int offset2) {
 extern uint64_t cr2_register[];
 extern uint64_t irq_error_code[];
 
-void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
+static uint64_t last_interrupt_number = 0;
+
+static void PreInterrupt(uint64_t interrupt_number) {
+  last_interrupt_number = interrupt_number;
   proc::SaveStateToCurrentProc();
+}
+
+static void PostInterrupt() {
+  if (!proc::IsRunning()) {
+    return;
+  }
+
+  if (proc::GetCurrentProc()->pid == 1) {
+    printk("Restoring pid1 on int %d, rip: %p\n", GetLastInterruptNumber(), proc::GetCurrentProc()->rip);
+  }
+}
+
+void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
+  PreInterrupt(interrupt_number);
 
   switch (interrupt_number) {
     case 8: // #DF double fault - error is always zero
@@ -224,10 +242,12 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
   }
 
   IRQEndOfInterrupt(interrupt_number);
+
+  PostInterrupt();
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
-  proc::SaveStateToCurrentProc();
+  PreInterrupt(interrupt_number);
 
   // TODO this is hacky, properly register page fault instead
   if (interrupt_number != 14) {
@@ -263,6 +283,23 @@ void c_interrupt_handler(uint64_t interrupt_number) {
 
   // this should only be called for PIC interrupts? TODO
   IRQEndOfInterrupt(interrupt_number);
+
+  PostInterrupt();
+}
+
+void c_syscall_handler(uint64_t interrupt_number,
+                       uint64_t error_code,
+                       uint64_t syscall_number,
+                       uint64_t param_1,
+                       uint64_t param_2,
+                       uint64_t param_3) {
+  PreInterrupt(interrupt_number);
+  HandleSyscall(syscall_number, param_1, param_2, param_3);
+  PostInterrupt();
+}
+
+uint64_t GetLastInterruptNumber() {
+  return last_interrupt_number;
 }
 
 void IRQInit() {

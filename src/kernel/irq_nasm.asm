@@ -3,7 +3,7 @@ global irq_2param
 global irq_syscall
 extern c_interrupt_handler
 extern c_interrupt_handler_2param
-extern HandleSyscall
+extern c_syscall_handler
 
 ; rdi: interrupt number
 ; rsi: error code
@@ -183,7 +183,7 @@ irq_syscall:
   mov [stack_save_state_address], rsp
 
   cld
-  call HandleSyscall
+  call c_syscall_handler 
 
   pop r9
   mov [stack_save_state_address], r9

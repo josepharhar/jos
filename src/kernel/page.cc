@@ -403,13 +403,11 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     // http://wiki.osdev.org/Page_Fault
     printk("page fault outside of reserved space:\n");
     printk("  error_code: %p\n", error_code);
-    printk("    error.write: %p\n", error.write);
-    printk("    error.user: %p\n", error.user);
-    printk("    error.protection_violation: %p\n", error.protection_violation);
-    printk("  faulting_address: %p\n", faulting_address);
-    printk("  virtual_address.p4_index: %d\n", virtual_address.p4_index);
+    printk("    error.write: %d, error.user: %d, error.protec_violat: %d\n",
+        error.write, error.user, error.protection_violation);
+    printk("  faulting_address: %p, p4_index: %d\n", faulting_address, virtual_address.p4_index);
     if (proc::IsRunning()) {
-      printk("  rip: %p,  pid: %d\n", proc::GetCurrentProc()->rip, proc::GetCurrentProc()->pid);
+      printk("  rip: %p, pid: %d\n", proc::GetCurrentProc()->rip, proc::GetCurrentProc()->pid);
       printk("  rsp: %p, rbp: %p\n", proc::GetCurrentProc()->rsp, proc::GetCurrentProc()->rbp);
     }
     printk("  halting\n");

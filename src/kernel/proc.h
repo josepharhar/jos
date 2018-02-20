@@ -103,8 +103,8 @@ class BlockedQueue {
   // Unblocks one process from the ProcQueue,
   // moving it back to the scheduler.
   // Called by interrupt handler?
-  // Returns whether or not a proc was unblocked
-  bool UnblockHead();
+  // Returns unblocked pid or zero
+  int UnblockHead();
 
   // Unblocks all processes from the ProcQueue,
   // moving them all back to the scheduler.
@@ -114,7 +114,7 @@ class BlockedQueue {
   // Blocks the current process.
   // Called by system call handler.
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-  //void BlockCurrentProc();
+  void BlockCurrentProc();
   void BlockCurrentProcNoNesting();
 
  private:
