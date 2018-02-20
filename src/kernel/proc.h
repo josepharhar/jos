@@ -114,7 +114,7 @@ class BlockedQueue {
   // Blocks the current process.
   // Called by system call handler.
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-  void BlockCurrentProc();
+  //void BlockCurrentProc();
   void BlockCurrentProcNoNesting();
 
  private:

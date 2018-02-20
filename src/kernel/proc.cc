@@ -500,7 +500,12 @@ void SaveStateToCurrentProc() {
     // TODO sometimes garbage data gets in from SaveState(). WHY???
     //   This check is hacky and should not be necessary.
     //   Is this happening because the kernel is getting interrupted?
+    printk("this should not happen - save state has rip = 0\n");
     return;
+  }
+
+  if (fake_proc.rip != current_proc->rip && current_proc->pid == 1) {
+    printk("pid1 rip %p -> %p\n", current_proc->rip, fake_proc.rip);
   }
 
   SaveState(current_proc);
