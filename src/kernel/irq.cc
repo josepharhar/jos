@@ -213,10 +213,6 @@ static void PostInterrupt() {
 
   if (proc::GetCurrentProc()->pid == 1) {
     printk("Restoring pid1 on int %d, rip: %p\n", GetLastInterruptNumber(), proc::GetCurrentProc()->rip);
-    if (GetLastInterruptNumber() == 32) {
-      int one = 1;
-      while (one);
-    }
   }
 }
 
