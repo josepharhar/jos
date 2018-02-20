@@ -34,6 +34,7 @@
 static char keyboard_input_buffer[KEYBOARD_BUFFER_SIZE] = {0};
 static int buffer_free_index = 0;
 static int buffer_drain_index = 0;
+
 static proc::BlockedQueue* proc_queue = 0;
 
 static char scancode_map[0x100] = {0};
@@ -247,9 +248,7 @@ char KeyboardRead() {
 
   // TODO shouldn't we try to consume before blocking?
   //      if there is already input in the buffer we shouldn't block
-  printk("KeyboardRead() calling proc_queue->BlockCurrentProc()...\n");
   proc_queue->BlockCurrentProc();
-  printk("KeyboardRead() returned from proc_queue->BlockCurrentProc()\n");
 
   if (buffer_free_index == buffer_drain_index) {
     printk("KeyboardRead() proc unblocked with empty buffer!\nthis should never happen!\n");
