@@ -1,6 +1,6 @@
 #include "init.h"
 
-#include "io.h"
+#include "getc.h"
 #include "asm.h"
 #include "printu.h"
 #include "clone.h"

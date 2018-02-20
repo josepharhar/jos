@@ -2,7 +2,7 @@
 
 #include <stdarg.h>
 
-#include "io.h"
+#include "getc.h"
 #include "vprintf.h"
 
 int printu(const char* format, ...) {

@@ -1,11 +1,11 @@
-#include "io.h"
+#include "getc.h"
 
 #include "syscall.h"
 
 char Getc() {
- static char input;
- Syscall(SYSCALL_GETC, (uint64_t) &input);
- return input;
+  SyscallGetcParams params;
+  Syscall(SYSCALL_GETC, (uint64_t)&params);
+  return params.character_writeback;
 }
 
 void Putc(char output) {

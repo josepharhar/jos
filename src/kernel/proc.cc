@@ -222,13 +222,6 @@ void Yield() {
   Syscall(SYSCALL_YIELD);
 }
 
-void YieldNoNesting() {
-  Reschedule();
-  current_proc = next_proc;
-  next_proc = 0;
-  RestoreState(current_proc);
-}
-
 void Exit() {
   Reschedule();
   Syscall(SYSCALL_EXIT);
@@ -385,19 +378,18 @@ BlockedQueue::~BlockedQueue() {}
 // Unblocks one process from the ProcQueue,
 // moving it back to the scheduler.
 // Called by interrupt handler?
-// Returns unblocked pid or zero
-int BlockedQueue::UnblockHead() {
+// Returns unblocked proc
+ProcContext* BlockedQueue::UnblockHead() {
   BEGIN_CS();
 
-  int removed_pid = 0;
+  ProcContext* removed_proc = 0;
   if (!queue_.IsEmpty()) {
-    ProcContext* unblocked = queue_.Remove();
-    unblocked->is_blocked = 0;
-    removed_pid = unblocked->pid;
+    removed_proc = queue_.Remove();
+    removed_proc->is_blocked = 0;
   }
 
   END_CS();
-  return removed_pid;
+  return removed_proc;
 }
 
 // Unblocks all processes from the ProcQueue,
@@ -430,7 +422,16 @@ void BlockedQueue::BlockCurrentProcNoNesting() {
   queue_.Add(current_proc);
   current_proc->is_blocked = 1;
   END_CS();
-  YieldNoNesting();
+
+  // formerly YieldNoNesting()
+  Reschedule();
+  current_proc = next_proc;
+  next_proc = 0;
+  RestoreState(current_proc);
+}
+
+int BlockedQueue::Size() {
+  return queue_.Size();
 }
 
 void Print() {

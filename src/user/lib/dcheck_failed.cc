@@ -1,7 +1,7 @@
 #include "dcheck.h"
 
 #include "printu.h"
-#include "io.h"
+#include "getc.h"
 #include "vprintf.h"
 
 void DCHECKFailed(const char* condition) {

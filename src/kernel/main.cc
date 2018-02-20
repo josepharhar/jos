@@ -14,9 +14,8 @@
 #include "ata_block_device.h"
 #include "kmalloc.h"
 #include "vfs.h"
-#include "io.h"
 #include "syscall_handler.h"
-#include "io_handler.h"
+#include "getc_handler.h"
 #include "elf.h"
 #include "exec_handler.h"
 #include "files.h"
@@ -38,7 +37,7 @@ void PrintStackInfo() {
   printk("esp:          %p\n", esp_holder);
 }
 
-void ProcKeyboard(void* arg) {
+/*void ProcKeyboard(void* arg) {
   while (1) {
     char input = KeyboardRead();
     if (input == '\\') {
@@ -48,7 +47,7 @@ void ProcKeyboard(void* arg) {
       printk("%c", input);
     }
   }
-}
+}*/
 
 ATABlockDevice* CreateATADevice() {
   uint16_t bus_base_port = PRIMARY_ATA_PORT;
@@ -183,7 +182,7 @@ void KernelMain() {
 
   InitSyscall();
   proc::Init();
-  IOInit();
+  GetcInit();
 
   //InitFork();
   InitGetpid();

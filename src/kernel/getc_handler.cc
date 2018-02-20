@@ -1,4 +1,4 @@
-#include "io_handler.h"
+#include "getc_handler.h"
 
 #include "printk.h"
 #include "syscall.h"
@@ -17,9 +17,11 @@ static void HandleSyscallGetc(uint64_t syscall_number,
     // since the calling process will be currently loaded in memory with its page table,
     // we can write directly into its memory
     if (proc::IsKernel() || IsAddressInUserspace(param_1)) {
-      char input = KeyboardRead();
+      /*char input = KeyboardRead();
       char* write_address = (char*) param_1;
-      *write_address = input;
+      *write_address = input;*/
+      SyscallGetcParams* params = (SyscallGetcParams*)param_1;
+      KeyboardReadNoNesting(params);
     } else {
       printk("HandleSyscallGetc() user proc gave write address in kernel space: %p\n", param_1);
     }
@@ -34,7 +36,7 @@ static void HandleSyscallPutc(uint64_t syscall_number,
   printk("%c", output);
 }
 
-void IOInit() {
+void GetcInit() {
   SetSyscallHandler(SYSCALL_GETC, HandleSyscallGetc);
   SetSyscallHandler(SYSCALL_PUTC, HandleSyscallPutc);
 }

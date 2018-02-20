@@ -103,8 +103,8 @@ class BlockedQueue {
   // Unblocks one process from the ProcQueue,
   // moving it back to the scheduler.
   // Called by interrupt handler?
-  // Returns unblocked pid or zero
-  int UnblockHead();
+  // Returns unblocked proc
+  ProcContext* UnblockHead();
 
   // Unblocks all processes from the ProcQueue,
   // moving them all back to the scheduler.
@@ -116,6 +116,8 @@ class BlockedQueue {
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
   void BlockCurrentProc();
   void BlockCurrentProcNoNesting();
+
+  int Size();
 
  private:
   stdj::Queue<ProcContext*> queue_;

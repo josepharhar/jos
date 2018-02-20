@@ -4,12 +4,15 @@
 #include "proc.h"
 #include "asm.h"
 #include "irq.h"
+#include "jqueue.h"
+#include "jbuffer.h"
+#include "page.h"
 
-#define PS2_DATA 0x60 // communication with a ps2 device within controller
-#define PS2_CMD 0x64 // output to ps2 controller
-#define PS2_STATUS PS2_CMD // input from ps2 controller
-#define PS2_STATUS_OUTPUT 1 // must be 1 before reading from 0x60
-#define PS2_STATUS_INPUT (1 << 1) // must be 0 before writing to 0x60 or 0x64
+#define PS2_DATA 0x60       // communication with a ps2 device within controller
+#define PS2_CMD 0x64        // output to ps2 controller
+#define PS2_STATUS PS2_CMD  // input from ps2 controller
+#define PS2_STATUS_OUTPUT 1        // must be 1 before reading from 0x60
+#define PS2_STATUS_INPUT (1 << 1)  // must be 0 before writing to 0x60 or 0x64
 
 #define CMD_GET_CONFIGURATION 0x20
 #define CMD_SET_CONFIGURATION 0x60
@@ -27,11 +30,11 @@
 #define SCANCODE_LEFT_SHIFT 0x12
 #define SCANCODE_RIGHT_SHIFT 0x59
 
-#define KEYBOARD_BUFFER_SIZE 256
+#define KEYBOARD_BUFFER_SIZE 2048
 
 // same pattern as serial_output_buffer in serial.c
 // TODO this should be a per-process buffer instead
-static char keyboard_input_buffer[KEYBOARD_BUFFER_SIZE] = {0};
+//static char keyboard_input_buffer[KEYBOARD_BUFFER_SIZE] = {0};
 static int buffer_free_index = 0;
 static int buffer_drain_index = 0;
 
@@ -200,9 +203,10 @@ char PollKeyboard() {
   }
 
   scancode_pressed[scancode] = 1;
-  
+
   if (scancode_map[scancode]) {
-    if (scancode_pressed[SCANCODE_LEFT_SHIFT] || scancode_pressed[SCANCODE_RIGHT_SHIFT]) {
+    if (scancode_pressed[SCANCODE_LEFT_SHIFT] ||
+        scancode_pressed[SCANCODE_RIGHT_SHIFT]) {
       return scancode_map_shift[scancode];
     }
     return scancode_map[scancode];
@@ -218,7 +222,7 @@ char PollKeyboard() {
 // KeyboardRead() reads from the buffer, or blocks if the buffer is empty
 
 // interrupts are disabled
-static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
+/*static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
   char keyboard_input = PollKeyboard();
 
   if (keyboard_input) {
@@ -234,13 +238,14 @@ static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
       buffer_free_index = next_free_index;
 
       // consume - unblock a process
-      printk("KeyboardRead() calling proc_queue->UnblockHead(): %d\n", proc_queue->UnblockHead());
+      printk("KeyboardRead() calling proc_queue->UnblockHead(): %d\n",
+proc_queue->UnblockHead());
     }
   }
-}
+}*/
 
 // blocking keyboard character reader
-char KeyboardRead() {
+/*char KeyboardRead() {
   if (!proc::IsRunning()) {
     printk("KeyboardRead() called without current_proc\n");
     return '\0';
@@ -251,7 +256,8 @@ char KeyboardRead() {
   proc_queue->BlockCurrentProc();
 
   if (buffer_free_index == buffer_drain_index) {
-    printk("KeyboardRead() proc unblocked with empty buffer!\nthis should never happen!\n");
+    printk("KeyboardRead() proc unblocked with empty buffer!\nthis should never
+happen!\n");
     return '\0';
   }
 
@@ -259,11 +265,72 @@ char KeyboardRead() {
   buffer_drain_index++;
   buffer_drain_index %= KEYBOARD_BUFFER_SIZE;
   return keyboard_input;
+}*/
+
+static stdj::Buffer<char>* keyboard_input_buffer = 0;
+
+struct KeyboardReadRequest {
+  proc::ProcContext* proc;
+  SyscallGetcParams* params;
+};
+
+static stdj::Queue<KeyboardReadRequest>* read_request_queue;
+static proc::BlockedQueue* read_blocked_queue;
+
+static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
+  char keyboard_input = PollKeyboard();
+  if (!keyboard_input) {
+    // failed to read from keyboard
+    return;
+  }
+
+  if (!keyboard_input_buffer->WriteSizeAvailable()) {
+    printk("keyboard input buffer full, input: '%c'\n", keyboard_input);
+    return;
+  }
+
+  if (!read_blocked_queue->Size()) {
+    // no proc to consume input, buffer it instead
+    keyboard_input_buffer->Write(&keyboard_input, 1);
+    return;
+  }
+
+  // consume keyboard_input
+  read_blocked_queue->UnblockHead();
+  KeyboardReadRequest request = read_request_queue->Remove();
+  // TODO check to make sure request.proc still exists with a weak ptr
+
+  uint64_t current_cr3 = (uint64_t)Getcr3();
+  Setcr3(request.proc->cr3);
+  request.params->character_writeback = keyboard_input;
+  Setcr3(current_cr3);
 }
 
+void KeyboardReadNoNesting(SyscallGetcParams* params) {
+  if (keyboard_input_buffer->ReadSizeAvailable()) {
+    // send to proc now
+    char keyboard_input = 0;
+    keyboard_input_buffer->Read(&keyboard_input, 1);
+    params->character_writeback = keyboard_input;
+
+  } else {
+    // block this proc
+    KeyboardReadRequest request;
+    request.proc = proc::GetCurrentProc();
+    request.params = params;
+
+    read_request_queue->Add(request);
+    read_blocked_queue->BlockCurrentProcNoNesting();
+  }
+}
 
 void KeyboardInit() {
-  IRQSetHandler(IRQHandlerEmpty, PIC1_OFFSET + 1, 0); // block interrupts during configuration
+  keyboard_input_buffer = new stdj::Buffer<char>(KEYBOARD_BUFFER_SIZE);
+  read_request_queue = new stdj::Queue<KeyboardReadRequest>();
+  read_blocked_queue = new proc::BlockedQueue();
+
+  // block interrupts during configuration
+  IRQSetHandler(IRQHandlerEmpty, PIC1_OFFSET + 1, 0);
 
   InitializeScancodes();
 
@@ -273,17 +340,17 @@ void KeyboardInit() {
 
   // flush the output buffer
   inb(PS2_STATUS);
-  
+
   // get configuration byte
   SendChar(CMD_GET_CONFIGURATION);
   uint8_t configuration = GetChar();
-  
+
   // change configuration byte
   configuration &= ~CONFIGURATION_FIRST_PORT_TRANSLATION;
-  //configuration &= ~CONFIGURATION_FIRST_PORT_INTERRUPT;
+  // configuration &= ~CONFIGURATION_FIRST_PORT_INTERRUPT;
   configuration |= CONFIGURATION_FIRST_PORT_INTERRUPT;
   configuration &= ~CONFIGURATION_SECOND_PORT_INTERRUPT;
-  //configuration |= CONFIGURATION_SECOND_PORT_INTERRUPT;
+  // configuration |= CONFIGURATION_SECOND_PORT_INTERRUPT;
 
   // set configuration byte
   SendChar(CMD_SET_CONFIGURATION);
