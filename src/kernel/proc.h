@@ -150,6 +150,9 @@ ProcContext* GetCurrentProc();
 // switches procs for preemptive multitasking
 void PreemptProc();
 
+// required for new blocking
+void EndOfInterruptReschedule();
+
 }  // namespace proc
 
 #endif  // PROC_H_

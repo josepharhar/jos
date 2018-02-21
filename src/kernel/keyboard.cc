@@ -296,7 +296,7 @@ static void HandleKeyboardInterrupt(uint64_t interrupt_number, void* arg) {
   }
 
   // consume keyboard_input
-  read_blocked_queue->UnblockHead();
+  proc::ProcContext* unblocked_proc = read_blocked_queue->UnblockHead();
   KeyboardReadRequest request = read_request_queue->Remove();
   // TODO check to make sure request.proc still exists with a weak ptr
 

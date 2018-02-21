@@ -430,10 +430,10 @@ void BlockedQueue::BlockCurrentProcNoNesting() {
   END_CS();
 
   // formerly YieldNoNesting()
-  Reschedule();
+  /*Reschedule();
   current_proc = next_proc;
   next_proc = 0;
-  RestoreState(current_proc);
+  RestoreState(current_proc);*/
 }
 
 int BlockedQueue::Size() {
@@ -552,6 +552,17 @@ ipc::Pipe* GetPipeForFdFromCurrentProc(int fd) {
   return current_proc->fd_map_.Get(fd);
 }
 
+static ProcContext* FindUnblockedProc() {
+  ProcContext* proc = current_proc;
+  do {
+    proc = proc_list->GetNextValue(proc);
+    if (!proc->is_blocked) {
+      return proc;
+    }
+  } while (proc != current_proc);
+  return 0;
+}
+
 void PreemptProc() {
   if (!IsRunning()) {
     return;
@@ -561,10 +572,32 @@ void PreemptProc() {
     return;
   }
 
-  Reschedule();
-  current_proc = next_proc;
-  next_proc = 0;
-  RestoreState(current_proc);
+  ProcContext* next_unblocked_proc = FindUnblockedProc();
+  if (next_unblocked_proc) {
+    current_proc = next_unblocked_proc;
+    RestoreState(current_proc);
+  }
+}
+
+void EndOfInterruptReschedule() {
+  if (!current_proc->is_blocked) {
+    return;
+  }
+
+  ProcContext* unblocked_proc = 0;
+  while (!unblocked_proc) {
+    unblocked_proc = FindUnblockedProc();
+    if (!unblocked_proc) {
+      sti();
+      asm volatile ("hlt");
+      cli();
+    }
+  }
+
+  if (current_proc != unblocked_proc) {
+    current_proc = unblocked_proc;
+    RestoreState(current_proc);
+  }
 }
 
 }  // namespace proc

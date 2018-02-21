@@ -159,16 +159,19 @@ void stack_testing() {
   }
 }
 
+static void asdfasdfasdf() {
+  printj("a;sdlfkjasd;lfjasdf\n");
+  while (1) { Putc(Getc()); }
+}
 void fork_testing() {
   printj("fork_testing() begin. calling fork()...\n");
   //int pid = fork();
-  int pid = 1234;
+  int pid = clone(asdfasdfasdf, 0, 0);
+  //int pid = 1234;
 
   printj("fork(): %d, pid: %d\n", pid, getpid());
 
   while (1) {
-    printj("asdf\n");
-    char input = Getc();
-    printj("%c", input);
+    Putc(Getc());
   }
 }
