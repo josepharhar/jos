@@ -296,6 +296,15 @@ void c_syscall_handler(uint64_t interrupt_number,
   PreInterrupt(interrupt_number);
   HandleSyscall(syscall_number, param_1, param_2, param_3);
   PostInterrupt();
+
+  proc::ProcContext* proc = proc::GetCurrentProc();
+  static bool asdf = false;
+  if (proc->pid == 2) {
+    asdf = true;
+  }
+  if (asdf) {
+    printk("Restoring pid %d at %p after syscall %d\n", proc->pid, proc->rip, syscall_number);
+  }
 }
 
 uint64_t GetLastInterruptNumber() {

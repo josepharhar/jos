@@ -18,6 +18,7 @@ pid_t clone(CloneCallback callback, void* new_stack, int flags) {
 
   clone_options.callback = (uint64_t)callback;
   clone_options.new_stack = (uint64_t)new_stack;
+  clone_options.pid_writeback = 0;
 
   Syscall(SYSCALL_CLONE, (uint64_t)&clone_options);
 

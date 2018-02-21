@@ -16,7 +16,11 @@ class Map {
     }
   }
 
-  Map(const Map& other) {
+  Map(const Map& other) { CopyFrom(other); }
+  Map& operator=(const Map& other) { CopyFrom(other); }
+
+ private:
+  void CopyFrom(const Map& other) {
     // TODO test this
     head_ = 0;
     if (!other.head_) {
@@ -29,10 +33,10 @@ class Map {
       entry = entry->next;
     }
   }
-  Map& operator=(const Map& other) = delete;
 
-  Map(Map&& other) = delete;
-  Map& operator=(Map&& other) = delete;
+ public:
+  Map(Map&& other) = default;
+  Map& operator=(Map&& other) = default;
 
   void Set(K key, V value) {
     // check for duplicates first

@@ -161,11 +161,14 @@ void stack_testing() {
 
 void fork_testing() {
   printj("fork_testing() begin. calling fork()...\n");
-  int pid = fork();
+  //int pid = fork();
+  int pid = 1234;
 
   printj("fork(): %d, pid: %d\n", pid, getpid());
 
   while (1) {
-    Putc(Getc());
+    printj("asdf\n");
+    char input = Getc();
+    printj("%c", input);
   }
 }

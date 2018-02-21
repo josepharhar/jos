@@ -138,16 +138,22 @@ ProcContext* Clone(SyscallCloneParams* clone_options) {
   new_proc->pid = new_proc_id++;
 
   // copy file descriptors
-  FdMap* new_fd_map = &new_proc->fd_map_;
-  for (int i = 0; i < new_fd_map->Size(); i++) {
-    ipc::Pipe* pipe_to_copy = new_fd_map->GetAt(i);
-    ipc::File* file = pipe_to_copy->GetFile();
-    ipc::Pipe* new_pipe = file->Open(pipe_to_copy->GetMode());
-    new_fd_map->Set(new_fd_map->GetKeyAt(i), new_pipe);
+  new_proc->fd_map_ = FdMap();
+  if (clone_options->copy_fds) {
+    FdMap* new_fd_map = &new_proc->fd_map_;
+    FdMap* old_fd_map = &current_proc->fd_map_;
+    for (int i = 0; i < old_fd_map->Size(); i++) {
+      ipc::Pipe* pipe_to_copy = old_fd_map->GetAt(i);
+      ipc::File* file = pipe_to_copy->GetFile();
+      ipc::Pipe* new_pipe = file->Open(pipe_to_copy->GetMode());
+      new_fd_map->Set(new_fd_map->GetKeyAt(i), new_pipe);
+    }
   }
 
   // add new proc to the master list of procs
   proc_list->Add(new_proc);
+
+  clone_options->pid_writeback = new_proc->pid;
 
   return new_proc;
 }
