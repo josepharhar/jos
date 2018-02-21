@@ -1,11 +1,11 @@
-#include "printu.h"
+#include "stdio.h"
 
 #include <stdarg.h>
 
 #include "getc.h"
 #include "vprintf.h"
 
-int printu(const char* format, ...) {
+int printj(const char* format, ...) {
   va_list list;
   va_start(list, format);
   int ret_value = vprintf(format, list, Putc, Puts);

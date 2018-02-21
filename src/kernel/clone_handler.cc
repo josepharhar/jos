@@ -11,7 +11,7 @@ static void HandleSyscallClone(uint64_t interrupt_number,
                                uint64_t param_2,
                                uint64_t param_3) {
   // TODO security this
-  CloneOptions* clone_options = (CloneOptions*)options_ptr;
+  SyscallCloneParams* clone_options = (SyscallCloneParams*)options_ptr;
   proc::Clone(clone_options);
 }
 

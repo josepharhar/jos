@@ -16,9 +16,9 @@
 
 #else  // user executable
 
-#include "shared/printu.h"
+#include "shared/stdio.h"
 
-#define NOTIMPLEMENTED() printu("NOTIMPLEMENTED %s", __PRETTY_FUNCTION__);
+#define NOTIMPLEMENTED() printj("NOTIMPLEMENTED %s", __PRETTY_FUNCTION__);
 
 #endif  // KERNEL
 

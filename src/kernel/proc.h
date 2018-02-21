@@ -87,7 +87,7 @@ void YieldNoNesting();
 void Exit();
 bool IsRunning();  // returns 1 if threading system is running, else 0
 
-ProcContext* Clone(CloneOptions* clone_options);
+ProcContext* Clone(SyscallCloneParams* clone_options);
 
 class BlockedQueue {
  public:

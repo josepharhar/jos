@@ -109,7 +109,7 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
 }
 
 // this is intended for user processes for clone()
-ProcContext* Clone(CloneOptions* clone_options) {
+ProcContext* Clone(SyscallCloneParams* clone_options) {
   // TODO use this more in other functions
   AssertRunning();
 

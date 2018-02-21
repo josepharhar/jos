@@ -3,8 +3,8 @@
 #include "syscall.h"
 
 // TODO add void* arg
-void clone(CloneCallback callback, void* new_stack, int flags) {
-  CloneOptions clone_options;
+pid_t clone(CloneCallback callback, void* new_stack, int flags) {
+  SyscallCloneParams clone_options;
 
   clone_options.copy_page_table = true;
   if (flags & CLONE_VM) {
@@ -20,4 +20,6 @@ void clone(CloneCallback callback, void* new_stack, int flags) {
   clone_options.new_stack = (uint64_t)new_stack;
 
   Syscall(SYSCALL_CLONE, (uint64_t)&clone_options);
+
+  return clone_options.pid_writeback;
 }

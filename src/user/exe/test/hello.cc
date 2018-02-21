@@ -1,6 +1,6 @@
-#include "printu.h"
+#include "stdio.h"
 
 int main() {
-  printu("Hello from hello.cc\n");
+  printj("Hello from hello.cc\n");
   return 0;
 }

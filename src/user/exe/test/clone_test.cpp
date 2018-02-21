@@ -74,4 +74,5 @@ void Parent() {
 
   printf("main() waiting on semaphore_2\n");
   sem_wait(&semaphore_2);
+  printf("main() done waiting on semaphore_2\n");
 }
