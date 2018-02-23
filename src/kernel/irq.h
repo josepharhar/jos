@@ -14,6 +14,16 @@ typedef void (*IRQHandler)(uint64_t interrupt_number, void* arg);
 extern "C" {
 #endif
 
+enum InterruptContextType {
+  INTERRUPT_CONTEXT_UNINITIALIZED = 0,
+  INTERRUPT_CONTEXT_ONE_PARAM = 1,
+  INTERRUPT_CONTEXT_TWO_PARAM = 2,
+  INTERRUPT_CONTEXT_SYSCALL = 3,
+  INTERRUPT_CONTEXT_PROCESS = 4,
+};
+InterruptContextType GetInterruptContext();
+uint64_t GetLastSyscallNum();
+
 void IRQInit();
 void IRQSetMask(uint8_t irq);
 void IRQClearMask(uint8_t irq);

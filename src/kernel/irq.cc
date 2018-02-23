@@ -199,10 +199,20 @@ static void PICRemap(int offset1, int offset2) {
 extern uint64_t cr2_register[];
 extern uint64_t irq_error_code[];
 
+static InterruptContextType interrupt_context = INTERRUPT_CONTEXT_UNINITIALIZED;
 static uint64_t last_interrupt_number = 0;
+static uint64_t last_syscall_num = 0;
 
-static void PreInterrupt(uint64_t interrupt_number) {
+InterruptContextType GetInterruptContext() {
+  return interrupt_context;
+}
+
+static void PreInterrupt(
+    InterruptContextType new_interrupt_context,
+    uint64_t interrupt_number) {
   last_interrupt_number = interrupt_number;
+  interrupt_context = new_interrupt_context;
+
   proc::SaveStateToCurrentProc();
 }
 
@@ -211,13 +221,15 @@ static void PostInterrupt() {
     return;
   }
 
+  interrupt_context = INTERRUPT_CONTEXT_PROCESS;
+
   /*if (proc::GetCurrentProc()->pid == 1) {
     printk("Restoring pid1 on int %d, rip: %p\n", GetLastInterruptNumber(), proc::GetCurrentProc()->rip);
   }*/
 }
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
-  PreInterrupt(interrupt_number);
+  PreInterrupt(INTERRUPT_CONTEXT_TWO_PARAM, interrupt_number);
 
   switch (interrupt_number) {
     case 8: // #DF double fault - error is always zero
@@ -247,7 +259,7 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
-  PreInterrupt(interrupt_number);
+  PreInterrupt(INTERRUPT_CONTEXT_ONE_PARAM, interrupt_number);
 
   // TODO this is hacky, properly register page fault instead
   if (interrupt_number != 14) {
@@ -293,12 +305,18 @@ void c_syscall_handler(uint64_t interrupt_number,
                        uint64_t param_1,
                        uint64_t param_2,
                        uint64_t param_3) {
-  PreInterrupt(interrupt_number);
+  PreInterrupt(INTERRUPT_CONTEXT_SYSCALL, interrupt_number);
+  last_syscall_num = syscall_number;
+
   HandleSyscall(syscall_number, param_1, param_2, param_3);
-  PostInterrupt();
+
+  // TODO why does machine reset when putting this after EndOfInterruptReschedule()??
+  //PostInterrupt();
 
   // TODO why doesn't this work for all interrupt handlers?
   proc::EndOfInterruptReschedule();
+
+  interrupt_context = INTERRUPT_CONTEXT_PROCESS;
 
   /*proc::ProcContext* proc = proc::GetCurrentProc();
   static bool asdf = false;
@@ -312,6 +330,9 @@ void c_syscall_handler(uint64_t interrupt_number,
 
 uint64_t GetLastInterruptNumber() {
   return last_interrupt_number;
+}
+uint64_t GetLastSyscallNum() {
+  return last_syscall_num;
 }
 
 void IRQInit() {

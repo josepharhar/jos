@@ -426,7 +426,7 @@ void BlockedQueue::BlockCurrentProcNoNesting() {
   // handlers
   BEGIN_CS();
   queue_.Add(current_proc);
-  current_proc->is_blocked = 1;
+  current_proc->is_blocked = (int)GetLastSyscallNum();
   END_CS();
 
   // formerly YieldNoNesting()
@@ -583,6 +583,9 @@ void EndOfInterruptReschedule() {
   if (!current_proc->is_blocked) {
     return;
   }
+
+  InterruptContextType interrupt_context = GetInterruptContext();
+  uint64_t last_syscall_num = GetLastSyscallNum();
 
   ProcContext* unblocked_proc = 0;
   while (!unblocked_proc) {
