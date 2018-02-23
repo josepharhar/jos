@@ -511,9 +511,17 @@ void SaveStateToCurrentProc() {
     return;
   }
 
-  /*if (fake_proc.rip != current_proc->rip && current_proc->pid == 1) {
-    printk("pid1 rip %p -> %p on int %d\n", current_proc->rip, fake_proc.rip, GetLastInterruptNumber());
-  }*/
+  // TODO this is very hacky and this check should have been covered
+  //   by PreInterrupt() checking interrupt_context
+  if (fake_proc.rip < 0xF000000 && current_proc->rip > 0xF000000) {
+    /*printk("PROC rip TO KERNEL SPACE! %p -> %p\n", current_proc->rip, fake_proc.rip);
+    printk("  context: %d, syscall: %d, interrupt: %d\n",
+        GetInterruptContext(), GetLastSyscallNum(), GetLastInterruptNumber());
+    while (1) {
+      asm volatile ("hlt");
+    }*/
+    return;
+  }
 
   SaveState(current_proc);
 }
@@ -579,7 +587,7 @@ void PreemptProc() {
   }
 }
 
-void EndOfInterruptReschedule() {
+void EndOfSyscallReschedule() {
   if (!current_proc->is_blocked) {
     return;
   }

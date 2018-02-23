@@ -20,6 +20,7 @@ enum InterruptContextType {
   INTERRUPT_CONTEXT_TWO_PARAM = 2,
   INTERRUPT_CONTEXT_SYSCALL = 3,
   INTERRUPT_CONTEXT_PROCESS = 4,
+  INTERRUPT_CONTEXT_SYSCALL_INTERRUPTED = 5,
 };
 InterruptContextType GetInterruptContext();
 uint64_t GetLastSyscallNum();

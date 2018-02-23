@@ -199,6 +199,7 @@ static void PICRemap(int offset1, int offset2) {
 extern uint64_t cr2_register[];
 extern uint64_t irq_error_code[];
 
+static InterruptContextType prev_interrupt_context = INTERRUPT_CONTEXT_UNINITIALIZED;
 static InterruptContextType interrupt_context = INTERRUPT_CONTEXT_UNINITIALIZED;
 static uint64_t last_interrupt_number = 0;
 static uint64_t last_syscall_num = 0;
@@ -210,10 +211,32 @@ InterruptContextType GetInterruptContext() {
 static void PreInterrupt(
     InterruptContextType new_interrupt_context,
     uint64_t interrupt_number) {
-  last_interrupt_number = interrupt_number;
-  interrupt_context = new_interrupt_context;
+  // somehow this if isn't catching the case when the timer interrupt interrupts
+  // system calls during the part where i turn interrupts off. why????
 
-  proc::SaveStateToCurrentProc();
+  if (interrupt_context == INTERRUPT_CONTEXT_SYSCALL) {
+    interrupt_context = INTERRUPT_CONTEXT_SYSCALL_INTERRUPTED;
+    // we have interrupted a syscall. should context be saved to proc?
+    
+    // if RestoreState() is not called during the interrupt, then
+    //   we will restore state perfectly back into the syscall handler. i think.
+    // if RestoreState() is called, then fucking shit dude.
+    
+    // if we save context to the current proc, then we could restore context
+    // into the syscall handler later. i guess theres nothing wrong with this...
+    // right? but thats the whole thing i was trying to avoid earlier
+    // to make multiprocessing simpler. for this reason, i will not SaveState
+    // here.
+    
+    // somehow, pid1's context's rip is getting stuck in a syscall handler
+    // at the hlt() where rescheduling happens at the end of a syscall.
+    // this can only happen if we save context while interrupting that part!
+  } else {
+    interrupt_context = new_interrupt_context;
+    proc::SaveStateToCurrentProc();
+  }
+
+  last_interrupt_number = interrupt_number;
 }
 
 static void PostInterrupt() {
@@ -221,11 +244,13 @@ static void PostInterrupt() {
     return;
   }
 
-  interrupt_context = INTERRUPT_CONTEXT_PROCESS;
-
-  /*if (proc::GetCurrentProc()->pid == 1) {
-    printk("Restoring pid1 on int %d, rip: %p\n", GetLastInterruptNumber(), proc::GetCurrentProc()->rip);
-  }*/
+  // TODO why does this break exec()????
+  //   is it because disk io still uses the old blocking technique?
+  /*if (interrupt_context == INTERRUPT_CONTEXT_SYSCALL_INTERRUPTED) {
+    interrupt_context = INTERRUPT_CONTEXT_SYSCALL;
+  } else {*/
+    interrupt_context = INTERRUPT_CONTEXT_PROCESS;
+  //}
 }
 
 void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) {
@@ -314,7 +339,8 @@ void c_syscall_handler(uint64_t interrupt_number,
   //PostInterrupt();
 
   // TODO why doesn't this work for all interrupt handlers?
-  proc::EndOfInterruptReschedule();
+  //   probably because interrupt handlers interrupt syscalls nomatter what
+  proc::EndOfSyscallReschedule();
 
   interrupt_context = INTERRUPT_CONTEXT_PROCESS;
 

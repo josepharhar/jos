@@ -151,7 +151,7 @@ ProcContext* GetCurrentProc();
 void PreemptProc();
 
 // required for new blocking
-void EndOfInterruptReschedule();
+void EndOfSyscallReschedule();
 
 }  // namespace proc
 
