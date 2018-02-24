@@ -110,21 +110,25 @@ uint64_t GetPhysicalAddress(uint64_t cr3, uint64_t address) {
   PageTableEntry* p4_entry =
       (PageTableEntry*)(((uint64_t*)cr3) + virtual_address.p4_index);
   if (p4_entry->available2 != PAGE_ALLOCATED) {
+    printk("GetPhysicalAddress() null p4\n");
     return NULL_FRAME;
   }
 
   PageTableEntry* p3_entry = (PageTableEntry*)p4_entry->GetAddress();
   if (p3_entry->available2 != PAGE_ALLOCATED) {
+    printk("GetPhysicalAddress() null p3\n");
     return NULL_FRAME;
   }
 
   PageTableEntry* p2_entry = (PageTableEntry*)p3_entry->GetAddress();
   if (p2_entry->available2 != PAGE_ALLOCATED) {
+    printk("GetPhysicalAddress() null p2\n");
     return NULL_FRAME;
   }
 
   PageTableEntry* p1_entry = (PageTableEntry*)p2_entry->GetAddress();
   if (p1_entry->available2 != PAGE_ALLOCATED) {
+    printk("GetPhysicalAddress() null p1\n");
     return NULL_FRAME;
   }
 

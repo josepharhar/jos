@@ -19,9 +19,9 @@ int main() {
   Puts("Hello from USERSPACE init\n");
   // proc_testing();
   // class_testing();
-  ipc_testing();
+  // ipc_testing();
   // stack_testing();
-  // fork_testing();
+  fork_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();
@@ -165,13 +165,15 @@ static void asdfasdfasdf() {
 }
 void fork_testing() {
   printj("fork_testing() begin. calling fork()...\n");
-  //int pid = fork();
-  int pid = clone(asdfasdfasdf, 0, 0);
+  int fork_retval = fork();
+  //int pid = clone(asdfasdfasdf, 0, 0);
   //int pid = 1234;
 
-  printj("fork(): %d, pid: %d\n", pid, getpid());
+  int pid = getpid();
+  printj("fork(): %d, pid: %d\n", fork_retval, pid);
 
   while (1) {
-    Putc(Getc());
+    char input = Getc();
+    printj("pid %d input '%c'\n", pid, input);
   }
 }

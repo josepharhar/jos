@@ -136,6 +136,10 @@ ProcContext* Clone(SyscallCloneParams* clone_options) {
 
   // set new pid
   new_proc->pid = new_proc_id++;
+    printk("new_proc->pid: %d, new_proc->rip: %p\n",
+        new_proc->pid, new_proc->rip);
+    printk("old_proc->cr3: %p, new_proc->cr3: %p\n",
+        current_proc->cr3, new_proc->cr3);
 
   // copy file descriptors
   new_proc->fd_map_ = FdMap();
@@ -428,6 +432,7 @@ void BlockedQueue::BlockCurrentProcNoNesting() {
   BEGIN_CS();
   queue_.Add(current_proc);
   current_proc->is_blocked = (int)GetLastSyscallNum();
+  printk("BlockCurrentProcNoNesting() pid: %d, is_blocked: %d\n", current_proc->pid, current_proc->is_blocked);
   END_CS();
 
   // formerly YieldNoNesting()
@@ -442,10 +447,10 @@ int BlockedQueue::Size() {
 }
 
 void Print() {
-  printk("proc::Print() printing procs:\n");
+  //printk("proc::Print() printing procs:\n");
   for (uint64_t i = 0; i < proc_list->Size(); i++) {
     ProcContext* proc = proc_list->Get(i);
-    printk("pid: %d, is_blocked: %d\n", proc->pid, proc->is_blocked);
+    printk("  pid: %d, blk: %d, rip: %p, cr3: %p\n", proc->pid, proc->is_blocked, proc->rip, proc->cr3);
   }
 }
 
@@ -584,7 +589,10 @@ void PreemptProc() {
   }
 
   ProcContext* next_unblocked_proc = FindUnblockedProc();
-  if (next_unblocked_proc) {
+  if (next_unblocked_proc && next_unblocked_proc != current_proc) {
+    printk("PreemptProc() switching procs pid %d -> %d\n",
+        current_proc->pid, next_unblocked_proc->pid);
+    Print();
     current_proc = next_unblocked_proc;
     RestoreState(current_proc);
   }
@@ -609,6 +617,19 @@ void EndOfSyscallReschedule() {
   }
 
   if (current_proc != unblocked_proc) {
+    printk("EndOfSyscallReschedule() switching procs pid %d -> %d\n", current_proc->pid, unblocked_proc->pid);
+    printk("  syscall: %d\n", GetLastSyscallNum());
+
+    printk("  pid %d rbp->phys: %p -> %p\n",
+        current_proc->pid, current_proc->rbp,
+        page::GetPhysicalAddress(current_proc->cr3,
+          current_proc->rbp));
+    printk("  pid %d rbp->phys: %p -> %p\n",
+        unblocked_proc->pid, unblocked_proc->rbp,
+        page::GetPhysicalAddress(unblocked_proc->cr3,
+          unblocked_proc->rbp));
+
+    Print();
     current_proc = unblocked_proc;
     RestoreState(current_proc);
   }

@@ -395,7 +395,9 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
   } else if (virtual_address.p4_index >= P4_USERSPACE_START) {
     // valid because userspace is huge? this is terrible TODO
     // TODO TODO TODO
-    p1_entry = GetP1Entry(faulting_address, DO_NOT_CREATE_ENTRIES);
+    //p1_entry = GetP1Entry(faulting_address, DO_NOT_CREATE_ENTRIES);
+    p1_entry = GetP1Entry(faulting_address, CREATE_ENTRIES, true);
+    printk("user %p -> p1 entry %p\n", faulting_address, p1_entry);
     if (p1_entry) {
       p1_entry->user_accessible = 1;
     }
