@@ -477,7 +477,7 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   // allocate user stack
   // printk("allocating user stack from %p to %p\n", USER_STACK_TOP,
   // USER_STACK_BOTTOM);
-  AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
+  //AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
   uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096;  // TODO
   // put Exit() on stack
   // TODO Exit() location must come from user executable, not this one
@@ -487,20 +487,21 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
 
   // allocate and fill user text/data
   printk("ExecCurrentProc() AllocateUserSpace()\n");
-  AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
+  //AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
   printk("ExecCurrentProc() memcpy()\n");
   // memset((void*)USER_STACK_BOTTOM - (4096 * 4), 0, 4096 * 4 + 1);
   uint64_t* stack = (uint64_t*)0x000007FFFFFFF000;
   printk("GetPhysicalAddress(%p): %p\n", stack,
          page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
-  PageTableEntry ptentry = GetP1Entry((uint64_t)stack, DO_NOT_CREATE_ENTRIES);
+  /*PageTableEntry ptentry = GetP1Entry((uint64_t)stack, DO_NOT_CREATE_ENTRIES);
   printk("        GetP1Entry(%p): %p\n", GetP1Entry((uint64_t)stack,
-        DO_NOT_CREATE_ENTRIES)->);
+        DO_NOT_CREATE_ENTRIES)->);*/
   *stack = 4880;
   printk("GetPhysicalAddress(%p): %p\n", stack,
          page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
+  printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address, page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));
 
   current_proc->rip = elf_info.instruction_pointer;
   // current_proc->rflags |= (3 << 12);

@@ -397,7 +397,6 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     // TODO TODO TODO
     //p1_entry = GetP1Entry(faulting_address, DO_NOT_CREATE_ENTRIES);
     p1_entry = GetP1Entry(faulting_address, CREATE_ENTRIES, true);
-    printk("user %p -> p1 entry %p\n", faulting_address, p1_entry);
     if (p1_entry) {
       p1_entry->user_accessible = 1;
     }
@@ -435,6 +434,7 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
   p1_entry->present = 1;
   p1_entry->writable = 1;
   p1_entry->available2 = PAGE_ALLOCATED;
+  printk("user %p -> phys %p\n", faulting_address, GetAddress(p1_entry));
 }
 
 // TODO move this to security.cc

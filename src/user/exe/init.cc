@@ -17,7 +17,7 @@ void stack_testing();
 void fork_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
-  while (1);
+  //while (1);
   // proc_testing();
   // class_testing();
   // ipc_testing();
@@ -170,7 +170,7 @@ void fork_testing() {
   //int pid = clone(asdfasdfasdf, 0, 0);
   //int pid = 1234;
 
-  int pid = getpid();
+  static int pid = getpid();
   printj("fork(): %d, pid: %d\n", fork_retval, pid);
 
   while (1) {
