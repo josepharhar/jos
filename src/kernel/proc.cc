@@ -136,10 +136,10 @@ ProcContext* Clone(SyscallCloneParams* clone_options) {
 
   // set new pid
   new_proc->pid = new_proc_id++;
-    printk("new_proc->pid: %d, new_proc->rip: %p\n",
-        new_proc->pid, new_proc->rip);
-    printk("old_proc->cr3: %p, new_proc->cr3: %p\n",
-        current_proc->cr3, new_proc->cr3);
+  printk("new_proc->pid: %d, new_proc->rip: %p\n", new_proc->pid,
+         new_proc->rip);
+  printk("old_proc->cr3: %p, new_proc->cr3: %p\n", current_proc->cr3,
+         new_proc->cr3);
 
   // copy file descriptors
   new_proc->fd_map_ = FdMap();
@@ -219,7 +219,7 @@ void Reschedule() {
     }
     // TODO reduce number of instructions between block checking and hlt()
     if (!next_proc) {
-      asm volatile ("hlt");
+      asm volatile("hlt");
     }
   } while (!next_proc);
 
@@ -432,7 +432,8 @@ void BlockedQueue::BlockCurrentProcNoNesting() {
   BEGIN_CS();
   queue_.Add(current_proc);
   current_proc->is_blocked = (int)GetLastSyscallNum();
-  printk("BlockCurrentProcNoNesting() pid: %d, is_blocked: %d\n", current_proc->pid, current_proc->is_blocked);
+  printk("BlockCurrentProcNoNesting() pid: %d, is_blocked: %d\n",
+         current_proc->pid, current_proc->is_blocked);
   END_CS();
 
   // formerly YieldNoNesting()
@@ -447,10 +448,11 @@ int BlockedQueue::Size() {
 }
 
 void Print() {
-  //printk("proc::Print() printing procs:\n");
+  // printk("proc::Print() printing procs:\n");
   for (uint64_t i = 0; i < proc_list->Size(); i++) {
     ProcContext* proc = proc_list->Get(i);
-    printk("  pid: %d, blk: %d, rip: %p, cr3: %p\n", proc->pid, proc->is_blocked, proc->rip, proc->cr3);
+    printk("  pid: %d, blk: %d, rip: %p, cr3: %p\n", proc->pid,
+           proc->is_blocked, proc->rip, proc->cr3);
   }
 }
 
@@ -484,7 +486,19 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   *stack_pointer = (uint64_t) &Exit;*/
 
   // allocate and fill user text/data
+  printk("ExecCurrentProc() AllocateUserSpace()\n");
   AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
+  printk("ExecCurrentProc() memcpy()\n");
+  // memset((void*)USER_STACK_BOTTOM - (4096 * 4), 0, 4096 * 4 + 1);
+  uint64_t* stack = (uint64_t*)0x000007FFFFFFF000;
+  printk("GetPhysicalAddress(%p): %p\n", stack,
+         page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
+  PageTableEntry ptentry = GetP1Entry((uint64_t)stack, DO_NOT_CREATE_ENTRIES);
+  printk("        GetP1Entry(%p): %p\n", GetP1Entry((uint64_t)stack,
+        DO_NOT_CREATE_ENTRIES)->);
+  *stack = 4880;
+  printk("GetPhysicalAddress(%p): %p\n", stack,
+         page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
 
@@ -520,7 +534,8 @@ void SaveStateToCurrentProc() {
   // TODO this is very hacky and this check should have been covered
   //   by PreInterrupt() checking interrupt_context
   if (fake_proc.rip < 0xF000000 && current_proc->rip > 0xF000000) {
-    /*printk("PROC rip TO KERNEL SPACE! %p -> %p\n", current_proc->rip, fake_proc.rip);
+    /*printk("PROC rip TO KERNEL SPACE! %p -> %p\n", current_proc->rip,
+    fake_proc.rip);
     printk("  context: %d, syscall: %d, interrupt: %d\n",
         GetInterruptContext(), GetLastSyscallNum(), GetLastInterruptNumber());
     while (1) {
@@ -558,8 +573,7 @@ int AddPipeToCurrentProc(ipc::Pipe* pipe) {
     // ran out of fds
     return new_fd;
   }
-  printk("pid %d installing fd %d -> %p\n",
-      current_proc->pid, new_fd, pipe);
+  printk("pid %d installing fd %d -> %p\n", current_proc->pid, new_fd, pipe);
   current_proc->fd_map_.Set(new_fd, pipe);
   return new_fd;
 }
@@ -590,8 +604,8 @@ void PreemptProc() {
 
   ProcContext* next_unblocked_proc = FindUnblockedProc();
   if (next_unblocked_proc && next_unblocked_proc != current_proc) {
-    printk("PreemptProc() switching procs pid %d -> %d\n",
-        current_proc->pid, next_unblocked_proc->pid);
+    printk("PreemptProc() switching procs pid %d -> %d\n", current_proc->pid,
+           next_unblocked_proc->pid);
     Print();
     current_proc = next_unblocked_proc;
     RestoreState(current_proc);
@@ -611,23 +625,22 @@ void EndOfSyscallReschedule() {
     unblocked_proc = FindUnblockedProc();
     if (!unblocked_proc) {
       sti();
-      asm volatile ("hlt");
+      asm volatile("hlt");
       cli();
     }
   }
 
   if (current_proc != unblocked_proc) {
-    printk("EndOfSyscallReschedule() switching procs pid %d -> %d\n", current_proc->pid, unblocked_proc->pid);
+    printk("EndOfSyscallReschedule() switching procs pid %d -> %d\n",
+           current_proc->pid, unblocked_proc->pid);
     printk("  syscall: %d\n", GetLastSyscallNum());
 
-    printk("  pid %d rbp->phys: %p -> %p\n",
-        current_proc->pid, current_proc->rbp,
-        page::GetPhysicalAddress(current_proc->cr3,
-          current_proc->rbp));
-    printk("  pid %d rbp->phys: %p -> %p\n",
-        unblocked_proc->pid, unblocked_proc->rbp,
-        page::GetPhysicalAddress(unblocked_proc->cr3,
-          unblocked_proc->rbp));
+    printk("  pid %d rbp->phys: %p -> %p\n", current_proc->pid,
+           current_proc->rbp,
+           page::GetPhysicalAddress(current_proc->cr3, current_proc->rbp));
+    printk("  pid %d rbp->phys: %p -> %p\n", unblocked_proc->pid,
+           unblocked_proc->rbp,
+           page::GetPhysicalAddress(unblocked_proc->cr3, unblocked_proc->rbp));
 
     Print();
     current_proc = unblocked_proc;

@@ -17,6 +17,7 @@ void stack_testing();
 void fork_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
+  while (1);
   // proc_testing();
   // class_testing();
   // ipc_testing();
