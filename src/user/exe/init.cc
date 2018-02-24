@@ -19,9 +19,9 @@ int main() {
   Puts("Hello from USERSPACE init\n");
   // proc_testing();
   // class_testing();
-  // ipc_testing();
+  ipc_testing();
   // stack_testing();
-  fork_testing();
+  // fork_testing();
 
   Puts("\ninit process ending\n");
   // TODO ProcExit();

@@ -18,7 +18,19 @@ static void HandleSyscallWrite(uint64_t interrupt_number,
   SyscallRdWrParams* params = (SyscallRdWrParams*)param_1;
 
   Pipe* pipe = proc::GetPipeForFdFromCurrentProc(params->fd);
-  pipe->Write(params->buffer, params->size, &(params->size_writeback));
+  if (!pipe) {
+    // fd must have been invalid
+    printk("HandleSyscallWrite() invalid fd: %d, listing fds:\n", params->fd);
+    proc::FdMap* fd_map = &(proc::GetCurrentProc()->fd_map_);
+    //for (int i = 0; i < fd_map->GetKeyAt(i))
+    for (int i = 0; i < fd_map->Size(); i++) {
+      int key = fd_map->GetKeyAt(i);
+      ipc::Pipe* value = fd_map->Get(key);
+      printk("  %d: %p\n", key, value);
+    }
+  } else {
+    pipe->Write(params->buffer, params->size, &(params->size_writeback));
+  }
 }
 
 static void HandleSyscallRead(uint64_t interrupt_number,

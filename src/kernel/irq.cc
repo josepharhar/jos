@@ -268,7 +268,13 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
     case 13: //  #GP general protection - error is selector index or zero
       // TODO user code can trigger this fault at any time, dont kys
       printk("interrupt 13 #GP general protection fault error_code: %p\n", error_code);
+      {
+        int one = 1;
+        while (one) {
+          //asm volatile ("hlt");
       HALT_LOOP();
+        }
+      }
       break;
 
     case 14: //  #PF page fault - error code is indicating why fault occured. faulting address is in CR2

@@ -146,7 +146,8 @@ ProcContext* Clone(SyscallCloneParams* clone_options) {
       ipc::Pipe* pipe_to_copy = old_fd_map->GetAt(i);
       ipc::File* file = pipe_to_copy->GetFile();
       ipc::Pipe* new_pipe = file->Open(pipe_to_copy->GetMode());
-      new_fd_map->Set(new_fd_map->GetKeyAt(i), new_pipe);
+      int fd = old_fd_map->GetKeyAt(i);
+      new_fd_map->Set(fd, new_pipe);
     }
   }
 
@@ -552,6 +553,8 @@ int AddPipeToCurrentProc(ipc::Pipe* pipe) {
     // ran out of fds
     return new_fd;
   }
+  printk("pid %d installing fd %d -> %p\n",
+      current_proc->pid, new_fd, pipe);
   current_proc->fd_map_.Set(new_fd, pipe);
   return new_fd;
 }
