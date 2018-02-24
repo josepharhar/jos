@@ -98,3 +98,14 @@ void hlt() {
   ///printk("are_interrupts_enabled(): %d\n", are_interrupts_enabled());
   asm volatile ("hlt");
 }
+
+uint64_t Getcr3() {
+  uint64_t cr3_value;
+  GET_REGISTER("cr3", cr3_value);
+  return cr3_value;
+}
+
+void Setcr3(uint64_t new_cr3) {
+  uint64_t cr3_value = new_cr3;
+  SET_REGISTER("cr3", cr3_value);
+}

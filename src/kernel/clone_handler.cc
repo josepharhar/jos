@@ -4,7 +4,7 @@
 #include "clone.h"
 #include "proc.h"
 #include "syscall_handler.h"
-#include "page_table.h"
+#include "page.h"
 
 static void HandleSyscallClone(uint64_t interrupt_number,
                                uint64_t options_ptr,

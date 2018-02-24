@@ -2,6 +2,7 @@
 
 #include "kernel/page.h"
 #include "printk.h"
+#include "asm.h"
 
 BufferFile::BufferFile() : buffer_(4096) {}
 BufferFile::~BufferFile() {}

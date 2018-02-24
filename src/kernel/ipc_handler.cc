@@ -7,6 +7,7 @@
 #include "buffer_file.h"
 #include "page.h"
 #include "printk.h"
+#include "asm.h"
 
 namespace ipc {
 

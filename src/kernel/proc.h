@@ -2,7 +2,7 @@
 #define PROC_H_
 
 #include "stdint.h"
-#include "page_table.h"
+#include "page.h"
 #include "elf.h"
 #include "stdint.h"
 #include "kernel/ipc.h"
@@ -66,6 +66,7 @@ class ProcContext {
   // struct ProcContext* blocked_next;
   int is_blocked;
   uint64_t pid;
+  uint64_t bottom_of_stack;
 
   FdMap fd_map_;
 

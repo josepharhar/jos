@@ -26,8 +26,14 @@ int read(int fd, void* read_buffer, int read_size) {
 
 int close(int fd) {
   Syscall(SYSCALL_CLOSE, (uint64_t)fd, 0, 0);
+
+  // TODO
+  return -1;
 }
 
 int pipe(int pipefd[2]) {
   Syscall(SYSCALL_PIPE, (uint64_t)pipefd, 0, 0);
+
+  // TODO
+  return -1;
 }

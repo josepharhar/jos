@@ -13,7 +13,7 @@ static void HandleSyscallGetc(uint64_t syscall_number,
                               uint64_t param_3) {
   // since the calling process will be currently loaded in memory with its page table,
   // we can write directly into its memory
-  if (proc::IsKernel() || IsAddressInUserspace(param_1)) {
+  if (proc::IsKernel() || page::IsAddressInUserspace(param_1)) {
     /*char input = KeyboardRead();
     char* write_address = (char*) param_1;
     *write_address = input;*/

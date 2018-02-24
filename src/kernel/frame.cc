@@ -131,6 +131,10 @@ void* FrameAllocate() {
   return ClearFrame(return_frame);
 }
 
+void FrameFree(uint64_t frame) {
+  FrameFree((void*)frame);
+}
+
 void FrameFree(void* new_frame) {
   uint64_t* new_frame_pointer = (uint64_t*) new_frame;
 
@@ -158,4 +162,17 @@ void TestFrame() {
   }
 
   printk("successfully tested %d frames\n", i + 1);
+}
+
+// wrapper for frame allocator that halts when memory runs out
+void* FrameAllocateSafe() {
+  void* pointer = FrameAllocate();
+  uint64_t address = (uint64_t)pointer;
+  if (address == NULL_FRAME) {
+    printk("Ran out of physical frames for paging, halting\n");
+    while (1) {
+      asm volatile ("hlt");
+    }
+  }
+  return pointer;
 }

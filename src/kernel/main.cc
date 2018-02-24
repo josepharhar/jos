@@ -174,7 +174,7 @@ void KernelMain() {
   // initialize memory management and dynamic memory allocation
   TagsInfo tags_info = ReadTags();
   FrameInit(tags_info);
-  PageInit();
+  page::Init();
 
   KeyboardInit();
 

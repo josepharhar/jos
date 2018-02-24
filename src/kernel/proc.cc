@@ -88,12 +88,14 @@ ProcContext* CreateKthread(KthreadFunction entry_point, void* arg) {
 
   // TODO consider stack overflow, its only 2MB virt
   // TODO free this when changing proc to user?
-  new_proc->rsp = (uint64_t)StackAllocate();
+  new_proc->bottom_of_stack = page::StackAllocate();
+  new_proc->rsp = new_proc->bottom_of_stack;
+  // new_proc->rbp = new_proc->rsp; // TODO uncomment this
 
   new_proc->ss = 0;  // for kernel
   new_proc->rflags = INTERRUPT_ENABLE_BIT;
   new_proc->pid = new_proc_id++;
-  new_proc->cr3 = (uint64_t)Getcr3();
+  new_proc->cr3 = Getcr3();
 
   // set first C argument to new proc function to void* arg
   new_proc->rdi = (uint64_t)arg;
@@ -266,7 +268,7 @@ void SaveState(struct ProcContext* proc) {
   proc->rflags = stack_save_state[18];
   proc->rsp = stack_save_state[19];
   proc->ss = stack_save_state[20];
-  proc->cr3 = (uint64_t)Getcr3();
+  proc->cr3 = Getcr3();
 }
 
 // TODO make static
@@ -364,7 +366,7 @@ static void HandleSyscallExit(uint64_t syscall_number,
   // free current_proc resources
   // TODO free page table
   // StackFree() takes any address within the stack
-  StackFree((void*)current_proc->rsp);
+  page::StackFree(current_proc->bottom_of_stack);
   kfree(current_proc);
 
   // set current_proc to the proc prior to current_proc in the list
@@ -490,18 +492,17 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   //AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
   printk("ExecCurrentProc() memcpy()\n");
   // memset((void*)USER_STACK_BOTTOM - (4096 * 4), 0, 4096 * 4 + 1);
-  uint64_t* stack = (uint64_t*)0x000007FFFFFFF000;
+  
+
+  /*uint64_t* stack = (uint64_t*)0x000007FFFFFFF000;
   printk("GetPhysicalAddress(%p): %p\n", stack,
          page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
-  /*PageTableEntry ptentry = GetP1Entry((uint64_t)stack, DO_NOT_CREATE_ENTRIES);
-  printk("        GetP1Entry(%p): %p\n", GetP1Entry((uint64_t)stack,
-        DO_NOT_CREATE_ENTRIES)->);*/
   *stack = 4880;
   printk("GetPhysicalAddress(%p): %p\n", stack,
          page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
-  printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address, page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));
+  printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address, page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));*/
 
   current_proc->rip = elf_info.instruction_pointer;
   // current_proc->rflags |= (3 << 12);
@@ -529,11 +530,16 @@ void SaveStateToCurrentProc() {
     //   This check is hacky and should not be necessary.
     //   Is this happening because the kernel is getting interrupted?
     printk("this should not happen - save state has rip = 0\n");
+    int one = 1;
+    while (one);
     return;
   }
 
   // TODO this is very hacky and this check should have been covered
   //   by PreInterrupt() checking interrupt_context
+  // TODO HandlePageFault() recursively triggers a page fault
+  //   by reaching this code because current_proc is not backed by
+  //   a physical frame yet!!!
   if (fake_proc.rip < 0xF000000 && current_proc->rip > 0xF000000) {
     /*printk("PROC rip TO KERNEL SPACE! %p -> %p\n", current_proc->rip,
     fake_proc.rip);

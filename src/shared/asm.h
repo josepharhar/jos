@@ -54,6 +54,9 @@ void invlpg(void* m);
 void wrmsr(uint32_t msr_id, uint64_t msr_value);
 uint64_t rdmsr(uint32_t msr_id);
 
+uint64_t Getcr3();
+void Setcr3(uint64_t new_cr3);
+
 #ifdef __cplusplus
 }
 #endif

@@ -280,7 +280,7 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
     case 14: //  #PF page fault - error code is indicating why fault occured. faulting address is in CR2
       // http://wiki.osdev.org/Exceptions#Page_Fault
       //printk("page fault error_code: 0x%llX, CR2: 0x%llX\n", error_code, *cr2_register);
-      HandlePageFault(error_code, *cr2_register);
+      page::HandlePageFault(error_code, *cr2_register);
       break;
   }
 
@@ -320,7 +320,7 @@ void c_interrupt_handler(uint64_t interrupt_number) {
 
     case 14:
       // page fault using new error code saving method
-      HandlePageFault(*irq_error_code, *cr2_register);
+      page::HandlePageFault(*irq_error_code, *cr2_register);
       break;
   }
 

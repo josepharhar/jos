@@ -12,10 +12,14 @@ void FrameInit(struct TagsInfo tags_info);
 // return NULL_FRAME_PTR on failure
 void* FrameAllocate();
 void FrameFree(void* frame);
+void FrameFree(uint64_t frame);
 
 // rounds up address to align to FRAME_SIZE_BYTES
 uint64_t AlignAddressUp(uint64_t address);
 // rounds down address to align to FRAME_SIZE_BYTES
 uint64_t AlignAddressDown(uint64_t address);
+
+// same as FrameAllocate() but halts when space runs out
+void* FrameAllocateSafe();
 
 #endif  // FRAME_H_
