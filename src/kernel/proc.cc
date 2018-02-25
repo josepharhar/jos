@@ -479,37 +479,36 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   // allocate user stack
   // printk("allocating user stack from %p to %p\n", USER_STACK_TOP,
   // USER_STACK_BOTTOM);
-  //AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
-  uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096;  // TODO
+  // AllocateUserSpace(USER_STACK_TOP, USER_STACK_SIZE);
+  // uint64_t user_stack_bottom = USER_STACK_BOTTOM - 512 - 4096;  // TODO
   // put Exit() on stack
   // TODO Exit() location must come from user executable, not this one
-  uint64_t* stack_pointer = (uint64_t*)user_stack_bottom;
+  // uint64_t* stack_pointer = (uint64_t*)user_stack_bottom;
   /*printk("putting Exit on stack at %p\n", user_stack_bottom);
   *stack_pointer = (uint64_t) &Exit;*/
+  page::AllocateUserSpace(current_proc->cr3, USER_STACK_TOP, USER_STACK_SIZE);
+  current_proc->rsp = USER_STACK_BOTTOM;
+  current_proc->rbp = USER_STACK_BOTTOM;
+  // TODO StackFree(current_proc->bottom_of_stack);
+  current_proc->bottom_of_stack = USER_STACK_BOTTOM;
 
   // allocate and fill user text/data
-  printk("ExecCurrentProc() AllocateUserSpace()\n");
-  //AllocateUserSpace(elf_info.load_address, elf_info.num_bytes);
-  printk("ExecCurrentProc() memcpy()\n");
-  // memset((void*)USER_STACK_BOTTOM - (4096 * 4), 0, 4096 * 4 + 1);
-  
-
-  /*uint64_t* stack = (uint64_t*)0x000007FFFFFFF000;
-  printk("GetPhysicalAddress(%p): %p\n", stack,
-         page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
-  *stack = 4880;
-  printk("GetPhysicalAddress(%p): %p\n", stack,
-         page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
+  page::AllocateUserSpace(current_proc->cr3, elf_info.load_address,
+                          elf_info.num_bytes);
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
-  printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address, page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));*/
+
+  /*uint64_t* stack = (uint64_t*)(USER_STACK_BOTTOM - 20);
+  printk("GetPhysicalAddress(%p): %p\n", stack,
+         page::GetPhysicalAddress(current_proc->cr3, (uint64_t)stack));
+  printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address,
+         page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));*/
 
   current_proc->rip = elf_info.instruction_pointer;
   // current_proc->rflags |= (3 << 12);
   // TODO
-  current_proc->cs = GDT_USER_CS + 3;
-  current_proc->ss = GDT_USER_DS + 3;
-  // current_proc->rsp = user_stack_bottom;
+  current_proc->cs = GDT_USER_CS + DPL_USER;
+  current_proc->ss = GDT_USER_DS + DPL_USER;
 
   RestoreState(current_proc);
 }
@@ -531,7 +530,8 @@ void SaveStateToCurrentProc() {
     //   Is this happening because the kernel is getting interrupted?
     printk("this should not happen - save state has rip = 0\n");
     int one = 1;
-    while (one);
+    while (one)
+      ;
     return;
   }
 

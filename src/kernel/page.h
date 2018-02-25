@@ -53,7 +53,7 @@ bool IsAddressInUserspace(uint64_t address);
 
 void HandlePageFault(uint64_t error_code, uint64_t faulting_address);
 
-int AllocateUserSpace(uint64_t address, uint64_t num_bytes);
+int AllocateUserSpace(uint64_t cr3, uint64_t address, uint64_t num_bytes);
 
 }  // namespace page
 
