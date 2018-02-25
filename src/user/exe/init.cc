@@ -15,14 +15,18 @@ void class_testing();
 void ipc_testing();
 void stack_testing();
 void fork_testing();
+void preempt_testing();
+void semaphore_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
-  //while (1);
+  // while (1);
   // proc_testing();
   // class_testing();
-  ipc_testing();
+  // ipc_testing();
   // stack_testing();
   // fork_testing();
+  preempt_testing();
+  // semaphore_testing();
 
   while (1) {
     Putc(Getc());
@@ -136,7 +140,7 @@ static void stackforkproc() {
 
   int pid = getpid();
   while (1) {
-    //printj("pid: %d\n", pid);
+    // printj("pid: %d\n", pid);
   }
 }
 static void stackcloneproc() {
@@ -150,7 +154,7 @@ static void stackcloneproc() {
 
   int pid = getpid();
   while (1) {
-    //printj("pid: %d\n", pid);
+    // printj("pid: %d\n", pid);
   }
 }
 void stack_testing() {
@@ -163,15 +167,11 @@ void stack_testing() {
   }
 }
 
-static void asdfasdfasdf() {
-  printj("a;sdlfkjasd;lfjasdf\n");
-  while (1) { Putc(Getc()); }
-}
 void fork_testing() {
   printj("fork_testing() begin. calling fork()...\n");
   int fork_retval = fork();
-  //int pid = clone(asdfasdfasdf, 0, 0);
-  //int pid = 1234;
+  // int pid = clone(asdfasdfasdf, 0, 0);
+  // int pid = 1234;
 
   static int pid = getpid();
   printj("fork(): %d, pid: %d\n", fork_retval, pid);
@@ -181,3 +181,33 @@ void fork_testing() {
     printj("pid %d input '%c'\n", pid, input);
   }
 }
+
+void preempt_testing() {
+  int counter = 0;
+
+  if (fork()) {
+    counter++;
+    if (fork()) {
+      counter++;
+      if (fork()) {
+        counter++;
+      }
+    }
+  }
+
+  char* indent = "";
+  if (counter == 1) {
+    indent = " ";
+  } else if (counter == 2) {
+    indent = "  ";
+  } else if (counter == 3) {
+    indent = "   ";
+  }
+
+  int pid = getpid();
+  while (1) {
+    printj("%spid: %d\n", indent, pid);
+  }
+}
+
+void semaphore_testing() {}
