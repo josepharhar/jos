@@ -1,9 +1,7 @@
-#include <assert.h>
+#include "test.h"
 
 #include <iostream>
 #include <vector>
-
-#include "test.h"
 
 #include "shared/jarray.h"
 
@@ -37,15 +35,15 @@ void TestBasicVector() {
   assert(IsEqual(vector, array));
 
   vector.erase(vector.begin() + 1);
-  array.Remove(1);
+  array.RemoveAt(1);
   assert(IsEqual(vector, array));
 
   vector.erase(vector.begin() + 1);
-  array.Remove(1);
+  array.RemoveAt(1);
   assert(IsEqual(vector, array));
 
   vector.erase(vector.begin() + 0);
-  array.Remove(0);
+  array.RemoveAt(0);
   assert(IsEqual(vector, array));
 }
 
@@ -71,9 +69,41 @@ void TestGetNext() {
   ASSERT_EQ(array.GetPreviousValue(100), 10);
 }
 
+void TestCopying() {
+  stdj::Array<int> array;
+  array.Add(50);
+  array.Add(40);
+  array.Add(30);
+
+  std::vector<int> vector;
+  vector.push_back(50);
+  vector.push_back(40);
+  vector.push_back(30);
+
+  assert(IsEqual(vector, array));
+
+  stdj::Array<int> copy = array;
+  std::vector<int> vector_copy = vector;
+  array.RemoveAt(0);
+  vector.erase(vector.begin());
+
+  assert(IsEqual(vector, array));
+  assert(IsEqual(vector_copy, copy));
+
+  stdj::Array<int> copy2(array);
+  std::vector<int> vector_copy2(vector);
+  array.RemoveAt(0);
+  vector.erase(vector.begin());
+
+  assert(IsEqual(vector, array));
+  assert(IsEqual(vector_copy, copy));
+  assert(IsEqual(vector_copy2, copy2));
+}
+
 int main(int argc, char** argv) {
   TestBasicVector();
   TestGetNext();
+  TestCopying();
 
   return 0;
 }

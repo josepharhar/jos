@@ -7,6 +7,9 @@ namespace stdj {
 
 class string : public Array<char> {
  public:
+  string();
+  string(const string& other);
+  string& operator=(const string& other);
   string(char* other_string);
 };
 

@@ -2,6 +2,7 @@
 #define TEST_H_
 
 #include "assert.h"
+#include "smartalloc.h"
 
 #include <iostream>
 

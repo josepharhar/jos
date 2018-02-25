@@ -16,7 +16,8 @@ class Array {
     }
   }
 
-  Array<T>(const Array<T>& other) {
+ private:
+  void Copy(const Array<T>& other) {
     size_ = other.size_;
     array_size_ = other.array_size_;
     array_ = 0;
@@ -25,7 +26,13 @@ class Array {
       memcpy(array_, other.array_, array_size_);
     }
   }
-  Array<T>& operator=(const Array<T>& other) = delete;
+
+ public:
+  Array<T>(const Array<T>& other) { Copy(other); }
+  Array<T>& operator=(const Array<T>& other) {
+    Copy(other);
+    return *this;
+  }
 
   Array<T>(Array<T>&& other) = delete;
   Array<T>& operator=(Array<T>&& other) = delete;
@@ -109,9 +116,7 @@ class Array {
     return -1;
   }
 
-  bool Contains(T value) const {
-    return GetIndexOfValue(value) != -1;
-  }
+  bool Contains(T value) const { return GetIndexOfValue(value) != -1; }
 
  private:
   T* array_;

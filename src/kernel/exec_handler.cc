@@ -18,10 +18,13 @@ void PagePrintTableInfo(uint64_t);
 
 // the proc which called this may or may not be in user mode,
 // but we will set it to user mode manually
-static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint64_t param_2, uint64_t param_3) {
+static void HandleSyscallExec(uint64_t interrupt_number,
+                              uint64_t param_1,
+                              uint64_t param_2,
+                              uint64_t param_3) {
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
-  char* filename = (char*) param_1;
+  char* filename = (char*)param_1;
   bool success = false;
 
   // TODO make filename absolute or relative on PATH
@@ -29,7 +32,7 @@ static void HandleSyscallExec(uint64_t interrupt_number, uint64_t param_1, uint6
   if (inode) {
     File* file = inode->Open();
     if (file) {
-      uint8_t* file_data = (uint8_t*) kmalloc(file->GetSize());
+      uint8_t* file_data = (uint8_t*)kmalloc(file->GetSize());
       file->Read(file_data, file->GetSize());
 
       ELFInfo elf_info = ELFGetInfo(file_data, file->GetSize());

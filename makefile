@@ -203,9 +203,13 @@ test: $(TEST_EXECS)
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h
 	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
-$(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
-	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS)
+$(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
+	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
 	./$@
+
+
+build/test/smartalloc.o: src/test/smartalloc.c src/test/smartalloc.h
+	gcc -c $< -o $@
 
 
 .PHONY: clean

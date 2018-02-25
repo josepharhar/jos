@@ -6,8 +6,8 @@
 #include "elf.h"
 #include "stdint.h"
 #include "kernel/ipc.h"
-#include "jmap.h"
 
+#include "shared/jmap.h"
 #include "shared/clone.h"
 #include "shared/jqueue.h"
 
