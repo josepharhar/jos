@@ -176,15 +176,8 @@ void KernelMain() {
   FrameInit(tags_info);
   page::Init();
 
-  printk("TODO fix initial kmalloc()\n");
-  uint64_t* asdf = (uint64_t*)kmalloc(4096);
-
-  printk("*%p = %p\n", asdf, 4880);
-  *asdf = 4880;
-
-  asdf += (0x1000 / 8);
-  printk("*%p = %p\n", asdf, 1234);
-  *asdf = 1234;
+  // get rid of the null frame, it screws everything up.
+  FrameAllocate();
 
   KeyboardInit();
 

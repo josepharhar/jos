@@ -119,6 +119,10 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p4_entry, user_accessible);
+        if (debug) {
+          printk("fault %p p4 %p -> p3 %p\n", address, p4_entry,
+                 p4_entry->GetAddress());
+        }
         break;
     }
   }
@@ -143,6 +147,10 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p3_entry, user_accessible);
+        if (debug) {
+          printk("fault %p p3 %p -> p2 %p\n", address, p3_entry,
+                 p3_entry->GetAddress());
+        }
         break;
     }
   }
@@ -167,6 +175,10 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p2_entry, user_accessible);
+        if (debug) {
+          printk("fault %p p2 %p -> p1 %p\n", address, p2_entry,
+                 p2_entry->GetAddress());
+        }
         break;
     }
   }
@@ -190,7 +202,13 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
         return NULL_FRAME;
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
+        uint64_t old_phys = p1_entry->GetAddress();
         AllocatePageTableEntry(p1_entry, user_accessible);
+        if (debug) {
+          printk("fault %p p1 %p -> phys %p\n", address, p1_entry,
+                 p1_entry->GetAddress());
+          printk("  old phys: %p\n", old_phys);
+        }
         break;
     }
   }
@@ -285,17 +303,12 @@ void* PageAllocate() {
     return 0;
   }*/
 
-  // use virtual address kernel_heap_break and increment it
   uint64_t new_page_address = kernel_heap_break;
   kernel_heap_break += PAGE_SIZE_BYTES;
 
   uint64_t physical_address =
       GetPhysicalAddress(Getcr3(), new_page_address, FULL_ALLOCATION_KERNEL);
-  static int asdf = 0;
-  if (asdf < 8) {
-    asdf++;
-    printk("PageAllocate() returning %p -> %p\n", new_page_address, physical_address);
-  }
+
   return (void*)new_page_address;
 }
 
@@ -361,6 +374,8 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
       VirtualAddress::FromPointer(faulting_address);
   PageFaultError error = *((PageFaultError*)&error_code);
 
+  bool debug = false;
+
   uint64_t cr3 = Getcr3();
   if (proc::IsRunning() && proc::GetCurrentProc()->cr3 != cr3) {
     printk("HandlePageFault() current proc's cr3 doesn't match actual cr3\n");
@@ -370,14 +385,14 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
 
   if (virtual_address.p4_index >= P4_KERNEL_HEAP &&
       virtual_address.p4_index <= P4_KERNEL_STACKS) {
-    physical_address =
-        GetPhysicalAddress(cr3, faulting_address, FULL_ALLOCATION_KERNEL, true);
+    physical_address = GetPhysicalAddress(cr3, faulting_address,
+                                          FULL_ALLOCATION_KERNEL, debug);
 
   } else if (virtual_address.p4_index >= P4_USERSPACE_START) {
     // valid because userspace is huge? this is terrible TODO
     // TODO TODO TODO
     physical_address =
-        GetPhysicalAddress(cr3, faulting_address, FULL_ALLOCATION_USER, true);
+        GetPhysicalAddress(cr3, faulting_address, FULL_ALLOCATION_USER, debug);
 
   } else {
     // http://wiki.osdev.org/Page_Fault

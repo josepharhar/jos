@@ -20,9 +20,9 @@ int main() {
   //while (1);
   // proc_testing();
   // class_testing();
-  // ipc_testing();
+  ipc_testing();
   // stack_testing();
-  //fork_testing();
+  // fork_testing();
 
   while (1) {
     Putc(Getc());
