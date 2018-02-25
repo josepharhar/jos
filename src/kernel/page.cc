@@ -264,7 +264,8 @@ void Init() {
 void* PageAllocateContiguous(int num_pages) {
   CheckInitialized();
 
-  /*if (kernel_heap_break + num_pages * PAGE_SIZE_BYTES >= kernel_stacks_break) {
+  /*if (kernel_heap_break + num_pages * PAGE_SIZE_BYTES >= kernel_stacks_break)
+  {
     // not enough virtual address space left in heap
     return 0;
   }*/
@@ -288,7 +289,13 @@ void* PageAllocate() {
   uint64_t new_page_address = kernel_heap_break;
   kernel_heap_break += PAGE_SIZE_BYTES;
 
-  GetPhysicalAddress(Getcr3(), new_page_address, FULL_ALLOCATION_KERNEL);
+  uint64_t physical_address =
+      GetPhysicalAddress(Getcr3(), new_page_address, FULL_ALLOCATION_KERNEL);
+  static int asdf = 0;
+  if (asdf < 8) {
+    asdf++;
+    printk("PageAllocate() returning %p -> %p\n", new_page_address, physical_address);
+  }
   return (void*)new_page_address;
 }
 
@@ -331,7 +338,6 @@ void PageFree(void* page) {
 
 uint64_t StackAllocate() {
   CheckInitialized();
-
 
   uint64_t stack_size = PAGES_PER_STACK * PAGE_SIZE_BYTES;
   uint64_t address = (uint64_t)PageAllocateContiguous(PAGES_PER_STACK);

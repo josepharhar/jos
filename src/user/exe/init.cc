@@ -22,8 +22,11 @@ int main() {
   // class_testing();
   // ipc_testing();
   // stack_testing();
-  fork_testing();
+  //fork_testing();
 
+  while (1) {
+    Putc(Getc());
+  }
   Puts("\ninit process ending\n");
   // TODO ProcExit();
 }

@@ -176,13 +176,15 @@ void KernelMain() {
   FrameInit(tags_info);
   page::Init();
 
-  printk("one\n");
+  printk("TODO fix initial kmalloc()\n");
   uint64_t* asdf = (uint64_t*)kmalloc(4096);
-  /*printk("kmalloc(): %p\n", asdf);
-  printk("*%p: %p\n", asdf, *asdf);
+
+  printk("*%p = %p\n", asdf, 4880);
   *asdf = 4880;
-  printk("*%p: %p\n", asdf, *asdf);*/
-  printk("two\n");
+
+  asdf += (0x1000 / 8);
+  printk("*%p = %p\n", asdf, 1234);
+  *asdf = 1234;
 
   KeyboardInit();
 
