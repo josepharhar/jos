@@ -178,10 +178,10 @@ void KernelMain() {
 
   printk("one\n");
   uint64_t* asdf = (uint64_t*)kmalloc(4096);
-  printk("kmalloc(): %p\n", asdf);
+  /*printk("kmalloc(): %p\n", asdf);
   printk("*%p: %p\n", asdf, *asdf);
   *asdf = 4880;
-  printk("*%p: %p\n", asdf, *asdf);
+  printk("*%p: %p\n", asdf, *asdf);*/
   printk("two\n");
 
   KeyboardInit();

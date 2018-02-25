@@ -12,7 +12,6 @@ static void HandleSyscallGetpid(uint64_t interrupt_number,
   // TODO security check userspace pointer
   uint64_t* pid_pointer = (uint64_t*)param_1;
   *pid_pointer = proc::GetCurrentPid();
-  printk("HandleSyscallGetpid() %p: %d\n", pid_pointer, proc::GetCurrentPid());
 }
 
 void InitGetpid() {
