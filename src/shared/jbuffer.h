@@ -33,14 +33,14 @@ class Buffer {
     if (write_index_ + write_size >= Size()) {
       // multiple copies
       uint64_t first_copy_size = Size() - write_index_;
-      memcpy(buffer_ + write_index_, source_buffer, first_copy_size);
+      memcpy(buffer_ + write_index_, source_buffer, first_copy_size * sizeof(T));
       memcpy(buffer_, source_buffer + first_copy_size,
-             write_size - first_copy_size);
+             (write_size - first_copy_size) * sizeof(T));
       write_index_ = write_size - first_copy_size;
 
     } else {
       // one copy
-      memcpy(buffer_ + write_index_, source_buffer, write_size);
+      memcpy(buffer_ + write_index_, source_buffer, write_size * sizeof(T));
       write_index_ = (write_index_ + write_size) % size_;
     }
 
@@ -63,14 +63,14 @@ class Buffer {
     if (read_index_ + read_size >= Size()) {
       // two copies
       uint64_t first_copy_size = Size() - read_index_;
-      memcpy(dest_buffer, buffer_ + read_index_, first_copy_size);
+      memcpy(dest_buffer, buffer_ + read_index_, first_copy_size * sizeof(T));
       memcpy(dest_buffer + first_copy_size, buffer_,
-             (read_size - first_copy_size));
+             (read_size - first_copy_size) * sizeof(T));
       read_index_ = read_size - first_copy_size;
 
     } else {
       // one copy
-      memcpy(dest_buffer, buffer_ + read_index_, read_size);
+      memcpy(dest_buffer, buffer_ + read_index_, read_size * sizeof(T));
       read_index_ = (read_index_ + read_size) % size_;
     }
 

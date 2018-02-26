@@ -1,16 +1,22 @@
-#include "test.h"
+#include <assert.h>
 
 #include <iostream>
 #include <vector>
+
+#include "test.h"
 
 #include "shared/jarray.h"
 
 static bool IsEqual(std::vector<int> vector, stdj::Array<int> array) {
   if (vector.size() != array.Size()) {
+    printf("IsEqual() vector.size(): %d, array.Size(): %d\n", vector.size(),
+           array.Size());
     return false;
   }
   for (int i = 0; i < vector.size(); i++) {
     if (vector[i] != array.Get(i)) {
+      printf("IsEqual() vector[%d]: %d, array.Get(%d): %d\n", i, vector[i], i,
+             array.Get(i));
       return false;
     }
   }
@@ -74,11 +80,13 @@ void TestCopying() {
   array.Add(50);
   array.Add(40);
   array.Add(30);
+  array.Add(20);
 
   std::vector<int> vector;
   vector.push_back(50);
   vector.push_back(40);
   vector.push_back(30);
+  vector.push_back(20);
 
   assert(IsEqual(vector, array));
 
@@ -86,7 +94,6 @@ void TestCopying() {
   std::vector<int> vector_copy = vector;
   array.RemoveAt(0);
   vector.erase(vector.begin());
-
   assert(IsEqual(vector, array));
   assert(IsEqual(vector_copy, copy));
 
@@ -94,7 +101,6 @@ void TestCopying() {
   std::vector<int> vector_copy2(vector);
   array.RemoveAt(0);
   vector.erase(vector.begin());
-
   assert(IsEqual(vector, array));
   assert(IsEqual(vector_copy, copy));
   assert(IsEqual(vector_copy2, copy2));

@@ -54,7 +54,34 @@ static void TestOverflow() {
   ASSERT_EQ(read_string, expected_string);
 }
 
+static void TestLargeType() {
+  stdj::Buffer<uint64_t> buffer(5);
+
+  uint64_t ints[5];
+  ints[0] = 100;
+  ints[1] = 200;
+  ints[2] = 300;
+  ints[3] = 400;
+  ints[4] = 500;
+
+  uint64_t ints_read[5] = {0};
+
+  buffer.Write(ints, 3);
+  buffer.Read(ints_read, 3);
+  ASSERT_EQ(ints[0], ints_read[0]);
+  ASSERT_EQ(ints[1], ints_read[1]);
+  ASSERT_EQ(ints[2], ints_read[2]);
+
+  buffer.Write(ints, 4);
+  buffer.Read(ints_read, 4);
+  ASSERT_EQ(ints[0], ints_read[0]);
+  ASSERT_EQ(ints[1], ints_read[1]);
+  ASSERT_EQ(ints[2], ints_read[2]);
+  ASSERT_EQ(ints[3], ints_read[3]);
+}
+
 int main(int argc, char** argv) {
   TestBasic();
   TestOverflow();
+  TestLargeType();
 }

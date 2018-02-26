@@ -23,7 +23,7 @@ class Array {
     array_ = 0;
     if (array_size_) {
       array_ = new T[array_size_];
-      memcpy(array_, other.array_, array_size_);
+      memcpy(array_, other.array_, array_size_ * sizeof(T));
     }
   }
 
@@ -70,7 +70,7 @@ class Array {
     if (index >= size_) {
       // TODO assert
     }
-    memmove(array_ + index, array_ + index + 1, size_ - index);
+    memmove(array_ + index, array_ + index + 1, (size_ - index) * sizeof(T));
     size_--;
   }
 
