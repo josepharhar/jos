@@ -360,7 +360,7 @@ Superblock* Superblock::Create(ATABlockDevice* ata_device) {
   printk("media descriptor type partition: 0x%X\n", partition.boot_record.bpb.media_descriptor_type);*/
 
   superblock->root_inode = (Inode*) kcalloc(sizeof(Inode));
-  *superblock->root_inode = Inode(superblock->partition.boot_record.root_cluster, "", true, superblock);
+  *superblock->root_inode = Inode(superblock->partition.boot_record.root_cluster, (char*)"", true, superblock);
 
   return superblock;
 }

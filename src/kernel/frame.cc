@@ -42,7 +42,7 @@ static void InitializeFrameRegion(uint64_t start_address, uint64_t end_address) 
   uint64_t num_frames = (end_address - start_address) / FRAME_SIZE_BYTES;
   uint8_t* start_pointer = (uint8_t*) start_address;
 
-  for (int i = 0; i < num_frames; i++) {
+  for (uint64_t i = 0; i < num_frames; i++) {
     uint8_t* new_frame_pointer = start_pointer + FRAME_SIZE_BYTES * i;
     uint8_t* next_frame_pointer = new_frame_pointer + FRAME_SIZE_BYTES;
     //printk("setting up frame #%d at %p -> %p\n", i, new_frame_pointer, next_frame_pointer);
@@ -74,7 +74,7 @@ void FrameInit(struct TagsInfo tags_info) {
   //uint64_t last_region_size = (avl_two_end - avl_two_start) % REGION_MAX_SIZE_BYTES; // if zero, no extra region
   uint8_t* start_pointer = (uint8_t*) avl_two_start;
   // each of these regions is the max size
-  for (int i = 0; i < num_regions; i++) {
+  for (uint64_t i = 0; i < num_regions; i++) {
     uint8_t* region_start_pointer = start_pointer + REGION_MAX_SIZE_BYTES * i;
     uint8_t* region_end_pointer = region_start_pointer + REGION_MAX_SIZE_BYTES;
     *((uint64_t*) region_start_pointer) = (uint64_t) region_end_pointer;

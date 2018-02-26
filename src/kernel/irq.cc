@@ -417,7 +417,8 @@ void IRQInit() {
   tss_descriptor.segment_limit_0_15 = sizeof(struct TSS) & 0xFFFF; // TODO is this correct?
   tss_descriptor.base_address_0_15 = tss_address & 0xFFFF;
   tss_descriptor.base_address_16_23 = (tss_address >> 16) & 0xFF;
-  tss_descriptor.type = 0xA1;
+  //tss_descriptor.type = 0xA1;
+  tss_descriptor.type = 9;
   tss_descriptor.zero = 0;
   tss_descriptor.dpl = 0;
   tss_descriptor.present = 1;

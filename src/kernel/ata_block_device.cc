@@ -107,7 +107,7 @@ int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   if (queue_was_empty) {
     Consume(new_request);
   } else {
-    printk("queue was not empty, waiting to consume request block_num: %d\n", new_request->block_num);
+    printk("queue was not empty, waiting to consume request block_num: %lu\n", new_request->block_num);
   }
   
   // block this process until interrupt happens and buffer is read into

@@ -22,10 +22,10 @@ int main() {
   // while (1);
   // proc_testing();
   // class_testing();
-  // ipc_testing();
+  ipc_testing();
   // stack_testing();
   // fork_testing();
-  preempt_testing();
+  // preempt_testing();
   // semaphore_testing();
 
   while (1) {
@@ -195,7 +195,7 @@ void preempt_testing() {
     }
   }
 
-  char* indent = "";
+  const char* indent = "";
   if (counter == 1) {
     indent = " ";
   } else if (counter == 2) {

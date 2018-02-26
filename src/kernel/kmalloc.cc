@@ -157,7 +157,7 @@ void TestKmalloc() {
     void* new_malloc = kmalloc(malloc_size);
     pointers[i] = (uint64_t)new_malloc;
     if (ReadWriteTest(new_malloc, malloc_size)) {
-      printk("failed ReadWriteTest() new_malloc: %p, malloc_size: %d\n",
+      printk("failed ReadWriteTest() new_malloc: %p, malloc_size: %q\n",
              new_malloc, malloc_size);
       return;
     }
