@@ -19,16 +19,6 @@ typedef stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> FdMap;
 
 class ProcContext {
  public:
-  ProcContext() {}
-  ~ProcContext() {}
-
-  ProcContext(const ProcContext& other) = default;
-  ProcContext& operator=(const ProcContext& other) = default;
-
-  ProcContext(ProcContext&& other) = delete;
-  ProcContext& operator=(ProcContext&& other) = delete;
-
-  // private:
   // hardware context
   // TODO add floating point state
   uint64_t rax;
