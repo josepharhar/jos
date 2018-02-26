@@ -17,4 +17,14 @@ string::string(char* other_string) {
   }
 }
 
+string::string(Array<char> array) {
+  for (int i = 0; i < array.Size(); i++) {
+    Add(array[i]);
+  }
+}
+
+const char* string::c_str() {
+  return Data();
+}
+
 }  // namespace stdj

@@ -9,7 +9,7 @@ namespace vfs {
 class Filepath {
  public:
   Filepath();
-  Filepath(const char* string);
+  Filepath(stdj::string string);
 
   ~Filepath();
 
@@ -20,9 +20,11 @@ class Filepath {
   Filepath& operator=(Filepath&& other) = delete;
 
   void Append(stdj::string string);
+  void Append(Filepath other); // TODO make constref
+  stdj::Array<stdj::string> GetArray();
 
  private:
-  stdj::Array<stdj::string> strings;
+  stdj::Array<stdj::string> strings_;
 };
 
 }  // namespace vfs

@@ -106,10 +106,34 @@ void TestCopying() {
   assert(IsEqual(vector_copy2, copy2));
 }
 
+void TestSubstring() {
+  stdj::Array<char> j_array;
+  j_array.Add('j');
+  j_array.Add('o');
+  j_array.Add('s');
+
+  stdj::Array<char> expected_substring;
+  expected_substring.Add('o');
+  assert(expected_substring == j_array.Substring(1, 2));
+
+  stdj::Array<char> expected_substring_2;
+  expected_substring_2.Add('j');
+  expected_substring_2.Add('o');
+  assert(expected_substring_2 == j_array.Substring(0, 2));
+
+  stdj::Array<char> expected_substring_3;
+  expected_substring_3.Add('o');
+  expected_substring_3.Add('s');
+  assert(expected_substring_3 == j_array.Substring(1, 3));
+
+  assert(j_array == j_array.Substring(0, 3));
+}
+
 int main(int argc, char** argv) {
   TestBasicVector();
   TestGetNext();
   TestCopying();
+  TestSubstring();
 
   return 0;
 }

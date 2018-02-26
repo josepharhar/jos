@@ -10,32 +10,42 @@ template <typename T>
 class Array {
  public:
   Array() : array_(0), array_size_(0), size_(0) {}
+  Array(T* new_array, int new_array_size)
+      : array_(new T[new_array_size + 1]),
+        array_size_(new_array_size + 1),
+        size_(new_array_size) {
+    memcpy(array_, new_array, new_array_size * sizeof(T));
+    memset(array_ + new_array_size, 0, sizeof(T));
+  }
+
   ~Array() {
     if (array_) {
       delete[] array_;
     }
   }
 
- private:
-  void Copy(const Array<T>& other) {
-    size_ = other.size_;
-    array_size_ = other.array_size_;
-    array_ = 0;
-    if (array_size_) {
-      array_ = new T[array_size_];
-      memcpy(array_, other.array_, array_size_ * sizeof(T));
-    }
-  }
-
- public:
-  Array<T>(const Array<T>& other) { Copy(other); }
+  Array<T>(const Array<T>& other) { CopyFrom(other); }
   Array<T>& operator=(const Array<T>& other) {
-    Copy(other);
+    CopyFrom(other);
     return *this;
   }
 
-  Array<T>(Array<T>&& other) = delete;
-  Array<T>& operator=(Array<T>&& other) = delete;
+  Array<T>(Array<T>&& other) = default;
+  Array<T>& operator=(Array<T>&& other) = default;
+
+  bool Equals(const Array<T>& other) const {
+    if (size_ != other.size_) {
+      return false;
+    }
+    for (int i = 0; i < size_; i++) {
+      if (array_[i] != other.array_[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  bool operator==(const Array<T>& other) const { return Equals(other); }
+  bool operator!=(const Array<T>& other) const { return !Equals(other); }
 
   T Get(uint64_t index) const {
     if (index >= size_) {
@@ -43,21 +53,22 @@ class Array {
     }
     return array_[index];
   }
+  T operator[](int index) { return Get(index); }
 
   T* Data() const { return array_; }
 
   void Add(T value) {
-    if (size_ + 1 > array_size_) {
-      // increase array size
+    // increase array size if needed
+    if (size_ + 1 >= array_size_) {
       uint64_t old_array_size = array_size_;
       T* old_array = array_;
 
       array_size_ = (old_array_size + 5) * 2;
-
       array_ = new T[array_size_];
-      memcpy(array_, old_array, old_array_size * sizeof(T));
+      memset(array_, 0, array_size_ * sizeof(T));
 
       if (old_array) {
+        memcpy(array_, old_array, old_array_size * sizeof(T));
         delete[] array_;
       }
     }
@@ -71,6 +82,7 @@ class Array {
       // TODO assert
     }
     memmove(array_ + index, array_ + index + 1, (size_ - index) * sizeof(T));
+    memset(array_ + size_, 0, sizeof(T));
     size_--;
   }
 
@@ -118,6 +130,20 @@ class Array {
 
   bool Contains(T value) const { return GetIndexOfValue(value) != -1; }
 
+  Array<T> Substring(int one, int two) {
+    Array<T> new_array;
+    if (one >= two) {
+      return new_array;
+    }
+    new_array.size_ = two - one;
+    new_array.array_size_ = new_array.size_ + 1;
+    new_array.array_ = new T[new_array.array_size_];
+    memcpy(new_array.array_, array_ + one, new_array.size_ * sizeof(T));
+    return new_array;
+  }
+
+  Array<T> Substring(int one) { return Substring(one, Size()); }
+
  private:
   T* array_;
   // actual size
@@ -125,6 +151,16 @@ class Array {
 
   // advertized size
   uint64_t size_;
+
+  void CopyFrom(const Array<T>& other) {
+    size_ = other.size_;
+    array_size_ = other.array_size_;
+    array_ = 0;
+    if (array_size_) {
+      array_ = new T[array_size_];
+      memcpy(array_, other.array_, array_size_ * sizeof(T));
+    }
+  }
 };
 
 }  // namespace stdj

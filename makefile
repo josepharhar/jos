@@ -79,6 +79,7 @@ TEST_BUILD_DIR = build/test
 TEST_SOURCES_CXX = $(shell find $(TEST_SOURCE_DIR) -name "*.cc")
 TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.o))
 TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.out))
+TEST_PASSED_FILES = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.passed))
 
 CC_FLAGS = -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
 # -fno-rtti is no runtime type information since we don't have libstdc++
@@ -197,16 +198,19 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 
 
 .PHONY: test
-test: $(TEST_EXECS)
+test: $(TEST_PASSED_FILES)
 
 # TODO make this depend on all headers in all source dirs?
 $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h
 	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
+.PRECIOUS: $(TEST_EXECS) # don't delete the test programs, make will always delete them otherwise.
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
 	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
-	./$@
 
+$(TEST_BUILD_DIR)/%.passed: $(TEST_BUILD_DIR)/%.out
+	./$<
+	touch $@
 
 build/test/smartalloc.o: src/test/smartalloc.c src/test/smartalloc.h
 	gcc -c $< -o $@
@@ -214,7 +218,7 @@ build/test/smartalloc.o: src/test/smartalloc.c src/test/smartalloc.h
 
 .PHONY: clean
 clean:
-	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out
+	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out $(TEST_BUILD_DIR)/*.passed
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
