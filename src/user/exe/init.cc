@@ -210,4 +210,10 @@ void preempt_testing() {
   }
 }
 
-void semaphore_testing() {}
+sem_t semaphore;
+void semaphore_cloneproc() {
+
+}
+void semaphore_testing() {
+  clone(semaphore_cloneproc, new_stack + 2048, CLONE_FILES | CLONE_VM);
+}
