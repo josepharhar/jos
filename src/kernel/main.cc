@@ -24,6 +24,7 @@
 #include "getpid_handler.h"
 #include "pit.h"
 #include "ipc_handler.h"
+#include "semaphore_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -185,12 +186,11 @@ void KernelMain() {
 
   InitSyscall();
   proc::Init();
+
   GetcInit();
-
-  //InitFork();
   InitGetpid();
-
   InitClone();
+  InitSemaphore();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();

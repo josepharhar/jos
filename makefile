@@ -81,9 +81,9 @@ TEST_OBJECTS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_D
 TEST_EXECS = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.out))
 TEST_PASSED_FILES = $(addprefix $(TEST_BUILD_DIR)/,$(TEST_SOURCES_CXX:$(TEST_SOURCE_DIR)/%.cc=%.passed))
 
-CC_FLAGS = -Werror -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
+CC_FLAGS = -DJOS -Werror -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I src/ #-g #-Wall -Werror #-mgeneral-regs-only
 # -fno-rtti is no runtime type information since we don't have libstdc++
-CXX_FLAGS = -Werror -fno-threadsafe-statics -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ -std=c++11 #-g
+CXX_FLAGS = -DJOS -Werror -fno-threadsafe-statics -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ -std=c++11 #-g
 
 all: run
 

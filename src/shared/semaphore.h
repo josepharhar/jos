@@ -13,7 +13,8 @@ enum SemaphoreRequestType {
   SEM_INIT = 3,
 };
 struct SyscallSemaphoreRequest {
-  SemaphoreRequestType request_type;
+  SemaphoreRequestType type;
+  sem_t* semaphore;
 };
 
 #endif  // SEMAPHORE_H_
