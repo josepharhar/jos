@@ -6,15 +6,12 @@
 #include "printk.h"
 #include "proc.h"
 
-class Semaphore {
- public:
-  Semaphore();
-
- private:
-  proc::BlockedQueue proc_queue_;
+struct Semaphore {
+  unsigned value;
+  proc::BlockedQueue proc_queue;
 };
 
-typedef stdj::Map<int, Semaphore*, ((Semaphore*)0)> SemaphoreMap;
+typedef stdj::Map<stdj::string, Semaphore*, ((Semaphore*)0)> SemaphoreMap;
 static SemaphoreMap semaphore_map;
 
 static void HandleSyscallSemaphore(uint64_t interrupt_number,
@@ -22,6 +19,8 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
                                    uint64_t param_2,
                                    uint64_t param_3) {
   SyscallSemaphoreRequest* request = (SyscallSemaphoreRequest*)param_1;
+  sem_t* request_semaphore = request->semaphore;
+
   switch (request->type) {
     case SEM_WAIT:
       break;
