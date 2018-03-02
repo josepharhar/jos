@@ -221,7 +221,8 @@ void semaphore_cloneproc() {
   }
 }
 void semaphore_testing() {
-  sem_init(&semaphore);
+  //sem_init(&semaphore);
+  sem_open(&semaphore, "/jarhar");
 
   clone(semaphore_cloneproc, new_stack + 2048, CLONE_FILES | CLONE_VM);
 

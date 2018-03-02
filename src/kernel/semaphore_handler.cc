@@ -11,7 +11,20 @@ struct Semaphore {
   proc::BlockedQueue proc_queue;
 };
 
-// static SemaphoreMap semaphore_map;
+static SemaphoreMap named_semaphores;
+
+static Semaphore* GetSemaphore(stdj::string name) {
+  proc::ProcContext* current_proc = proc::GetCurrentProc();
+  if (!current_proc->open_semaphores_.ContainsKey(name)) {
+    return 0;
+  }
+  Semaphore* semaphore = current_proc->open_semaphores_.Get(name);
+  if (named_semaphores.Get(name) != semaphore) {
+    printk("proc has semaphore open not in named_semaphores!!!\n");
+    return 0;
+  }
+  return semaphore;
+}
 
 static void HandleSyscallSemaphore(uint64_t interrupt_number,
                                    uint64_t param_1,
@@ -20,17 +33,15 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
   SyscallSemaphoreRequest* request = (SyscallSemaphoreRequest*)param_1;
   sem_t* request_semaphore = request->semaphore;
   // TODO Make sure request_semaphore->name is null terminated
-  /*stdj::string semaphore_name(request_semaphore->name);
-  printk("HandleSyscallSemaphore semaphore_name: \"%s\"\n",
-         semaphore_name.c_str());*/
-  int semaphore_number = request_semaphore->semaphore;
-  printk("HandleSyscallSemaphore semaphore_number: %d\n", semaphore_number);
+  stdj::string name(request_semaphore->name);
+  printk("HandleSyscallSemaphore name: \"%s\"\n", name.c_str());
   bool is_wait = false;
   proc::ProcContext* current_proc = proc::GetCurrentProc();
 
   switch (request->type) {
     case SEM_WAIT: {
-      if (!current_proc->open_semaphores_.ContainsKey(semaphore_name)) {
+      Semaphore* semaphore = GetSemaphore(name);
+      if (!semaphore) {
         request->status_writeback = -1;
         break;
       }
@@ -38,19 +49,24 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
     }
 
     case SEM_POST: {
-      if (!current_proc->open_semaphores_.ContainsKey(semaphore_name)) {
+      Semaphore* semaphore = GetSemaphore(name);
+      if (!semaphore) {
         request->status_writeback = -1;
         break;
       }
       break;
     }
 
-    case SEM_INIT: {
-      if (!semaphore_map.ContainsKey(semaphore_name)) {
+    case SEM_OPEN: {
+      if (!named_semaphores.ContainsKey(name)) {
         Semaphore* new_semaphore = new Semaphore();
-        semaphore_map.Set(semaphore_name, new_semaphore);
-        current_proc->open_semaphores_.Set(semaphore_name, new_semaphore);
+        named_semaphores.Set(name, new_semaphore);
       }
+      Semaphore* semaphore = named_semaphores.Get(name);
+      if (!current_proc->open_semaphores_.ContainsKey(name)) {
+        current_proc->open_semaphores_.Set(name, semaphore);
+      }
+      request->status_writeback = 0;
       break;
     }
 
@@ -61,6 +77,6 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
 }
 
 void InitSemaphore() {
-  semaphore_map = SemaphoreMap();
+  named_semaphores = SemaphoreMap();
   SetSyscallHandler(SYSCALL_SEMAPHORE, HandleSyscallSemaphore);
 }
