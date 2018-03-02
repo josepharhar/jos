@@ -45,6 +45,14 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
         request->status_writeback = -1;
         break;
       }
+      if (semaphore->value) {
+        // semaphore is available. acquire it.
+        semaphore->value = 0;
+      } else {
+        // semaphore is in use. wait for it.
+        semaphore->proc_queue.BlockCurrentProcNoNesting();
+      }
+      request->status_writeback = 0;
       break;
     }
 
@@ -54,6 +62,17 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
         request->status_writeback = -1;
         break;
       }
+      if (!semaphore->value) {
+        // semaphore is acquired. release it and unblock a proc.
+        if (semaphore->proc_queue.Size()) {
+          // unblock a proc, keep value zero
+          semaphore->proc_queue.UnblockHead();
+        } else {
+          // release the semaphore
+          semaphore->value = 1;
+        }
+      }
+      request->status_writeback = 0;
       break;
     }
 

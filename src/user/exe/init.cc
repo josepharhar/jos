@@ -213,18 +213,42 @@ void preempt_testing() {
 }
 
 sem_t semaphore;
-void semaphore_cloneproc() {
-  printf("semaphore_cloneproc\n");
+int pid;
+static void semaphore_waiting() {
+  printf("[%d] calling sem_wait()...\n", pid);
+  int wait_retval = sem_wait(&semaphore);
+  printf("[%d] sem_wait() returned %d\n", pid, wait_retval);
 
-  while (1) {
-    Putc(Getc());
+  for (int i = 0; i < 10; i++) {
+    for (int j = 0; j < 100000000; j++)
+      ;
+    printf("[%d]", pid);
   }
+  printf("\n");
+
+  printf("[%d] calling sem_post()\n", pid);
+  int post_retval = sem_post(&semaphore);
+  printf("[%d] sem_post() returned %d\n", pid, post_retval);
 }
 void semaphore_testing() {
-  //sem_init(&semaphore);
-  sem_open(&semaphore, "/jarhar");
+  if (fork()) {
+    pid = getpid();
+    printf("[%d] calling sem_open()\n", pid);
+    sem_open(&semaphore, "/jarhar");
+    printf("[%d] sem_open() returned\n", pid);
 
-  clone(semaphore_cloneproc, new_stack + 2048, CLONE_FILES | CLONE_VM);
+    int post_retval = sem_post(&semaphore);
+    printf("[%d] sem_post() returned %d\n", pid, post_retval);
+
+    semaphore_waiting();
+
+  } else {
+    pid = getpid();
+    sem_open(&semaphore, "/jarhar");
+    printf("[%d] sem_open() returned\n", pid);
+
+    semaphore_waiting();
+  }
 
   while (1) {
     Putc(Getc());
