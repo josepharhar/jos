@@ -6,6 +6,7 @@
 #include "elf.h"
 #include "stdint.h"
 #include "kernel/ipc.h"
+#include "semaphore_handler.h"
 
 #include "shared/jmap.h"
 #include "shared/clone.h"
@@ -53,12 +54,12 @@ class ProcContext {
   uint64_t cr3;
 
   // software context
-  // struct ProcContext* blocked_next;
   int is_blocked;
   uint64_t pid;
   uint64_t bottom_of_stack;
 
   FdMap fd_map_;
+  SemaphoreMap open_semaphores_;
 
   void PrintValues();
   int GetNewFd();
