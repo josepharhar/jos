@@ -27,8 +27,8 @@ int main() {
   // ipc_testing();
   // stack_testing();
   // fork_testing();
-  // preempt_testing();
-  semaphore_testing();
+  preempt_testing();
+  // semaphore_testing();
 
   while (1) {
     Putc(Getc());
@@ -208,6 +208,8 @@ void preempt_testing() {
 
   int pid = getpid();
   while (1) {
+    for (int i = 0; i < 10000000; i++)
+      ;
     printf("%spid: %d\n", indent, pid);
   }
 }
