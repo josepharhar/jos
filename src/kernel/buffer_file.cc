@@ -48,7 +48,6 @@ void BufferFile::Write(ipc::Pipe* pipe,
           (int)buffer_.Read(read_request.buffer, bytes_to_read);
       Setcr3(proc::GetCurrentProc()->cr3);
 
-      printk("BufferFile::Write unblocking a proc\n");
       read_blocked_queue_.UnblockHead();
     }
 
@@ -72,8 +71,6 @@ void BufferFile::Read(ipc::Pipe* pipe,
                       uint8_t* dest_buffer,
                       int read_size,
                       int* size_writeback) {
-  printk("BufferFile::Read dest_buffer: %p, read_size: %d\n", dest_buffer,
-         read_size);
   uint64_t read_size_available = buffer_.ReadSizeAvailable();
   if (read_size_available) {
     int size_read = (int)buffer_.Read(dest_buffer, (uint64_t)read_size);
@@ -96,6 +93,8 @@ void BufferFile::Read(ipc::Pipe* pipe,
     }
 
     *size_writeback = size_read;
+
+    return;
   }
 
   // block this process until there is stuff to read.

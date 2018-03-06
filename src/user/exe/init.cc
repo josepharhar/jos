@@ -24,10 +24,10 @@ int main() {
   // while (1);
   // proc_testing();
   // class_testing();
-  // ipc_testing();
+  ipc_testing();
   // stack_testing();
   // fork_testing();
-  preempt_testing();
+  // preempt_testing();
   // semaphore_testing();
 
   while (1) {
@@ -113,7 +113,7 @@ static void ipcnewproc() {
   }
 }
 
-void ipc_testing() {
+void ipc_testing_old() {
   printf("ipc_testing()\n");
 
   pipe(fds);
@@ -131,6 +131,26 @@ void ipc_testing() {
 
   while (1) {
     Putc(Getc());
+  }
+}
+
+void ipc_testing() {
+  printf("ipc_testing()\n");
+  pipe(fds);
+
+  if (fork()) {
+    write(fds[1], "hello", 5);
+    while (1) {
+      char input = Getc();
+      write(fds[1], &input, 1);
+    }
+  } else {
+    while (1) {
+      char buffer[100];
+      memset(buffer, 0, 100);
+      int bytes_read = read(fds[0], buffer, 99);
+      printf("read from pipe: \"%s\"\n", buffer);
+    }
   }
 }
 
