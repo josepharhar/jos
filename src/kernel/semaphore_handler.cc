@@ -34,7 +34,6 @@ static void HandleSyscallSemaphore(uint64_t interrupt_number,
   sem_t* request_semaphore = request->semaphore;
   // TODO Make sure request_semaphore->name is null terminated
   stdj::string name(request_semaphore->name);
-  printk("HandleSyscallSemaphore name: \"%s\"\n", name.c_str());
   bool is_wait = false;
   proc::ProcContext* current_proc = proc::GetCurrentProc();
 
