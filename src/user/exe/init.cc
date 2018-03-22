@@ -19,16 +19,18 @@ void stack_testing();
 void fork_testing();
 void preempt_testing();
 void semaphore_testing();
+void exit_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
   // while (1);
   // proc_testing();
   // class_testing();
-  ipc_testing();
+  // ipc_testing();
   // stack_testing();
   // fork_testing();
   // preempt_testing();
   // semaphore_testing();
+  exit_testing();
 
   while (1) {
     Putc(Getc());
@@ -270,6 +272,31 @@ void semaphore_testing() {
     printf("[%d] sem_open() returned\n", pid);
 
     semaphore_waiting();
+  }
+
+  while (1) {
+    Putc(Getc());
+  }
+}
+
+void exit_testing() {
+  printf("exit_testing()\n");
+
+  if (!fork()) {
+    printf("pid %d calling exit()...\n", getpid());
+    exit();
+    printf("RETURNED FROM exit()!!!\n");
+  }
+
+  if (fork()) {
+    printf("pid %d calling exit()...\n", getpid());
+    exit();
+    printf("RETURNED FROM exit()!!!\n");
+  }
+  if (fork()) {
+    printf("pid %d calling exit()...\n", getpid());
+    exit();
+    printf("RETURNED FROM exit()!!!\n");
   }
 
   while (1) {

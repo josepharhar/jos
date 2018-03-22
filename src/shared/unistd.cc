@@ -12,3 +12,7 @@ pid_t getpid() {
   Syscall(SYSCALL_GETPID, (uint64_t)&pid);
   return (int)pid;
 }
+
+void exit() {
+  Syscall(SYSCALL_EXIT);
+}

@@ -10,6 +10,8 @@ typedef int pid_t;
 pid_t fork();
 pid_t getpid();
 
+void exit();
+
 #ifdef __cplusplus
 }
 #endif  // __cplusplus

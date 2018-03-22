@@ -226,11 +226,13 @@ void Reschedule() {
   }
 }
 
+// TODO delet this
 void Yield() {
   Reschedule();
   Syscall(SYSCALL_YIELD);
 }
 
+// TODO delet this
 void Exit() {
   Reschedule();
   Syscall(SYSCALL_EXIT);
@@ -334,39 +336,21 @@ static void HandleSyscallExit(uint64_t syscall_number,
                               uint64_t param_1,
                               uint64_t param_2,
                               uint64_t param_3) {
-  // destroy current process and switch context to next process
-
-  if (!current_proc || !next_proc || proc_list->IsEmpty()) {
-    printk(
-        "HandleSyscallExit() current_proc: %p, next_proc: %p, "
-        "proc_list->IsEmpty(): %p\n",
-        current_proc, next_proc, proc_list->IsEmpty());
+  if (!current_proc || proc_list->IsEmpty()) {
+    printk("HandleSyscallExit() procs not running!\n");
     return;
   }
 
-  // TODO in order to round robin correctly,
-  // set current_proc to the proc prior to current_proc in the list
-  // remove current_proc
-  // call Reschedule()
-  // current_proc = next_proc
-  // restore current_proc
+  ProcContext* proc_to_delete = current_proc;
+  current_proc = proc_list->GetPreviousValue(current_proc);
 
-  ProcContext* current_proc_prev = proc_list->GetPreviousValue(current_proc);
-
-  // remove current_proc from linked list
-  proc_list->RemoveAt(proc_list->GetIndexOfValue(current_proc));
-
-  // free current_proc resources
+  proc_list->RemoveValue(proc_to_delete);
   // TODO free page table
-  // StackFree() takes any address within the stack
-  page::StackFree(current_proc->bottom_of_stack);
-  kfree(current_proc);
-
-  // set current_proc to the proc prior to current_proc in the list
-  current_proc = current_proc_prev;
+  // TODO free fd resources
+  kfree(proc_to_delete);
 
   if (proc_list->IsEmpty()) {
-    // no more procs to run, restore main context
+    printk("  no procs left, returning to kernel\n");
     is_proc_running = 0;
     RestoreState(main_proc);
     kfree(main_proc);
