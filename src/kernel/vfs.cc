@@ -177,8 +177,11 @@ LinkedList<Inode*>* Inode::ReadDir() {
   int reading_lfn = 0;
   uint64_t current_cluster = cluster;
 
+  printk("21\n");
   while (IsValidCluster(current_cluster)) {
+    printk("22\n");
     DirectoryEntry* directory_sector = (DirectoryEntry*) superblock->ReadCluster(current_cluster);
+    printk("23\n");
 
     for (int i = 0; i < DIRECTORY_ENTRIES_PER_SECTOR; i++) {
       DirectoryEntry* entry = directory_sector + i;

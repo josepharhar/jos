@@ -27,11 +27,15 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   char* filename = (char*)param_1;
   bool success = false;
 
+  printk("1\n");
   // TODO make filename absolute or relative on PATH
   Inode* inode = FindFile(root_directory, filename);
+  printk("2\n");
   if (inode) {
+  printk("3\n");
     File* file = inode->Open();
     if (file) {
+  printk("4\n");
       uint8_t* file_data = (uint8_t*)kmalloc(file->GetSize());
       file->Read(file_data, file->GetSize());
 

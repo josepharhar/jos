@@ -425,7 +425,7 @@ int BlockedQueue::Size() {
 }
 
 void Print() {
-  // printk("proc::Print() printing procs:\n");
+  //printk("proc::Print() printing procs:\n");
   for (uint64_t i = 0; i < proc_list->Size(); i++) {
     ProcContext* proc = proc_list->Get(i);
     printk("  pid: %d, blk: %d, rip: %p, cr3: %p\n", proc->pid,
@@ -470,6 +470,7 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
   printk("GetPhysicalAddress(%p): %p\n", elf_info.load_address,
          page::GetPhysicalAddress(current_proc->cr3, elf_info.load_address));*/
 
+  printk("ExecCurrentProc() rip %p -> %p\n", current_proc->rip, elf_info.instruction_pointer);
   current_proc->rip = elf_info.instruction_pointer;
   // current_proc->rflags |= (3 << 12);
   // TODO

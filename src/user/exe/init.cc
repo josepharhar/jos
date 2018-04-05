@@ -9,6 +9,8 @@
 #include "unistd.h"
 #include "semaphore.h"
 #include "jos.h"
+#include "exec.h"
+#include "syscall.h"
 
 // TODO the first piece of code in this file is what gets run by
 // exec(), make it always look for main() somehow instead
@@ -20,17 +22,20 @@ void fork_testing();
 void preempt_testing();
 void semaphore_testing();
 void exit_testing();
+void exec_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
   // while (1);
   // proc_testing();
   // class_testing();
-  // ipc_testing();
   // stack_testing();
+
+  // ipc_testing();
   // fork_testing();
   // preempt_testing();
   // semaphore_testing();
-  exit_testing();
+  // exit_testing();
+  exec_testing();
 
   while (1) {
     Putc(Getc());
@@ -301,5 +306,21 @@ void exit_testing() {
 
   while (1) {
     Putc(Getc());
+  }
+}
+
+void exec_testing() {
+  printf("exec_testing() pid: %d\n", getpid());
+
+  if (!fork()) {
+    printf("new pid %d going to exec...\n", getpid());
+    exec("init");
+    printf("EXEC RETURNED!!!!\n");
+  }
+
+  while (1) {
+    char input = Getc();
+    Syscall(SYSCALL_DEBUG);
+    //Putc(input);
   }
 }

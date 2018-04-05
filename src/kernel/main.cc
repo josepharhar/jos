@@ -25,6 +25,7 @@
 #include "pit.h"
 #include "ipc_handler.h"
 #include "semaphore_handler.h"
+#include "debug_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -151,7 +152,7 @@ void ProcInit(void* arg) {
   // exec will put this proc into user mode
   //Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
-  Exec((char*)"init");
+  exec("init");
   printk("Perhaps not.\n");
   while (1) {
     asm volatile ("hlt");
@@ -191,6 +192,7 @@ void KernelMain() {
   InitGetpid();
   InitClone();
   InitSemaphore();
+  InitDebug();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();
