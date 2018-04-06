@@ -1,5 +1,8 @@
-#ifndef VFS_H_
-#define VFS_H_
+#ifndef KERNEL_VFS2_H_
+#define KERNEL_VFS2_H_
+
+#include "shared/jarray.h"
+#include "shared/jstring.h"
 
 // TODO separate fat32 implementation from this class
 // when pure virtual vtable shenanigans are fixed
@@ -9,6 +12,8 @@
 #include "linked_list.h"
 
 #define LFN_BUFFER_LENGTH 257
+
+namespace vfs {
 
 // 16 bytes
 // https://en.wikipedia.org/wiki/Master_boot_record#PTE
@@ -168,4 +173,6 @@ class Superblock {
   uint32_t* fat_table;
 };
 
-#endif  // VFS_H_
+}  // namespace vfs
+
+#endif  // KERNEL_VFS2_H_

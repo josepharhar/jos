@@ -1,8 +1,5 @@
-#ifndef KERNEL_VFS2_H_
-#define KERNEL_VFS2_H_
-
-#include "shared/jarray.h"
-#include "shared/jstring.h"
+#ifndef VFS_FILEPATH_
+#define VFS_FILEPATH_
 
 namespace vfs {
 
@@ -20,7 +17,7 @@ class Filepath {
   Filepath& operator=(Filepath&& other) = delete;
 
   void Append(stdj::string string);
-  void Append(Filepath other); // TODO make constref
+  void Append(Filepath other);  // TODO make constref
   stdj::Array<stdj::string> GetArray();
 
  private:
@@ -29,4 +26,4 @@ class Filepath {
 
 }  // namespace vfs
 
-#endif  // KERNEL_VFS2_H_
+#endif  // VFS_FILEPATH_

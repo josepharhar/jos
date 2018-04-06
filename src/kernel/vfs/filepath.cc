@@ -1,4 +1,4 @@
-#include "vfs2.h"
+#include "vfs/filepath.h"
 
 namespace vfs {
 

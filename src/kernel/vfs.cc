@@ -25,7 +25,8 @@
 #define FILE_ATTRIBUTE_DEVICE 0x40
 #define FILE_ATTRIBUTE_RESERVED 0x80
 // LFN = Long File Name
-//#define FILE_ATTRIBUTE_LFN (FILE_ATTRIBUTE_READ_ONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_VOLUME_ID)
+//#define FILE_ATTRIBUTE_LFN (FILE_ATTRIBUTE_READ_ONLY | FILE_ATTRIBUTE_HIDDEN |
+//FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_VOLUME_ID)
 #define FILE_ATTRIBUTE_LFN 0xF
 
 // the highest 4 bits are ignored when reading clusters from fat table
@@ -50,7 +51,8 @@ struct DirectoryEntry {
   uint8_t creation_time_hms[2];
   uint8_t creation_date[2];
   uint8_t accessed_date[2];
-  uint16_t first_cluster_number_high; // high 16 bits of this entry's first cluster number
+  uint16_t first_cluster_number_high;  // high 16 bits of this entry's first
+                                       // cluster number
   uint8_t last_modified_time[2];
   uint8_t last_modified_date[2];
   uint16_t first_cluster_number_low;
@@ -61,8 +63,8 @@ struct DirectoryEntry {
 struct DirectoryEntryLFN {
   uint8_t index;
   uint16_t name_1[5];
-  uint8_t attribute; // must be 0xF
-  uint8_t long_entry_type; // zero for name entries
+  uint8_t attribute;        // must be 0xF
+  uint8_t long_entry_type;  // zero for name entries
   uint8_t checksum;
   uint16_t name_2[6];
   uint16_t zero;
@@ -70,8 +72,8 @@ struct DirectoryEntryLFN {
 } __attribute__((packed));
 
 static bool IsValidCluster(uint64_t cluster) {
-  return cluster >= FAT32_CLUSTER_VALID_START
-    && cluster <= FAT32_CLUSTER_VALID_END;
+  return cluster >= FAT32_CLUSTER_VALID_START &&
+         cluster <= FAT32_CLUSTER_VALID_END;
 }
 
 File::File(Inode* inode) : inode(inode), offset(0) {}
@@ -87,7 +89,6 @@ int File::Read(uint8_t* dest, uint64_t length) {
     cluster = inode->GetSuperblock()->GetNextCluster(cluster);
     offset_remaining -= 512;
   }
-
 
   while (length) {
     uint8_t* buffer = inode->GetSuperblock()->ReadCluster(cluster);
@@ -126,8 +127,11 @@ uint64_t File::GetSize() {
   return inode->GetSize();
 }
 
-Inode::Inode(uint64_t cluster, char* name, bool is_directory, Superblock* superblock)
-   : cluster(cluster), is_directory(is_directory), superblock(superblock) {
+Inode::Inode(uint64_t cluster,
+             char* name,
+             bool is_directory,
+             Superblock* superblock)
+    : cluster(cluster), is_directory(is_directory), superblock(superblock) {
   strncpy(this->filename, name, LFN_BUFFER_LENGTH);
 }
 
@@ -161,7 +165,7 @@ File* Inode::Open() {
     return 0;
   }
 
-  File* file = (File*) kmalloc(sizeof(File));
+  File* file = (File*)kmalloc(sizeof(File));
   *file = File(this);
   return file;
 }
@@ -178,13 +182,13 @@ LinkedList<Inode*>* Inode::ReadDir() {
   uint64_t current_cluster = cluster;
 
   while (IsValidCluster(current_cluster)) {
-    DirectoryEntry* directory_sector = (DirectoryEntry*) superblock->ReadCluster(current_cluster);
+    DirectoryEntry* directory_sector =
+        (DirectoryEntry*)superblock->ReadCluster(current_cluster);
 
     for (int i = 0; i < DIRECTORY_ENTRIES_PER_SECTOR; i++) {
       DirectoryEntry* entry = directory_sector + i;
 
       switch (entry->attributes) {
-
         case FILE_ATTRIBUTE_LFN: {
           if (!reading_lfn) {
             // start reading long filename
@@ -192,7 +196,7 @@ LinkedList<Inode*>* Inode::ReadDir() {
             memset(lfn_filename, 0, LFN_BUFFER_LENGTH);
           }
 
-          DirectoryEntryLFN* lfn = (DirectoryEntryLFN*) entry;
+          DirectoryEntryLFN* lfn = (DirectoryEntryLFN*)entry;
 
           // only first five bits of index count
           int lfn_index = (lfn->index & 0x1F) - 1;
@@ -210,11 +214,12 @@ LinkedList<Inode*>* Inode::ReadDir() {
 
           break;
         }
-      
+
         case FILE_ATTRIBUTE_ARCHIVE:
         case FILE_ATTRIBUTE_DIRECTORY: {
-          Inode* new_inode = (Inode*) kcalloc(sizeof(Inode));
-          new_inode->is_directory = entry->attributes == FILE_ATTRIBUTE_DIRECTORY;
+          Inode* new_inode = (Inode*)kcalloc(sizeof(Inode));
+          new_inode->is_directory =
+              entry->attributes == FILE_ATTRIBUTE_DIRECTORY;
           new_inode->superblock = superblock;
           new_inode->size = entry->filesize;
 
@@ -226,7 +231,8 @@ LinkedList<Inode*>* Inode::ReadDir() {
             int filename_chars_written = 0;
             for (int i = 0; i < 8; i++) {
               if (entry->legacy_name[i] != ' ') {
-                new_inode->filename[filename_chars_written++] = entry->legacy_name[i];
+                new_inode->filename[filename_chars_written++] =
+                    entry->legacy_name[i];
               }
             }
             // add file extension
@@ -235,17 +241,19 @@ LinkedList<Inode*>* Inode::ReadDir() {
             }
             for (int i = 0; i < 3; i++) {
               if (entry->legacy_name[8 + i] != ' ') {
-                new_inode->filename[filename_chars_written++] = entry->legacy_name[8 + i];
+                new_inode->filename[filename_chars_written++] =
+                    entry->legacy_name[8 + i];
               }
             }
           }
 
-          /*if (!strcmp(new_inode->filename, "..") || !strcmp(new_inode->filename, ".")) {
+          /*if (!strcmp(new_inode->filename, "..") ||
+          !strcmp(new_inode->filename, ".")) {
           }*/
 
           // set cluster pointer
-          new_inode->cluster = (entry->first_cluster_number_high << 16)
-            | entry->first_cluster_number_low;
+          new_inode->cluster = (entry->first_cluster_number_high << 16) |
+                               entry->first_cluster_number_low;
 
           list->Add(new_inode);
 
@@ -255,7 +263,6 @@ LinkedList<Inode*>* Inode::ReadDir() {
         default:
           break;
       }
-
     }
 
     kfree(directory_sector);
@@ -267,7 +274,7 @@ LinkedList<Inode*>* Inode::ReadDir() {
 
 // static
 Superblock* Superblock::Create(ATABlockDevice* ata_device) {
-  Superblock* superblock = (Superblock*) kcalloc(sizeof(Superblock));
+  Superblock* superblock = (Superblock*)kcalloc(sizeof(Superblock));
   superblock->ata_device = ata_device;
 
   // scan MBR
@@ -283,20 +290,25 @@ Superblock* Superblock::Create(ATABlockDevice* ata_device) {
     printk("invalid first partition status: 0x%X\n", first_partition_status);
     return 0;
   }
-  uint8_t first_partition_type = superblock->mbr.partition_entries[0].partition_type;
+  uint8_t first_partition_type =
+      superblock->mbr.partition_entries[0].partition_type;
   if (first_partition_type != 0xC) {
-    printk("invalid first partition type, should be 0xC for Fat32/LBA: 0x%X\n", first_partition_type);
+    printk("invalid first partition type, should be 0xC for Fat32/LBA: 0x%X\n",
+           first_partition_type);
     return 0;
   }
 
-  uint64_t lba_first_sector = superblock->mbr.partition_entries[0].lba_first_sector;
-  //printk("lba_first_sector: 0x%X\n", lba_first_sector);
-  //printk("num_sectors: 0x%X\n", mbr.partition_entries[0].num_sectors);
+  uint64_t lba_first_sector =
+      superblock->mbr.partition_entries[0].lba_first_sector;
+  // printk("lba_first_sector: 0x%X\n", lba_first_sector);
+  // printk("num_sectors: 0x%X\n", mbr.partition_entries[0].num_sectors);
 
   ata_device->ReadBlock(lba_first_sector, &superblock->partition);
 
-  /*printk("bytes_per_sector: 0x%X\n", partition.boot_record.bpb.bytes_per_sector);
-  printk("sectors_per_cluster: 0x%X\n", partition.boot_record.bpb.sectors_per_cluster);
+  /*printk("bytes_per_sector: 0x%X\n",
+  partition.boot_record.bpb.bytes_per_sector);
+  printk("sectors_per_cluster: 0x%X\n",
+  partition.boot_record.bpb.sectors_per_cluster);
   uint64_t total_sectors = partition.boot_record.bpb.total_sectors;
   if (!total_sectors) {
     total_sectors = partition.boot_record.bpb.total_sectors_large;
@@ -314,22 +326,28 @@ Superblock* Superblock::Create(ATABlockDevice* ata_device) {
   }
   printk("\"\n");*/
 
-  if (superblock->partition.boot_partition_signature != BOOT_SIGNATURE_LITTLE_ENDIAN) {
-    printk("invalid boot partition signature: 0x%X\n", superblock->partition.boot_partition_signature);
+  if (superblock->partition.boot_partition_signature !=
+      BOOT_SIGNATURE_LITTLE_ENDIAN) {
+    printk("invalid boot partition signature: 0x%X\n",
+           superblock->partition.boot_partition_signature);
     return 0;
   }
 
-  /*printk("num reserved sectors: 0x%X\n", partition.boot_record.bpb.num_reserved_sectors);
-  uint64_t fats_sector = lba_first_sector + partition.boot_record.bpb.num_reserved_sectors;
+  /*printk("num reserved sectors: 0x%X\n",
+  partition.boot_record.bpb.num_reserved_sectors);
+  uint64_t fats_sector = lba_first_sector +
+  partition.boot_record.bpb.num_reserved_sectors;
   printk("sectors per fat: 0x%X\n", partition.boot_record.sectors_per_fat);
   uint64_t root_cluster = partition.boot_record.root_cluster;
   printk("root cluster: 0x%X\n", root_cluster);*/
 
-  uint8_t* fat_table_bytes = (uint8_t*) kmalloc(512 * superblock->partition.boot_record.sectors_per_fat);
+  uint8_t* fat_table_bytes = (uint8_t*)kmalloc(
+      512 * superblock->partition.boot_record.sectors_per_fat);
   for (int i = 0; i < superblock->partition.boot_record.sectors_per_fat; i++) {
-    ata_device->ReadBlock(superblock->GetFatsStartSector() + i, fat_table_bytes + 512 * i);
+    ata_device->ReadBlock(superblock->GetFatsStartSector() + i,
+                          fat_table_bytes + 512 * i);
   }
-  superblock->fat_table = (uint32_t*) fat_table_bytes;
+  superblock->fat_table = (uint32_t*)fat_table_bytes;
 
   /*DirectoryEntry* root_directory = (DirectoryEntry*) kmalloc(512);
   ata_device->ReadBlock(ClusterToSector(root_cluster), root_directory);
@@ -341,10 +359,11 @@ Superblock* Superblock::Create(ATABlockDevice* ata_device) {
 
   /*printk("root directory attributes: 0x%X\n", root_directory->attributes);
   printk("sizeof directory entry should be 0x20: %p\n", sizeof(DirectoryEntry));
-  printk("sizeof DirectoryEntryLFN should be 32: %d\n", sizeof(DirectoryEntryLFN));
+  printk("sizeof DirectoryEntryLFN should be 32: %d\n",
+  sizeof(DirectoryEntryLFN));
   printk("\n");*/
 
-  //ReadDir(root_cluster, 0);
+  // ReadDir(root_cluster, 0);
 
   /*uint64_t sectors_per_fat = partition.boot_record.sectors_per_fat;
   printk("fat table first sector:\n");
@@ -356,11 +375,15 @@ Superblock* Superblock::Create(ATABlockDevice* ata_device) {
     printk("[0x%X]: %p  ", i, value);
   }
   printk("\n");
-  printk("media descriptor type mbr: 0x%X\n", mbr.boot_record.bpb.media_descriptor_type);
-  printk("media descriptor type partition: 0x%X\n", partition.boot_record.bpb.media_descriptor_type);*/
+  printk("media descriptor type mbr: 0x%X\n",
+  mbr.boot_record.bpb.media_descriptor_type);
+  printk("media descriptor type partition: 0x%X\n",
+  partition.boot_record.bpb.media_descriptor_type);*/
 
-  superblock->root_inode = (Inode*) kcalloc(sizeof(Inode));
-  *superblock->root_inode = Inode(superblock->partition.boot_record.root_cluster, (char*)"", true, superblock);
+  superblock->root_inode = (Inode*)kcalloc(sizeof(Inode));
+  *superblock->root_inode =
+      Inode(superblock->partition.boot_record.root_cluster, (char*)"", true,
+            superblock);
 
   return superblock;
 }
@@ -377,11 +400,14 @@ Inode* Superblock::GetRootInode() {
 }
 
 uint64_t Superblock::GetFatsStartSector() {
-  return mbr.partition_entries[0].lba_first_sector + partition.boot_record.bpb.num_reserved_sectors;
+  return mbr.partition_entries[0].lba_first_sector +
+         partition.boot_record.bpb.num_reserved_sectors;
 }
 
 uint64_t Superblock::GetDataRegionStartSector() {
-  return GetFatsStartSector() + partition.boot_record.sectors_per_fat * partition.boot_record.bpb.num_fats;
+  return GetFatsStartSector() +
+         partition.boot_record.sectors_per_fat *
+             partition.boot_record.bpb.num_fats;
 }
 
 uint64_t Superblock::ClusterToSector(uint64_t cluster_number) {
@@ -391,7 +417,7 @@ uint64_t Superblock::ClusterToSector(uint64_t cluster_number) {
 }
 
 uint8_t* Superblock::ReadCluster(uint64_t cluster) {
-  uint8_t* sector = (uint8_t*) kmalloc(512);
+  uint8_t* sector = (uint8_t*)kmalloc(512);
   ata_device->ReadBlock(ClusterToSector(cluster), sector);
   return sector;
 }
