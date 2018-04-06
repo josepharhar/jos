@@ -39,6 +39,11 @@ class Queue {
     return remove_value;
   }
 
+  T Peek() {
+    DCHECK(head_);
+    return head_->value;
+  }
+
   uint64_t Size() const {
     uint64_t size = 0;
     QueueEntry* next = head_;
