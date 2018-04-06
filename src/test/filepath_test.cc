@@ -1,6 +1,6 @@
 #include "test.h"
 
-#include "kernel/vfs2.h"
+#include "kernel/vfs/filepath.h"
 
 static void TestParse() {
   vfs::Filepath filepath("/hello/world");

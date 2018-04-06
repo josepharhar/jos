@@ -1,8 +1,8 @@
 #ifndef SEMAPHORE_HANDLER_H_
 #define SEMAPHORE_HANDLER_H_
 
-#include "jstring.h"
-#include "jmap.h"
+#include "shared/jstring.h"
+#include "shared/jmap.h"
 
 struct Semaphore;
 typedef stdj::Map<stdj::string, Semaphore*, ((Semaphore*)0)> SemaphoreMap;

@@ -5,12 +5,16 @@
 extern "C" {
 #endif  // __cplusplus
 
+#ifdef JOS
+
 typedef int pid_t;
 
 pid_t fork();
 pid_t getpid();
 
 void exit();
+
+#endif  // JOS
 
 #ifdef __cplusplus
 }
