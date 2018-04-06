@@ -11,12 +11,6 @@ class Queue {
   Queue() {}
   ~Queue() {}
 
-  Queue(const Queue& other) = delete;
-  Queue& operator=(const Queue& other) = delete;
-
-  Queue(Queue&& other) = delete;
-  Queue& operator=(Queue&& other) = delete;
-
   void Add(T value) {
     QueueEntry* new_entry = new QueueEntry();
     new_entry->value = value;

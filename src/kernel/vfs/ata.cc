@@ -1,35 +1,75 @@
-#include "ata_block_device.h"
+#include "ata.h"
+
+#include "shared/jqueue.h"
+
+#include "kernel/kmalloc.h"
+#include "kernel/printk.h"
+#include "kernel/irq.h"
 
 // http://wiki.osdev.org/ATA_PIO_Mode
 
-#include "kmalloc.h"
-#include "queue.h"
-#include "asm.h"
-#include "printk.h"
-#include "proc.h"
-#include "irq.h"
+#define PRIMARY_ATA_PORT 0x1F0
+#define PRIMARY_STATUS_PORT 0x3F6  // "alternate" status port
+#define PRIMARY_DEVICE_CONTROL_PORT \
+  0x3F6  // 0x3F6 doubles as status read and control write
 
-// global used for interrupt handling
-static Queue<ATARequest> request_queue = Queue<ATARequest>();
-proc::BlockedQueue* proc_queue = 0;
+// port offsets from PRIMARY_ATA_PORT
+#define PORT_OFFSET_DATA 0
+#define PORT_OFFSET_FEATURES 1
+#define PORT_OFFSET_SECTOR_COUNT 2
+#define PORT_OFFSET_LBA_LO 3
+#define PORT_OFFSET_LBA_MID 4
+#define PORT_OFFSET_LBA_HI 5
+#define PORT_OFFSET_DRIVE_SELECT 6  // use to select a drive
+#define PORT_OFFSET_STATUS 7        // "regular" status port, also command port
+#define PORT_OFFSET_CMD 7  // register 7 doubles as status read and cmd write
 
-static ATABlockDevice* irq_to_device[256];
+// bit masks from PORT_OFFSET_STATUS/PRIMARY_STATUS_PORT
+#define STATUS_ERR 1         // indicates an error occured
+#define STATUS_DRQ (1 << 3)  // set when drive has PIO data to give or receive
+#define STATUS_SRV (1 << 4)  // overlapped mode service request
+#define STATUS_DF (1 << 5)   // drive fault error (does not set ERR)
+#define STATUS_RDY (1 << 6)  // clear when drive is spun down or after an error
+#define STATUS_BSY \
+  (1 << 7)  // set when drive is preparing to send/receive data. overrides other
+            // bits
+
+// bit masks for PRIMARY_DEVICE_CONTROL_PORT
+#define CONTROL_NIEN \
+  (1 << 1)  // set to stop current device from sending interrupts
+#define CONTROL_SRST \
+  (1 << 2)  // set to do a software reset on all drives on the bus
+#define CONTROL_HOB \
+  (1 << 7)  // set to read back high order byte of last lab48 value sent on io
+            // port
+
+namespace vfs {
+
+static stdj::Queue<ATARequest> request_queue;
+
+ATADevice::ATADevice() {}
+ATADevice::~ATADevice() {
+  // TODO unregister interrupt handler?
+}
 
 // static
-void ATABlockDevice::GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
-  ATABlockDevice* ata_device = (ATABlockDevice*) arg;
+void ATADevice::GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
+  ATADevice* ata_device = (ATADevice*)arg;
   ata_device->InterruptHandler();
 }
 
-void ATABlockDevice::InterruptHandler() {
+void ATADevice::InterruptHandler() {
   uint8_t status = inb(bus_base_port + PORT_OFFSET_STATUS);
   if ((status & STATUS_BSY) || !(status & STATUS_DRQ)) {
-    printk("ATABlockDevice::InterruptHandler() invalid status: 0x%X\n", status);
+    printk("ATADevice::InterruptHandler() invalid status: 0x%X\n", status);
     return;
   }
 
   if (request_queue.IsEmpty()) {
-    printk("ATABlockDevice::InterruptHandler() called with no requests! status: 0x%X\n", status);
+    printk(
+        "ATABlockDevice::InterruptHandler() called with no requests! status: "
+        "0x%X\n",
+        status);
     printk("dumping some input: ");
     int i;
     for (i = 0; inb(PRIMARY_ATA_PORT + PORT_OFFSET_STATUS) & STATUS_DRQ; i++) {
@@ -43,33 +83,46 @@ void ATABlockDevice::InterruptHandler() {
     return;
   }
 
-  
   // service request
-  ATARequest* request = request_queue.Remove();
-  // TODO this reading could take a long time.
-  // would it be possible to defer it until after the interrupt handler?
-  uint16_t* buffer = (uint16_t*) request->buffer;
-  uint16_t request_port = bus_base_port + PORT_OFFSET_DATA;
-  for (int i = 0; i < 256; i++) {
-    // inw() must be used to read from HDD
-    // it reads two bytes at a time in big endian order,
-    // so we must use buffer as a byte/char buffer instead of a short/uint16_t buffer
-    buffer[i] = inw(request_port);
-  }
-  kfree(request);
+  ATARequest request = request_queue.Remove();
 
-  // unblock the process which made the request
-  proc_queue->UnblockHead();
-  
+  switch (request.type) {
+    case ATARequest::READ: {
+      // TODO this reading could take a long time.
+      // would it be possible to defer it until after the interrupt handler?
+      uint16_t* buffer = (uint16_t*)request.buffer;
+      uint16_t request_port = bus_base_port + PORT_OFFSET_DATA;
+      for (int i = 0; i < 256; i++) {
+        // inw() must be used to read from HDD
+        // it reads two bytes at a time in big endian order,
+        // so we must use buffer as a byte/char buffer instead of a
+        // short/uint16_t
+        // buffer
+        buffer[i] = inw(request_port);
+      }
+      break;
+    }
+  }
+
+  // signal that the request has been completed
+  if (request.callback) {
+    request.callback();
+  }
+
   // consume another request if there is one
   if (!request_queue.IsEmpty()) {
-    Consume(request_queue.Peek());
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    // TODO TODO TODO A;SDLJFHASL;DFDF;LKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+    //Consume(request_queue.Peek());
   }
 }
-
-ATABlockDevice::ATABlockDevice() {}
-
-ATABlockDevice::~ATABlockDevice() {}
 
 static uint8_t PollStatus(uint16_t status_port) {
   // osdev says to read five times first
@@ -77,27 +130,24 @@ static uint8_t PollStatus(uint16_t status_port) {
   for (int i = 0; i < 5 || (status & STATUS_BSY); i++) {
     status = inb(status_port);
     if (i > 100) {
-      printk("polled status 100 times but still busy. port: 0x%X, status: 0x%X\n", status_port, status);
+      printk(
+          "polled status 100 times but still busy. port: 0x%X, status: 0x%X\n",
+          status_port, status);
       return status;
     }
   }
   return status;
 }
 
-int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
-  // assert context is a process
-  if (!proc::IsRunning()) {
-    printk("ATABlockDevice::ReadBlock() must be called from a blockable context\n");
-    return 1;
-  }
-
-  BEGIN_CS(); // disable interrupts to make sure queues don't change
-
+int ATADevice::ReadBlock(uint64_t block_num,
+                         void* dest,
+                         ATARequestCallback callback) {
   // create a new request and add it to request queue
-  ATARequest* new_request = (ATARequest*) kmalloc(sizeof(ATARequest));
-  new_request->block_num = block_num;
-  new_request->buffer = dest;
-  new_request->request_type = ATARequest::RequestType::READ;
+  ATARequest new_request;
+  new_request.block_num = block_num;
+  new_request.buffer = dest;
+  new_request.type = ATARequest::READ;
+  new_request.callback = callback;
   bool queue_was_empty = request_queue.IsEmpty();
   request_queue.Add(new_request);
 
@@ -107,28 +157,32 @@ int ATABlockDevice::ReadBlock(uint64_t block_num, void* dest) {
   if (queue_was_empty) {
     Consume(new_request);
   } else {
-    printk("queue was not empty, waiting to consume request block_num: %lu\n", new_request->block_num);
+    printk("queue was not empty, waiting to consume request block_num: %lu\n",
+           new_request.block_num);
   }
-  
+
   // block this process until interrupt happens and buffer is read into
-  proc_queue->BlockCurrentProc();
-  
-  END_CS();
+  // proc_queue->BlockCurrentProc();
+
   return 0;
 }
 
-int ATABlockDevice::WriteBlock(uint64_t block_num, void* src) {
+int ATADevice::WriteBlock(uint64_t block_num,
+                          void* src,
+                          ATARequestCallback callback) {
   // TODO implement writing
   return 1;
 }
 
 // static
-ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
-                                      uint16_t ata_master,
-                                      bool is_master,
-                                      const char* name,
-                                      uint8_t irq) {
-  irq = 46; // TODO
+ATADevice* ATADevice::Probe(uint16_t bus_base_port,
+                            uint16_t ata_master,
+                            bool is_master,
+                            const char* name,
+                            uint8_t irq) {
+  request_queue = stdj::Queue<ATARequest>();
+
+  irq = 46;  // TODO
 
   // block interrupts during initialization
   IRQSetHandler(&IRQHandlerEmpty, irq, 0);
@@ -156,7 +210,8 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
   }
 
   // make sure LBAmid and LBAhi are zero
-  if (inb(bus_base_port + PORT_OFFSET_LBA_MID) || inb(bus_base_port + PORT_OFFSET_LBA_HI)) {
+  if (inb(bus_base_port + PORT_OFFSET_LBA_MID) ||
+      inb(bus_base_port + PORT_OFFSET_LBA_HI)) {
     printk("LBAmid | LBAhi, drive is not ATA. initialization failed\n");
     return 0;
   }
@@ -170,8 +225,9 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
     return 0;
   }
 
-  // data is ready to read from the data port. read 256 16bit values and store them
-  uint16_t* identify_buffer = (uint16_t*) kmalloc(256 * sizeof(uint16_t));
+  // data is ready to read from the data port. read 256 16bit values and store
+  // them
+  uint16_t* identify_buffer = (uint16_t*)kmalloc(256 * sizeof(uint16_t));
   for (int i = 0; i < 256; i++) {
     identify_buffer[i] = inw(bus_base_port + PORT_OFFSET_DATA);
   }
@@ -181,69 +237,27 @@ ATABlockDevice* ATABlockDevice::Probe(uint16_t bus_base_port,
     return 0;
   }
   uint64_t num_sectors = 0;
-  num_sectors |= (((uint64_t) identify_buffer[100]) << 0);
-  num_sectors |= (((uint64_t) identify_buffer[101]) << 16);
-  num_sectors |= (((uint64_t) identify_buffer[102]) << 32);
-  num_sectors |= (((uint64_t) identify_buffer[103]) << 48);
-  //printk("num LBA48 addressable sectors: %p\n", num_sectors);
+  num_sectors |= (((uint64_t)identify_buffer[100]) << 0);
+  num_sectors |= (((uint64_t)identify_buffer[101]) << 16);
+  num_sectors |= (((uint64_t)identify_buffer[102]) << 32);
+  num_sectors |= (((uint64_t)identify_buffer[103]) << 48);
+  // printk("num LBA48 addressable sectors: %p\n", num_sectors);
   kfree(identify_buffer);
 
-
-  /*
-  // read one sector at address 0
-  outb(bus_base_port + PORT_OFFSET_DRIVE_SELECT, 0x40); // 0x40: master, lba48
-  do {
-    status = inb(bus_base_port + PORT_OFFSET_STATUS);
-    printk("status after using drive select: 0x%X\n", status);
-  } while (status & STATUS_BSY);
-  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT, 0); // sectorcount high byte
-  outb(bus_base_port + PORT_OFFSET_LBA_LO, 0); // lba4
-  outb(bus_base_port + PORT_OFFSET_LBA_MID, 0); // lba5
-  outb(bus_base_port + PORT_OFFSET_LBA_HI, 0); // lba6
-  do {
-    status = inb(bus_base_port + PORT_OFFSET_STATUS);
-    printk("intermediate waiting status: 0x%X\n", status);
-  } while (status & STATUS_BSY);
-  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT, 1); // sectorcount low byte
-  outb(bus_base_port + PORT_OFFSET_LBA_LO, 0); // lba1
-  outb(bus_base_port + PORT_OFFSET_LBA_MID, 0); // lba2
-  outb(bus_base_port + PORT_OFFSET_LBA_HI, 0); // lba3
-  outb(bus_base_port + PORT_OFFSET_CMD, 0x24); // send "READ SECTORS EXT" command 0x24
-  // poll reading
-  do {
-    status = inb(bus_base_port + PORT_OFFSET_STATUS);
-    printk("waiting to read status: 0x%X\n", status);
-  } while (status & STATUS_BSY);
-  // read
-  uint16_t* read_buffer = (uint16_t*) kmalloc(256 * sizeof(uint16_t));
-  for (int i = 0; i < 32; i++) {
-    read_buffer[i] = inw(PRIMARY_ATA_PORT + PORT_OFFSET_DATA);
-    printk("[%d]: 0x%X", i, read_buffer[i]);
-    if (i % 6 == 0) {
-      printk("\n");
-    }
-  }
-  kfree(read_buffer);
-  */
-
-
-  ATABlockDevice* device = new ATABlockDevice();
+  ATADevice* device = new ATADevice();
   device->bus_base_port = bus_base_port;
-  //*device->request_queue = Queue<ATARequest>();
   device->is_master = is_master;
   device->ata_master = ata_master;
   device->irq = irq;
   device->num_sectors = num_sectors;
-  device->proc_queue = new proc::BlockedQueue();
 
   IRQSetHandler(&GlobalInterruptHandler, device->irq, device);
 
   return device;
 }
 
-void ATABlockDevice::Consume(struct ATARequest* request) {
-  //uint64_t lba = request->block_num * 512;
-  uint64_t lba = request->block_num;
+void ATADevice::Consume(ATARequest request) {
+  uint64_t lba = request.block_num;
   uint8_t sectorcount_low_byte = num_sectors & 0xFF;
   uint8_t sectorcount_high_byte = (num_sectors >> 8) & 0xFF;
 
@@ -253,24 +267,21 @@ void ATABlockDevice::Consume(struct ATARequest* request) {
   sectorcount_high_byte = 0;
 
   PollStatus(bus_base_port + PORT_OFFSET_STATUS);
-  outb(bus_base_port + PORT_OFFSET_DRIVE_SELECT, 0x40); // 0x40: master, lba48
+  outb(bus_base_port + PORT_OFFSET_DRIVE_SELECT, 0x40);  // 0x40: master, lba48
   PollStatus(bus_base_port + PORT_OFFSET_STATUS);
-  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT, sectorcount_high_byte); // sectorcount high byte
-  outb(bus_base_port + PORT_OFFSET_LBA_LO, (lba >> 24) & 0xFF); // lba4
-  outb(bus_base_port + PORT_OFFSET_LBA_MID, (lba >> 32) & 0xFF); // lba5
-  outb(bus_base_port + PORT_OFFSET_LBA_HI, (lba >> 48) & 0xFF); // lba6
+  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT,
+       sectorcount_high_byte);  // sectorcount high byte
+  outb(bus_base_port + PORT_OFFSET_LBA_LO, (lba >> 24) & 0xFF);   // lba4
+  outb(bus_base_port + PORT_OFFSET_LBA_MID, (lba >> 32) & 0xFF);  // lba5
+  outb(bus_base_port + PORT_OFFSET_LBA_HI, (lba >> 48) & 0xFF);   // lba6
   PollStatus(bus_base_port + PORT_OFFSET_STATUS);
-  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT, sectorcount_low_byte); // sectorcount low byte
-  outb(bus_base_port + PORT_OFFSET_LBA_LO, lba & 0xFF); // lba1
-  outb(bus_base_port + PORT_OFFSET_LBA_MID, (lba >> 8) & 0xFF); // lba2
-  outb(bus_base_port + PORT_OFFSET_LBA_HI, (lba >> 16) & 0xFF); // lba3
-  outb(bus_base_port + PORT_OFFSET_CMD, 0x24); // send "READ SECTORS EXT" command 0x24
+  outb(bus_base_port + PORT_OFFSET_SECTOR_COUNT,
+       sectorcount_low_byte);                            // sectorcount low byte
+  outb(bus_base_port + PORT_OFFSET_LBA_LO, lba & 0xFF);  // lba1
+  outb(bus_base_port + PORT_OFFSET_LBA_MID, (lba >> 8) & 0xFF);  // lba2
+  outb(bus_base_port + PORT_OFFSET_LBA_HI, (lba >> 16) & 0xFF);  // lba3
+  outb(bus_base_port + PORT_OFFSET_CMD,
+       0x24);  // send "READ SECTORS EXT" command 0x24
 }
 
-// static
-void ATABlockDevice::Destroy(ATABlockDevice* ata_device) {
-  // TODO figure out what else should be done when an ata device is "unregistered"
-  // unregister interrupt handler?
-
-  kfree(ata_device);
-}
+}  // namespace vfs

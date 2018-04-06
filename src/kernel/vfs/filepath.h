@@ -1,6 +1,8 @@
 #ifndef VFS_FILEPATH_
 #define VFS_FILEPATH_
 
+#include "shared/jstring.h"
+
 namespace vfs {
 
 class Filepath {
