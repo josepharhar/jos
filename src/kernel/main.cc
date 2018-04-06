@@ -13,7 +13,10 @@
 #include "proc.h"
 #include "ata_block_device.h"
 #include "kmalloc.h"
-#include "vfs.h"
+//#include "vfs.h"
+#include "kernel/vfs/superblock.h"
+#include "kernel/vfs/inode.h"
+#include "kernel/vfs/file.h"
 #include "syscall_handler.h"
 #include "getc_handler.h"
 #include "elf.h"
@@ -29,132 +32,48 @@
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
 extern uint64_t p2_table[];
-uint64_t esp_holder = 0;
-void PrintStackInfo() {
-  printk("p2_table:     %p\n", p2_table);
-  printk("stack_bottom: %p\n", stack_bottom);
-  printk("stack_top:    %p\n", stack_top);
-  asm volatile("movq %rsp,esp_holder");
-  printk("esp:          %p\n", esp_holder);
-}
 
-/*void ProcKeyboard(void* arg) {
-  while (1) {
-    char input = KeyboardRead();
-    if (input == '\\') {
-      printk("\n");
-      proc::Print();
-    } else {
-      printk("%c", input);
-    }
-  }
-}*/
-
-ATABlockDevice* CreateATADevice() {
+static vfs::ATADevice* CreateATADevice() {
   uint16_t bus_base_port = PRIMARY_ATA_PORT;
   uint16_t master = 0;  // TODO
   uint8_t is_master = 1;
   char name[] = "ata_device_name";
   uint8_t irq = 0;  // TODO
-  return ATABlockDevice::Probe(bus_base_port, master, is_master, name, irq);
+  return vfs::ATADevice::Probe(bus_base_port, master, is_master, name, irq);
 }
 
-void PrintIndent(int level) {
-  for (int i = 0; i < level; i++) {
-    printk("  ");
-  }
+static vfs::Superblock* superblock = 0;
+static void SuperblockReady(Superblock* new_superblock) {
+  // this is called by an interrupt handler
+  superblock = new_superblock;
 }
 
-/*void PrintDir(Inode* inode, int level) {
-  if (inode->IsDirectory()) {
-    PrintIndent(level);
-    printk("%s/\n", inode->GetName());
-    LinkedList<Inode*> sub_inodes = inode->ReadDir();
-    Inode* sub_inode = sub_inodes.GetHead();
-    while (sub_inode) {
-      if (strcmp(sub_inode->GetName(), "..") && strcmp(sub_inode->GetName(), ".")) {
-        PrintDir(sub_inode, level + 1);
-      }
-
-      Inode* old_sub_inode = sub_inode;
-      sub_inode = sub_inodes.GetNextNoLoop(sub_inode);
-      kfree(old_sub_inode);
-    }
-  } else {
-    PrintIndent(level);
-    printk("%s\n", inode->GetName());
-  }
-}
-void PrintDir(Inode* inode) {
-  PrintDir(inode, 0);
-}*/
-
-/*void ProcVFS(void* arg) {
-  ATABlockDevice* ata_device = CreateATADevice();
-  Superblock* superblock = Superblock::Create(ata_device);
-
-  //PrintDir(superblock->GetRootInode());
-  char filename[] = "init";
-  Inode* inode = FindFile(superblock->GetRootInode(), filename);
-  if (inode) {
-    printk("inode->GetName(): \"%s\"\n", inode->GetName());
-    printk("inode->GetSize(): %lld\n", inode->GetSize());
-    File* file = inode->Open();
-    char* data = (char*) kmalloc(inode->GetSize());
-    memset(data, '_', inode->GetSize());
-    file->Read((uint8_t*) data, inode->GetSize());
-    //printk("data:\n%s\n", data);
-    
-    ELFCreateProc((uint8_t*) data, inode->GetSize());
-
-    kfree(data);
-    file->Close();
-    kfree(file); // TODO do this somewhere else
-    kfree(inode);
-  } else {
-    printk("unable to find file \"%s\"\n", filename);
-  }
-
-  Superblock::Destroy(superblock);
-  ATABlockDevice::Destroy(ata_device);
-
-  while (1) {
-    printk("%c", KeyboardRead());
-  }
-}*/
-
-void ProcInit(void* arg) {
+static void ProcInit(void* arg) {
   printk("Hello from Init process\n");
 
-  // TODO this is awful
-  ATABlockDevice* block_device = CreateATADevice();
-  Superblock* superblock = Superblock::Create(block_device);
-  Inode* root_directory = superblock->GetRootInode();
-  InitExec(root_directory);
+  // TODO this would normally be called with interrupts disabled...
+  //   maybe it doesnt matter since there is only one thing going on rn.
+  vfs::Superblock::Create(CreateATADevice(), SuperblockReady);
+  while (!superblock) {}
+  printk("got superblock: %p\n", superblock);
+  InitExec(superblock->GetRootInode());
 
   // TODO delet this
-  /*printk("testing PageTable::GetPhysicalAddress()\n");
-  uint64_t* addr = (uint64_t*)kmalloc(sizeof(uint64_t));
-  *addr = 1234;
-  printk("virtual address %p: %d\n", addr, *addr);
-  PageTable page_table((uint64_t)Getcr3());
-  uint64_t* physical_address = (uint64_t*)page_table.GetPhysicalAddress((uint64_t)addr);
-  printk("physical address %p: %d\n", physical_address, *physical_address);*/
-
   uint64_t new_cr3 = page::CopyPageTable((uint64_t)Getcr3());
   if (page::GetPhysicalAddress((uint64_t)Getcr3(), 100) !=
       page::GetPhysicalAddress(new_cr3, 100)) {
     printk("WTF\n");
-    while (1) asm volatile ("hlt");
+    while (1)
+      asm volatile("hlt");
   }
 
   // exec will put this proc into user mode
-  //Exec("/user/init");
+  // Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
   Exec((char*)"init");
   printk("Perhaps not.\n");
   while (1) {
-    asm volatile ("hlt");
+    asm volatile("hlt");
   }
 }
 

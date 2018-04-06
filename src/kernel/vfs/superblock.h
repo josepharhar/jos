@@ -5,9 +5,12 @@
 
 namespace vfs {
 
+typedef void (*SuperblockReadyCallback)(Superblock*);
+
 class Superblock {
  public:
-  static Superblock* Create(ATADevice* ata_device);
+  static Superblock* Create(ATADevice* ata_device,
+                            SuperblockReadyCallback callback);
   static void Destroy(Superblock* superblock);
 
   Inode* GetRootInode();
@@ -17,7 +20,7 @@ class Superblock {
   void PutSuper(); // write superblock to disk*/
 
   // FAT32 specific information
-  uint8_t* ReadCluster(uint64_t cluster);  // TODO this should be given a buffer
+  void ReadCluster(uint64_t cluster, void* dest, ATARequestCallback callback);
   uint64_t GetNextCluster(uint64_t cluster);
 
  private:
@@ -36,6 +39,16 @@ class Superblock {
   MBR mbr;
   MBR partition;
   uint32_t* fat_table;
+
+  // temp storage for events in Superblock::Create
+  SuperblockReadyCallback ready_callback_;
+  int boot_record_block_index_;
+  uint8_t* fat_table_bytes_;
+
+  // static helper callbacks that need private visibility
+  static void SuperblockCreateReadBootRecord(void* arg);
+  static void SuperblockCreateReadLbaFirstSector(void* arg);
+  static void SuperblockCreateMBRScanned(void* arg);
 };
 
 }  // namespace vfs

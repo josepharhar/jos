@@ -5,7 +5,7 @@
 
 namespace vfs {
 
-typedef void (*ATARequestCallback)();
+typedef void (*ATARequestCallback)(void*);
 
 struct ATARequest {
   enum RequestType {
@@ -14,6 +14,7 @@ struct ATARequest {
   uint64_t block_num;
   void* buffer;
   ATARequestCallback callback;
+  void* callback_arg;
 };
 
 class ATADevice {
@@ -21,8 +22,14 @@ class ATADevice {
   ~ATADevice();
 
   // returns 0 on success, calls callback when request is done
-  int ReadBlock(uint64_t block_num, void* dest, ATARequestCallback callback);
-  int WriteBlock(uint64_t block_num, void* src, ATARequestCallback callback);
+  int ReadBlock(uint64_t block_num,
+                void* dest,
+                ATARequestCallback callback,
+                void* callback_arg = 0);
+  int WriteBlock(uint64_t block_num,
+                 void* src,
+                 ATARequestCallback callback,
+                 void* callback_arg = 0);
 
   static ATADevice* Probe(uint16_t bus_base_port,
                           uint16_t ata_master,

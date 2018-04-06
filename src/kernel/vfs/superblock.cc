@@ -1,54 +1,92 @@
 #include "kernel/vfs/superblock.h"
 
+#include "kernel/vfs/inode.h"
+#include "kernel/printk.h"
+
 namespace vfs {
 
 // static
-Superblock* Superblock::Create(ATADevice* ata_device) {
-  Superblock* superblock = (Superblock*)kcalloc(sizeof(Superblock));
-  superblock->ata_device = ata_device;
+void Superblock::SuperblockCreateReadBootRecord(void* arg) {
+  Superblock* superblock = (Superblock*)arg;
 
-  // scan MBR
-  ata_device->ReadBlock(0, &superblock->mbr);
+  if (superblock->boot_record_block_index_ <
+      superblock->partition.boot_record.sectors_per_fat) {
+    superblock->ata_device->ReadBlock(
+        superblock->GetFatsStartSector() + superblock->boot_record_block_index_,
+        superblock->fat_table_bytes_ +
+            512 * superblock->boot_record_block_index_,
+        SuperblockCreateReadBootRecord, superblock);
+    superblock->boot_record_block_index_++;
+    return;
+  }
+
+  superblock->fat_table = (uint32_t*)superblock->fat_table_bytes_;
+  superblock->root_inode = (Inode*)kcalloc(sizeof(Inode));
+  *superblock->root_inode =
+      Inode(superblock->partition.boot_record.root_cluster, (char*)"", true,
+            superblock);
+
+  superblock->ready_callback_(superblock);
+}
+
+// static
+void Superblock::SuperblockCreateReadLbaFirstSector(void* arg) {
+  Superblock* superblock = (Superblock*)arg;
+
+  if (superblock->partition.boot_partition_signature !=
+      BOOT_SIGNATURE_LITTLE_ENDIAN) {
+    printk("invalid boot partition signature: 0x%X\n",
+           superblock->partition.boot_partition_signature);
+    superblock->ready_callback_(0);
+    kfree(superblock);
+    return;
+  }
+
+  superblock->boot_record_block_index_ = 0;
+  superblock->fat_table_bytes_ = (uint8_t*)kmalloc(
+      512 * superblock->partition.boot_record.sectors_per_fat);
+  SuperblockCreateReadBootRecord(superblock);
+}
+
+// static
+void Superblock::SuperblockCreateMBRScanned(void* arg) {
+  Superblock* superblock = (Superblock*)arg;
 
   uint8_t first_partition_status = superblock->mbr.partition_entries[0].status;
   if (first_partition_status != MBR_STATUS_ACTIVE) {
     printk("invalid first partition status: 0x%X\n", first_partition_status);
-    return 0;
+    superblock->ready_callback_(0);
+    kfree(superblock);
+    return;
   }
   uint8_t first_partition_type =
       superblock->mbr.partition_entries[0].partition_type;
   if (first_partition_type != 0xC) {
     printk("invalid first partition type, should be 0xC for Fat32/LBA: 0x%X\n",
            first_partition_type);
-    return 0;
+    superblock->ready_callback_(0);
+    kfree(superblock);
+    return;
   }
 
   uint64_t lba_first_sector =
       superblock->mbr.partition_entries[0].lba_first_sector;
 
-  ata_device->ReadBlock(lba_first_sector, &superblock->partition);
+  superblock->ata_device->ReadBlock(lba_first_sector, &superblock->partition,
+                                    SuperblockCreateReadLbaFirstSector,
+                                    superblock);
+}
 
-  if (superblock->partition.boot_partition_signature !=
-      BOOT_SIGNATURE_LITTLE_ENDIAN) {
-    printk("invalid boot partition signature: 0x%X\n",
-           superblock->partition.boot_partition_signature);
-    return 0;
-  }
+// static
+void Superblock::Create(ATADevice* ata_device,
+                        SuperblockReadyCallback callback) {
+  Superblock* superblock = (Superblock*)kcalloc(sizeof(Superblock));
+  superblock->ata_device = ata_device;
+  superblock->ready_callback_ = callback;
 
-  uint8_t* fat_table_bytes = (uint8_t*)kmalloc(
-      512 * superblock->partition.boot_record.sectors_per_fat);
-  for (int i = 0; i < superblock->partition.boot_record.sectors_per_fat; i++) {
-    ata_device->ReadBlock(superblock->GetFatsStartSector() + i,
-                          fat_table_bytes + 512 * i);
-  }
-  superblock->fat_table = (uint32_t*)fat_table_bytes;
-
-  superblock->root_inode = (Inode*)kcalloc(sizeof(Inode));
-  *superblock->root_inode =
-      Inode(superblock->partition.boot_record.root_cluster, (char*)"", true,
-            superblock);
-
-  return superblock;
+  // scan MBR
+  ata_device->ReadBlock(0, &superblock->mbr, SuperblockCreateMBRScanned,
+                        superblock);
 }
 
 // static
@@ -79,10 +117,10 @@ uint64_t Superblock::ClusterToSector(uint64_t cluster_number) {
   return GetDataRegionStartSector() + cluster_number - 2;
 }
 
-uint8_t* Superblock::ReadCluster(uint64_t cluster) {
-  uint8_t* sector = (uint8_t*)kmalloc(512);
-  ata_device->ReadBlock(ClusterToSector(cluster), sector);
-  return sector;
+void Superblock::ReadCluster(uint64_t cluster,
+                             void* dest,
+                             ATARequestCallback callback) {
+  ata_device->ReadBlock(ClusterToSector(cluster), dest, callback);
 }
 
 // returns zero if there is no next cluster

@@ -106,7 +106,7 @@ void ATADevice::InterruptHandler() {
 
   // signal that the request has been completed
   if (request.callback) {
-    request.callback();
+    request.callback(request.callback_arg);
   }
 
   // consume another request if there is one
@@ -132,13 +132,15 @@ static uint8_t PollStatus(uint16_t status_port) {
 
 int ATADevice::ReadBlock(uint64_t block_num,
                          void* dest,
-                         ATARequestCallback callback) {
+                         ATARequestCallback callback,
+                         void* callback_arg) {
   // create a new request and add it to request queue
   ATARequest new_request;
   new_request.block_num = block_num;
   new_request.buffer = dest;
   new_request.type = ATARequest::READ;
   new_request.callback = callback;
+  new_request.callback_arg = callback_arg;
   bool queue_was_empty = request_queue.IsEmpty();
   request_queue.Add(new_request);
 
@@ -160,7 +162,8 @@ int ATADevice::ReadBlock(uint64_t block_num,
 
 int ATADevice::WriteBlock(uint64_t block_num,
                           void* src,
-                          ATARequestCallback callback) {
+                          ATARequestCallback callback,
+                          void* callback_arg) {
   // TODO implement writing
   return 1;
 }

@@ -1,5 +1,8 @@
 #include "kernel/vfs/file.h"
 
+#include "kernel/vfs/inode.h"
+#include "kernel/vfs/superblock.h"
+
 namespace vfs {
 
 File::File(Inode* inode) : inode(inode), offset(0) {}

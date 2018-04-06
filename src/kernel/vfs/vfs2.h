@@ -43,6 +43,8 @@
 
 // https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
 
+typedef void (*Closure)();
+
 namespace vfs {
 
 // must be 32 bytes
