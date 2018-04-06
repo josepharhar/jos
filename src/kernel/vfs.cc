@@ -395,7 +395,9 @@ uint64_t Superblock::ClusterToSector(uint64_t cluster_number) {
 
 uint8_t* Superblock::ReadCluster(uint64_t cluster) {
   uint8_t* sector = (uint8_t*) kmalloc(512);
+  printk("31\n");
   ata_device->ReadBlock(ClusterToSector(cluster), sector);
+  printk("32\n");
   return sector;
 }
 
