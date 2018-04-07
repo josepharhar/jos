@@ -15,7 +15,49 @@
 
 static vfs::Inode* root_directory = 0;
 
-void PagePrintTableInfo(uint64_t);
+struct ExecContext {
+  proc::BlockedQueue proc_queue;
+  uint8_t* file_data;
+  vfs::File* file;
+  vfs::Inode* inode;
+};
+
+static void ReadFileCallback(void* void_arg) {
+  ExecContext* arg = (ExecContext*)void_arg;
+
+  ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
+  if (elf_info.success) {
+    proc::ExecCurrentProc(elf_info, arg->file_data);
+  } else {
+    printk("HandleSyscallExec failed to exec\n");
+  }
+
+  arg->proc_queue.UnblockHead();
+
+  kfree(arg->file_data);
+  arg->file->Close();
+  kfree(arg->file);
+  kfree(arg->inode);
+  delete arg;
+}
+
+static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
+  ExecContext* arg = (ExecContext*)void_arg;
+
+  arg->inode = inode;
+  if (arg->inode) {
+    arg->file = inode->Open();
+    if (arg->file) {
+      arg->file_data = (uint8_t*)kmalloc(arg->file->GetSize());
+      arg->file->Read(arg->file_data, arg->file->GetSize(), ReadFileCallback,
+                      arg);
+      return;
+    }
+  }
+
+  arg->proc_queue.UnblockHead();
+  delete arg;
+}
 
 // the proc which called this may or may not be in user mode,
 // but we will set it to user mode manually
@@ -25,33 +67,14 @@ static void HandleSyscallExec(uint64_t interrupt_number,
                               uint64_t param_3) {
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
-  char* filename = (char*)param_1;
-  bool success = false;
+  vfs::Filepath filepath((char*)param_1);
 
-  // TODO make filename absolute or relative on PATH
-  vfs::Inode* inode = FindFile(root_directory, filename);
-  if (inode) {
-    vfs::File* file = inode->Open();
-    if (file) {
-      uint8_t* file_data = (uint8_t*)kmalloc(file->GetSize());
-      file->Read(file_data, file->GetSize());
-
-      ELFInfo elf_info = ELFGetInfo(file_data, file->GetSize());
-      if (elf_info.success) {
-        proc::ExecCurrentProc(elf_info, file_data);
-        success = true;
-      }
-
-      kfree(file_data);
-      file->Close();
-      kfree(file);
-    }
-    kfree(inode);
-  }
-
-  if (!success) {
-    printk("HandleSyscallExec failed to exec file \"%s\"\n", filename);
-  }
+  ExecContext* arg = new ExecContext();
+  arg->proc_queue.BlockCurrentProc();
+  arg->file_data = 0;
+  arg->file = 0;
+  arg->inode = 0;
+  FindFile(root_directory, filepath, FindFileCallback, arg);
 }
 
 void InitExec(vfs::Inode* new_root_directory) {

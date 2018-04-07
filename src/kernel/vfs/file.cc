@@ -14,7 +14,8 @@ struct ReadReadClusterArg {
   uint64_t length_remaining;
   uint64_t offset_into_block;
   uint64_t cluster;
-  void (*callback)();
+  File::FileRdWrCallback callback;
+  void* callback_arg;
   uint8_t* buffer;
 };
 // static
@@ -39,15 +40,18 @@ void File::ReadReadCluster(void* void_arg) {
                                                     ReadReadCluster, arg);
   } else {
     arg->file->offset_ += arg->length;
-    arg->callback();
+    arg->callback(arg->callback_arg);
     kfree(arg->buffer);
     delete arg;
   }
 }
 
-int File::Read(uint8_t* dest, uint64_t length, void (*callback)()) {
+int File::Read(uint8_t* dest,
+               uint64_t length,
+               FileRdWrCallback callback,
+               void* callback_arg) {
   if (offset_ + length > inode_->GetSize()) {
-    callback();
+    callback(callback_arg);
     return 1;
   }
 
@@ -67,16 +71,20 @@ int File::Read(uint8_t* dest, uint64_t length, void (*callback)()) {
     arg->offset_into_block = offset_remaining;
     arg->cluster = cluster;
     arg->callback = callback;
+    arg->callback_arg = callback_arg;
     arg->buffer = (uint8_t*)kmalloc(512);
     inode_->GetSuperblock()->ReadCluster(arg->cluster, arg->buffer,
                                          ReadReadCluster, arg);
   } else {
-    callback();
+    callback(callback_arg);
   }
   return 0;
 }
 
-int File::Write(uint8_t* src, uint64_t length, void (*callback)()) {
+int File::Write(uint8_t* src,
+                uint64_t length,
+                FileRdWrCallback callback,
+                void* callback_arg) {
   // TODO
   return 1;
 }

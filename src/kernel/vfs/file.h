@@ -12,8 +12,15 @@ class File {
  public:
   File(Inode* inode);
 
-  int Read(uint8_t* dest, uint64_t length, void (*callback)());
-  int Write(uint8_t* src, uint64_t length, void (*callback)());
+  typedef void (*FileRdWrCallback)(void*);
+  int Read(uint8_t* dest,
+           uint64_t length,
+           FileRdWrCallback callback,
+           void* callback_arg);
+  int Write(uint8_t* src,
+            uint64_t length,
+            FileRdWrCallback callback,
+            void* callback_arg);
   int Seek(uint64_t offset);
   int Close();
   // ? static int Close(File** file);

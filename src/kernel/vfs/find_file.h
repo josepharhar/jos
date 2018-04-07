@@ -6,8 +6,11 @@
 
 namespace vfs {
 
-typedef void (*FindFileCallback)(Inode* inode);
-void FindFile(Inode* root_inode, Filepath filepath, FindFileCallback callback);
+typedef void (*FindFileCallback)(Inode*, void*);
+void FindFile(Inode* root_inode,
+              Filepath filepath,
+              FindFileCallback callback,
+              void* callback_arg);
 
 }  // namespace vfs
 

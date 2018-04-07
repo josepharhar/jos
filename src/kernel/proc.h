@@ -86,12 +86,6 @@ class BlockedQueue {
   BlockedQueue();
   ~BlockedQueue();
 
-  BlockedQueue(const BlockedQueue& other) = delete;
-  BlockedQueue& operator=(const BlockedQueue& other) = delete;
-
-  BlockedQueue(BlockedQueue&& other) = delete;
-  BlockedQueue& operator=(BlockedQueue&& other) = delete;
-
   // Unblocks one process from the ProcQueue,
   // moving it back to the scheduler.
   // Called by interrupt handler?
@@ -106,7 +100,7 @@ class BlockedQueue {
   // Blocks the current process.
   // Called by system call handler.
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-  void BlockCurrentProc();
+  void BlockCurrentProc(); // TODO delet this
   void BlockCurrentProcNoNesting();
 
   int Size();
