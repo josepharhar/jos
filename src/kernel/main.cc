@@ -43,7 +43,7 @@ static vfs::ATADevice* CreateATADevice() {
 }
 
 static vfs::Superblock* superblock = 0;
-static void SuperblockReady(Superblock* new_superblock) {
+static void SuperblockReady(vfs::Superblock* new_superblock) {
   // this is called by an interrupt handler
   superblock = new_superblock;
 }

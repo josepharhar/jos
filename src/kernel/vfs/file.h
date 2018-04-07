@@ -22,8 +22,10 @@ class File {
   uint64_t GetSize();
 
  private:
-  Inode* inode;
-  uint64_t offset;
+  Inode* inode_;
+  uint64_t offset_;
+
+  static void ReadReadCluster(void* arg);
 };
 
 }  // namespace vfs

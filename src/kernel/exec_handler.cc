@@ -12,7 +12,7 @@
 #include "user.h"
 #include "string.h"
 
-static Inode* root_directory = 0;
+static vfs::Inode* root_directory = 0;
 
 void PagePrintTableInfo(uint64_t);
 
@@ -28,9 +28,9 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   bool success = false;
 
   // TODO make filename absolute or relative on PATH
-  Inode* inode = FindFile(root_directory, filename);
+  vfs::Inode* inode = FindFile(root_directory, filename);
   if (inode) {
-    File* file = inode->Open();
+    vfs::File* file = inode->Open();
     if (file) {
       uint8_t* file_data = (uint8_t*)kmalloc(file->GetSize());
       file->Read(file_data, file->GetSize());
@@ -53,7 +53,7 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   }
 }
 
-void InitExec(Inode* new_root_directory) {
+void InitExec(vfs::Inode* new_root_directory) {
   SetSyscallHandler(SYSCALL_EXEC, HandleSyscallExec);
   root_directory = new_root_directory;
 }
