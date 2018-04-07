@@ -44,6 +44,9 @@ class Inode {
   uid_t uid;
   gid_t gid;
   uint64_t ino_num;*/
+
+  // static helpers that need private visibility
+  static void ReadDirReadDirectorySector(void* arg);
 };
 
 }  // namespace vfs

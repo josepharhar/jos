@@ -119,8 +119,9 @@ uint64_t Superblock::ClusterToSector(uint64_t cluster_number) {
 
 void Superblock::ReadCluster(uint64_t cluster,
                              void* dest,
-                             ATARequestCallback callback) {
-  ata_device->ReadBlock(ClusterToSector(cluster), dest, callback);
+                             ATARequestCallback callback,
+                             void* arg) {
+  ata_device->ReadBlock(ClusterToSector(cluster), dest, callback, arg);
 }
 
 // returns zero if there is no next cluster

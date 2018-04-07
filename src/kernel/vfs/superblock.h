@@ -9,8 +9,7 @@ typedef void (*SuperblockReadyCallback)(Superblock*);
 
 class Superblock {
  public:
-  static Superblock* Create(ATADevice* ata_device,
-                            SuperblockReadyCallback callback);
+  static void Create(ATADevice* ata_device, SuperblockReadyCallback callback);
   static void Destroy(Superblock* superblock);
 
   Inode* GetRootInode();
@@ -20,7 +19,10 @@ class Superblock {
   void PutSuper(); // write superblock to disk*/
 
   // FAT32 specific information
-  void ReadCluster(uint64_t cluster, void* dest, ATARequestCallback callback);
+  void ReadCluster(uint64_t cluster,
+                   void* dest,
+                   ATARequestCallback callback,
+                   void* arg = 0);
   uint64_t GetNextCluster(uint64_t cluster);
 
  private:

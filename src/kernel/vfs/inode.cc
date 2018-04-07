@@ -55,9 +55,10 @@ struct ReadDirReadDirectorySectorArg {
   stdj::Array<Inode*> list;
   bool reading_lfn;
   char lfn_filename[LFN_BUFFER_LENGTH];
-  ReadDirCallback callback;
+  Inode::ReadDirCallback callback;
 };
-static void ReadDirReadDirectorySector(void* void_arg) {
+// static
+void Inode::ReadDirReadDirectorySector(void* void_arg) {
   ReadDirReadDirectorySectorArg* arg = (ReadDirReadDirectorySectorArg*)void_arg;
 
   for (int i = 0; i < DIRECTORY_ENTRIES_PER_SECTOR; i++) {
@@ -129,7 +130,7 @@ static void ReadDirReadDirectorySector(void* void_arg) {
         new_inode->cluster = (entry->first_cluster_number_high << 16) |
                              entry->first_cluster_number_low;
 
-        arg->list->Add(new_inode);
+        arg->list.Add(new_inode);
 
         break;
       }
@@ -140,7 +141,8 @@ static void ReadDirReadDirectorySector(void* void_arg) {
   }
 
   kfree(arg->directory_sector);
-  arg->current_cluster = superblock->GetNextCluster(arg->current_cluster);
+  arg->current_cluster =
+      arg->inode->superblock->GetNextCluster(arg->current_cluster);
 
   if (IsValidCluster(arg->current_cluster)) {
     arg->directory_sector = (DirectoryEntry*)kmalloc(512);
@@ -167,7 +169,7 @@ void Inode::ReadDir(ReadDirCallback callback) {
   arg->callback = callback;
 
   DirectoryEntry* directory_sector = (DirectoryEntry*)kmalloc(512);
-  superblock->ReadCluster(current_cluster, directory_sector,
+  superblock->ReadCluster(arg->current_cluster, directory_sector,
                           ReadDirReadDirectorySector, arg);
 }
 
