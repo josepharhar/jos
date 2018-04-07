@@ -1,6 +1,7 @@
 #include "kernel/vfs/find_file.h"
 
 #include "string.h"
+#include "kernel/printk.h"
 
 namespace vfs {
 
@@ -11,6 +12,7 @@ struct ReadDirCallbackArg {
 };
 
 static void ReadDirCallback(stdj::Array<Inode*> inodes, void* void_arg) {
+  printk("vfs::ReadDirCallback\n");
   ReadDirCallbackArg* arg = (ReadDirCallbackArg*)void_arg;
 
   if (!arg->filepath.Size()) {
@@ -46,12 +48,15 @@ void FindFile(Inode* root_inode,
               Filepath filepath,
               FindFileCallback callback,
               void* callback_arg) {
+  printk("vfs::FindFile\n");
   stdj::Array<stdj::string> filepath_array = filepath.GetArray();
 
   if (filepath_array.Size() == 0) {
+    printk("vfs::FindFile filepath_array.Size() == 0\n");
     callback(0, callback_arg);
 
   } else {
+    printk("vfs::FindFile calling ReadDir()\n");
     ReadDirCallbackArg* arg = new ReadDirCallbackArg();
     arg->filepath = filepath;
     arg->callback = callback;

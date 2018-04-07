@@ -20,6 +20,8 @@ class Filepath {
   stdj::string RemoveFirst();
   stdj::string RemoveLast();
 
+  stdj::string ToString();
+
  private:
   stdj::Array<stdj::string> strings_;
 };

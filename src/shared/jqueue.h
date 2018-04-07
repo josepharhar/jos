@@ -44,6 +44,21 @@ class Queue {
     return head_->value;
   }
 
+  T GetAtIndex(int index) {
+    QueueEntry* entry = head_;
+    int current_entry_index = 0;
+    while (entry) {
+      if (current_entry_index == index) {
+        return entry->value;
+      }
+      entry = entry->next;
+      current_entry_index++;
+    }
+
+    DCHECK(false);
+    return head_->value;
+  }
+
   uint64_t Size() const {
     uint64_t size = 0;
     QueueEntry* next = head_;

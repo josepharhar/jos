@@ -285,4 +285,14 @@ void ATADevice::Consume(ATARequest request) {
        0x24);  // send "READ SECTORS EXT" command 0x24
 }
 
+void ATADevice::PrintQueue() {
+  printk("ATADevice::PrintQueue() request_queue.Size(): %d\n",
+         request_queue.Size());
+  for (int i = 0; i < request_queue.Size(); i++) {
+    ATARequest request = request_queue.GetAtIndex(i);
+    printk("  [%d]: block_num: %ld buffer: %p, callback: %p\n", i,
+           request.block_num, request.buffer, request.callback);
+  }
+}
+
 }  // namespace vfs

@@ -42,6 +42,7 @@ static void ReadFileCallback(void* void_arg) {
 }
 
 static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
+  printk("FindFileCallback\n");
   ExecContext* arg = (ExecContext*)void_arg;
 
   arg->inode = inode;
@@ -49,11 +50,14 @@ static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
     arg->file = inode->Open();
     if (arg->file) {
       arg->file_data = (uint8_t*)kmalloc(arg->file->GetSize());
+      printk("FindFileCallback calling arg->file->Read\n");
       arg->file->Read(arg->file_data, arg->file->GetSize(), ReadFileCallback,
                       arg);
       return;
     }
   }
+
+  printk("FindFileCallback failed to find file\n");
 
   arg->proc_queue.UnblockHead();
   delete arg;
@@ -65,16 +69,22 @@ static void HandleSyscallExec(uint64_t interrupt_number,
                               uint64_t param_1,
                               uint64_t param_2,
                               uint64_t param_3) {
+  printk("HandleSyscallExec\n");
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
+  printk("1\n");
   vfs::Filepath filepath((char*)param_1);
+  printk("2\n");
 
   ExecContext* arg = new ExecContext();
-  arg->proc_queue.BlockCurrentProc();
+  printk("3\n");
+  arg->proc_queue.BlockCurrentProcNoNesting();
   arg->file_data = 0;
   arg->file = 0;
   arg->inode = 0;
+  printk("4\n");
   FindFile(root_directory, filepath, FindFileCallback, arg);
+  printk("5\n");
 }
 
 void InitExec(vfs::Inode* new_root_directory) {

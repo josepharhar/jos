@@ -38,6 +38,8 @@ class ATADevice {
                           uint8_t irq);
   static void GlobalInterruptHandler(uint64_t interrupt_number, void* arg);
 
+  void PrintQueue();
+
  private:
   ATADevice();
 

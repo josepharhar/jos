@@ -71,6 +71,7 @@ static void ProcInit(void* arg) {
   // exec will put this proc into user mode
   // Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
+  printk("kernel init calling exec...\n");
   Exec((char*)"init");
   printk("Perhaps not.\n");
   while (1) {
