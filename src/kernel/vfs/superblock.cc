@@ -9,14 +9,13 @@ namespace vfs {
 void Superblock::SuperblockCreateReadBootRecord(void* arg) {
   Superblock* superblock = (Superblock*)arg;
 
-  if (superblock->boot_record_block_index_ <
-      superblock->partition.boot_record.sectors_per_fat) {
-    superblock->ata_device->ReadBlock(
-        superblock->GetFatsStartSector() + superblock->boot_record_block_index_,
-        superblock->fat_table_bytes_ +
-            512 * superblock->boot_record_block_index_,
-        SuperblockCreateReadBootRecord, superblock);
+  int i = superblock->boot_record_block_index_;
+  if (i < superblock->partition.boot_record.sectors_per_fat) {
     superblock->boot_record_block_index_++;
+    superblock->ata_device->ReadBlock(superblock->GetFatsStartSector() + i,
+                                      superblock->fat_table_bytes_ + 512 * i,
+                                      SuperblockCreateReadBootRecord,
+                                      superblock);
     return;
   }
 

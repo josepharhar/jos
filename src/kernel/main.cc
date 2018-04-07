@@ -13,7 +13,6 @@
 #include "proc.h"
 #include "ata_block_device.h"
 #include "kmalloc.h"
-//#include "vfs.h"
 #include "kernel/vfs/superblock.h"
 #include "kernel/vfs/inode.h"
 #include "kernel/vfs/file.h"
@@ -53,7 +52,9 @@ static void ProcInit(void* arg) {
 
   // TODO this would normally be called with interrupts disabled...
   //   maybe it doesnt matter since there is only one thing going on rn.
-  vfs::Superblock::Create(CreateATADevice(), SuperblockReady);
+  vfs::ATADevice* ata_device = CreateATADevice();
+  printk("got ata_device: %p\n", ata_device);
+  vfs::Superblock::Create(ata_device, SuperblockReady);
   while (!superblock) {}
   printk("got superblock: %p\n", superblock);
   InitExec(superblock->GetRootInode());

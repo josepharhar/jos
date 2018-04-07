@@ -88,8 +88,9 @@ void ATADevice::InterruptHandler() {
 
   switch (request.type) {
     case ATARequest::READ: {
-      // TODO this reading could take a long time.
-      // would it be possible to defer it until after the interrupt handler?
+      // this reading could take a long time.
+      //   would it be possible to defer it until after the interrupt handler?
+
       uint16_t* buffer = (uint16_t*)request.buffer;
       uint16_t request_port = bus_base_port + PORT_OFFSET_DATA;
       for (int i = 0; i < 256; i++) {
@@ -102,16 +103,20 @@ void ATADevice::InterruptHandler() {
       }
       break;
     }
-  }
-
-  // signal that the request has been completed
-  if (request.callback) {
-    request.callback(request.callback_arg);
+    default:
+      printk("ATADevice::InterruptHandler unknown request.type: %D\n",
+             request.type);
+      break;
   }
 
   // consume another request if there is one
   if (!request_queue.IsEmpty()) {
     Consume(request_queue.Peek());
+  }
+
+  // signal that the request has been completed
+  if (request.callback) {
+    request.callback(request.callback_arg);
   }
 }
 
@@ -260,6 +265,8 @@ void ATADevice::Consume(ATARequest request) {
   sectorcount_low_byte = 1;
   sectorcount_high_byte = 0;
 
+  /*printk("ATADevice::Consume block_num: %p, buffer: %p\n",
+      request.block_num, request.buffer);*/
   PollStatus(bus_base_port + PORT_OFFSET_STATUS);
   outb(bus_base_port + PORT_OFFSET_DRIVE_SELECT, 0x40);  // 0x40: master, lba48
   PollStatus(bus_base_port + PORT_OFFSET_STATUS);
