@@ -39,4 +39,30 @@ stdj::Array<stdj::string> Filepath::GetArray() {
   return strings_;
 }
 
+stdj::string Filepath::RemoveFirst() {
+  if (!strings_.Size()) {
+    // TODO DCHECK
+    return "";
+  }
+
+  stdj::string value = strings_.Get(0);
+  strings_.RemoveAt(0);
+  return value;
+}
+
+stdj::string Filepath::RemoveLast() {
+  if (!strings_.Size()) {
+    // TODO DCHECK
+    return "";
+  }
+
+  stdj::string value = strings_.Get(strings_.Size() - 1);
+  strings_.RemoveAt(0);
+  return value;
+}
+
+int Filepath::Size() {
+  return strings_.Size();
+}
+
 }  // namespace vfs

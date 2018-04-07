@@ -11,7 +11,7 @@ string& string::operator=(const string& other) {
   return *this;
 }
 
-string::string(char* other_string) {
+string::string(const char* other_string) {
   while (*other_string) {
     Add(*other_string++);
   }

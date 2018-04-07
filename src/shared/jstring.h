@@ -10,7 +10,7 @@ class string : public Array<char> {
   string();
   string(const string& other);
   string& operator=(const string& other);
-  string(char* other_string);
+  string(const char* other_string);
   string(Array<char> array);
 
   const char* c_str();

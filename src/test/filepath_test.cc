@@ -48,7 +48,53 @@ static void TestAppend() {
   assert(expected_strings == actual_strings);
 }
 
+static void TestRemove() {
+  vfs::Filepath filepath;
+  filepath.Append("one");
+  filepath.Append("two");
+  filepath.Append("three");
+  stdj::Array<stdj::string> expected_strings_1;
+  expected_strings_1.Add("one");
+  expected_strings_1.Add("two");
+  expected_strings_1.Add("three");
+  ASSERT_EQ(expected_strings_1, filepath.GetArray());
+
+  filepath.RemoveFirst();
+  stdj::Array<stdj::string> expected_strings_2;
+  expected_strings_2.Add("two");
+  expected_strings_2.Add("three");
+  ASSERT_EQ(expected_strings_2, filepath.GetArray());
+
+  filepath.RemoveLast();
+  stdj::Array<stdj::string> expected_strings_3;
+  expected_strings_3.Add("two");
+  ASSERT_EQ(expected_strings_3, filepath.GetArray());
+
+  filepath.RemoveFirst();
+  stdj::Array<stdj::string> expected_strings_4;
+  ASSERT_EQ(expected_strings_4, filepath.GetArray());
+}
+
+static void TestSize() {
+  vfs::Filepath filepath;
+  ASSERT_EQ(filepath.Size(), 0);
+
+  filepath.Append("hello");
+  ASSERT_EQ(filepath.Size(), 1);
+
+  filepath.Append("world");
+  ASSERT_EQ(filepath.Size(), 2);
+
+  filepath.RemoveFirst();
+  ASSERT_EQ(filepath.Size(), 1);
+
+  filepath.RemoveLast();
+  ASSERT_EQ(filepath.Size(), 0);
+}
+
 int main(int argc, char** argv) {
   TestAppend();
   TestParse();
+  TestRemove();
+  TestSize();
 }

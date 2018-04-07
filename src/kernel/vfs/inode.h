@@ -17,8 +17,8 @@ class Inode {
   static void Destroy(Inode* inode);
 
   File* Open();
-  typedef void (*ReadDirCallback)(stdj::Array<Inode*>);
-  void ReadDir(ReadDirCallback callback);
+  typedef void (*ReadDirCallback)(stdj::Array<Inode*>, void* arg);
+  void ReadDir(ReadDirCallback callback, void* arg);
   bool IsDirectory();
   char* GetName();
 

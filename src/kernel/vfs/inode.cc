@@ -56,6 +56,7 @@ struct ReadDirReadDirectorySectorArg {
   bool reading_lfn;
   char lfn_filename[LFN_BUFFER_LENGTH];
   Inode::ReadDirCallback callback;
+  void* callback_arg;
 };
 // static
 void Inode::ReadDirReadDirectorySector(void* void_arg) {
@@ -151,13 +152,13 @@ void Inode::ReadDirReadDirectorySector(void* void_arg) {
                                         ReadDirReadDirectorySector, arg);
   } else {
     // done now i guess
-    arg->callback(arg->list);
+    arg->callback(arg->list, arg->callback_arg);
     delete arg;
   }
 }
-void Inode::ReadDir(ReadDirCallback callback) {
+void Inode::ReadDir(ReadDirCallback callback, void* callback_arg) {
   if (!is_directory || !IsValidCluster(cluster)) {
-    callback(stdj::Array<Inode*>());
+    callback(stdj::Array<Inode*>(), callback_arg);
     return;
   }
 
@@ -169,6 +170,7 @@ void Inode::ReadDir(ReadDirCallback callback) {
   arg->reading_lfn = false;
   memset(arg->lfn_filename, 0, LFN_BUFFER_LENGTH);
   arg->callback = callback;
+  arg->callback_arg = callback_arg;
 
   superblock->ReadCluster(arg->current_cluster, arg->directory_sector,
                           ReadDirReadDirectorySector, arg);

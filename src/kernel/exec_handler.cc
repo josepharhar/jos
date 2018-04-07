@@ -2,7 +2,6 @@
 
 #include "syscall_handler.h"
 #include "page.h"
-#include "files.h"
 #include "kmalloc.h"
 #include "elf.h"
 #include "printk.h"
@@ -11,6 +10,8 @@
 #include "proc.h"
 #include "user.h"
 #include "string.h"
+#include "kernel/vfs/find_file.h"
+#include "kernel/vfs/file.h"
 
 static vfs::Inode* root_directory = 0;
 
