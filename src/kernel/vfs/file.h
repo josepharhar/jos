@@ -12,8 +12,8 @@ class File {
  public:
   File(Inode* inode);
 
-  int Read(uint8_t* dest, uint64_t length);
-  int Write(uint8_t* src, uint64_t length);
+  int Read(uint8_t* dest, uint64_t length, void (*callback)());
+  int Write(uint8_t* src, uint64_t length, void (*callback)());
   int Seek(uint64_t offset);
   int Close();
   // ? static int Close(File** file);

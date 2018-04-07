@@ -162,14 +162,15 @@ void Inode::ReadDir(ReadDirCallback callback) {
   }
 
   ReadDirReadDirectorySectorArg* arg = new ReadDirReadDirectorySectorArg();
+  arg->inode = this;
+  arg->current_cluster = cluster;
+  arg->directory_sector = (DirectoryEntry*)kmalloc(512);
+  arg->list = stdj::Array<Inode*>();
   arg->reading_lfn = false;
   memset(arg->lfn_filename, 0, LFN_BUFFER_LENGTH);
-  arg->list = stdj::Array<Inode*>();
-  arg->current_cluster = cluster;
   arg->callback = callback;
 
-  DirectoryEntry* directory_sector = (DirectoryEntry*)kmalloc(512);
-  superblock->ReadCluster(arg->current_cluster, directory_sector,
+  superblock->ReadCluster(arg->current_cluster, arg->directory_sector,
                           ReadDirReadDirectorySector, arg);
 }
 

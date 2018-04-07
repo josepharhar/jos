@@ -7,8 +7,35 @@ namespace vfs {
 
 File::File(Inode* inode) : inode(inode), offset(0) {}
 
-int File::Read(uint8_t* dest, uint64_t length) {
+struct ReadReadClusterArg {
+  File* file;
+  uint8_t* buffer;
+  uint8_t* dest;
+  uint64_t length;
+};
+// static
+void File::ReadReadCluster(void* void_arg) {
+  ReadReadClusterArg* arg = (ReadReadClusterArg*)void_arg;
+
+  for (int i = 0; i < 512 && arg->length; i++) {
+    *arg->dest++ = arg->buffer[i];
+    arg->length--;
+  }
+  cluster = inode->GetSuperblock()->GetNextCluster(cluster);
+
+  if (length) {
+    arg->inode->GetSuperblock()->ReadCluster(arg->cluster, ReadReadCluster, arg);
+  } else {
+    arg->file->offset += length;
+    kfree(arg->buffer);
+    kfree(arg);
+    arg->callback();
+  }
+}
+
+int File::Read(uint8_t* dest, uint64_t length, void (*callback)()) {
   if (offset + length > inode->GetSize()) {
+    callback();
     return 1;
   }
 
@@ -19,22 +46,19 @@ int File::Read(uint8_t* dest, uint64_t length) {
     offset_remaining -= 512;
   }
 
-  while (length) {
-    uint8_t* buffer = inode->GetSuperblock()->ReadCluster(cluster);
-    for (int i = 0; i < 512 && length; i++) {
-      *dest++ = buffer[i];
-      length--;
-    }
-    kfree(buffer);
-    cluster = inode->GetSuperblock()->GetNextCluster(cluster);
+  if (length) {
+    ReadReadClusterArg* arg = new ReadReadClusterArg();
+    arg->file = this;
+    arg->buffer = (uint8_t*)kmalloc(512);
+    arg->dest = dest;
+    inode->GetSuperblock()->ReadCluster(cluster, ReadReadCluster, arg);
+  } else {
+    callback();
   }
-
-  offset += length;
-
   return 0;
 }
 
-int File::Write(uint8_t* src, uint64_t length) {
+int File::Write(uint8_t* src, uint64_t length, void (*callback)()) {
   // TODO
   return 1;
 }
