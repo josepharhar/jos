@@ -144,6 +144,17 @@ class Array {
 
   Array<T> Substring(int one) { return Substring(one, Size()); }
 
+  Array<T> operator+(const Array<T>& other) {
+    Array<T> new_array;
+    for (int i = 0; i < Size(); i++) {
+      new_array.Add(Get(i));
+    }
+    for (int i = 0; i < other.Size(); i++) {
+      new_array.Add(other.Get(i));
+    }
+    return new_array;
+  }
+
  private:
   T* array_;
   // actual size

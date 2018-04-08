@@ -129,11 +129,30 @@ void TestSubstring() {
   assert(j_array == j_array.Substring(0, 3));
 }
 
+void TestAdd() {
+  stdj::Array<char> array_one;
+  array_one.Add('a');
+  array_one.Add('s');
+
+  stdj::Array<char> array_two;
+  array_two.Add('d');
+  array_two.Add('f');
+
+  stdj::Array<char> expected;
+  expected.Add('a');
+  expected.Add('s');
+  expected.Add('d');
+  expected.Add('f');
+
+  assert(expected == array_one + array_two);
+}
+
 int main(int argc, char** argv) {
   TestBasicVector();
   TestGetNext();
   TestCopying();
   TestSubstring();
+  //TestAdd();
 
   return 0;
 }
