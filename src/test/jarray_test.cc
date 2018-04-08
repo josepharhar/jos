@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
   TestGetNext();
   TestCopying();
   TestSubstring();
-  //TestAdd();
+  TestAdd();
 
   return 0;
 }

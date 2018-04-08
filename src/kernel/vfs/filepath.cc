@@ -56,8 +56,9 @@ stdj::string Filepath::RemoveLast() {
     return "";
   }
 
-  stdj::string value = strings_.Get(strings_.Size() - 1);
-  strings_.RemoveAt(0);
+  int index_to_remove = strings_.Size() - 1;
+  stdj::string value = strings_.Get(index_to_remove);
+  strings_.RemoveAt(index_to_remove);
   return value;
 }
 

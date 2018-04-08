@@ -72,7 +72,7 @@ static void ProcInit(void* arg) {
   // Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
   printk("kernel init calling exec...\n");
-  Exec((char*)"/init");
+  Exec((char*)"/user/init");
   printk("Perhaps not.\n");
   while (1) {
     asm volatile("hlt");

@@ -59,18 +59,18 @@ static void TestRemove() {
   expected_strings_1.Add("three");
   assert(expected_strings_1 == filepath.GetArray());
 
-  filepath.RemoveFirst();
+  assert(stdj::string("one") == filepath.RemoveFirst());
   stdj::Array<stdj::string> expected_strings_2;
   expected_strings_2.Add("two");
   expected_strings_2.Add("three");
-  assert(expected_strings_2 ==  filepath.GetArray());
+  assert(expected_strings_2 == filepath.GetArray());
 
-  filepath.RemoveLast();
+  assert(stdj::string("three") == filepath.RemoveLast());
   stdj::Array<stdj::string> expected_strings_3;
   expected_strings_3.Add("two");
   assert(expected_strings_3 == filepath.GetArray());
 
-  filepath.RemoveFirst();
+  assert(stdj::string("two") == filepath.RemoveFirst());
   stdj::Array<stdj::string> expected_strings_4;
   assert(expected_strings_4 == filepath.GetArray());
 }
@@ -95,6 +95,6 @@ static void TestSize() {
 int main(int argc, char** argv) {
   TestAppend();
   TestParse();
-  //TestRemove();
-  //TestSize();
+  TestRemove();
+  // TestSize();
 }
