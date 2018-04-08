@@ -23,7 +23,7 @@ static bool IsEqual(std::vector<int> vector, stdj::Array<int> array) {
   return true;
 }
 
-void TestBasicVector() {
+static void TestBasicVector() {
   std::vector<int> vector;
   stdj::Array<int> array;
   assert(IsEqual(vector, array));
@@ -53,7 +53,7 @@ void TestBasicVector() {
   assert(IsEqual(vector, array));
 }
 
-void TestGetNext() {
+static void TestGetNext() {
   stdj::Array<int> array;
   array.Add(1);
 
@@ -75,7 +75,7 @@ void TestGetNext() {
   ASSERT_EQ(array.GetPreviousValue(100), 10);
 }
 
-void TestCopying() {
+static void TestCopying() {
   stdj::Array<int> array;
   array.Add(50);
   array.Add(40);
@@ -129,7 +129,7 @@ void TestSubstring() {
   assert(j_array == j_array.Substring(0, 3));
 }
 
-void TestAdd() {
+static void TestAdd() {
   stdj::Array<char> array_one;
   array_one.Add('a');
   array_one.Add('s');
@@ -145,6 +145,17 @@ void TestAdd() {
   expected.Add('f');
 
   assert(expected == array_one + array_two);
+}
+
+static void TestSize() {
+  stdj::Array<uint64_t> array;
+  assert(array.Size() == 0);
+
+  array.Add(1234);
+  assert(array.Size() == 1);
+
+  array.Add(1234);
+  assert(array.Size() == 2);
 }
 
 int main(int argc, char** argv) {

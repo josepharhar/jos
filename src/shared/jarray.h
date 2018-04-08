@@ -146,10 +146,10 @@ class Array {
 
   Array<T> operator+(const Array<T>& other) {
     Array<T> new_array;
-    for (int i = 0; i < Size(); i++) {
+    for (unsigned i = 0; i < Size(); i++) {
       new_array.Add(Get(i));
     }
-    for (int i = 0; i < other.Size(); i++) {
+    for (unsigned i = 0; i < other.Size(); i++) {
       new_array.Add(other.Get(i));
     }
     return new_array;

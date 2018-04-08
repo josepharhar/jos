@@ -27,18 +27,22 @@ static void ReadDirCallback(stdj::Array<Inode*> inodes, void* void_arg) {
     Inode* inode = inodes.Get(i);
     if (!strcmp(inode->GetName(), target_filename.c_str())) {
       // found it
+      printk("vfs::ReadDirCallback found \"%s\"\n", target_filename.c_str());
       if (!arg->filepath.Size()) {
+        printk("vfs::ReadDirCallback success!\n");
         arg->callback(inode, arg->callback_arg);
         delete arg;
         return;
 
       } else if (inode->IsDirectory()) {
+        printk("vfs::ReadDirCallback entering directory\n");
         inode->ReadDir(ReadDirCallback, arg);
         return;
       }
     }
   }
 
+  printk("vfs::ReadDirCallback failed to find \"%s\"\n", target_filename.c_str());
   arg->callback(0, arg->callback_arg);
   delete arg;
   return;
@@ -48,7 +52,10 @@ void FindFile(Inode* root_inode,
               Filepath filepath,
               FindFileCallback callback,
               void* callback_arg) {
-  printk("vfs::FindFile\n");
+  printk("calling kmalloc(10)\n");
+  printk("kmalloc(10): %p\n", kmalloc(10));
+  //kmalloc(50);
+  printk("vfs::FindFile filepath: %s\n", filepath.ToString().c_str());
   stdj::Array<stdj::string> filepath_array = filepath.GetArray();
 
   if (filepath_array.Size() == 0) {

@@ -96,5 +96,5 @@ int main(int argc, char** argv) {
   TestAppend();
   TestParse();
   TestRemove();
-  // TestSize();
+  TestSize();
 }

@@ -44,8 +44,8 @@ static void ReadFileCallback(void* void_arg) {
 static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
   printk("FindFileCallback\n");
   ExecContext* arg = (ExecContext*)void_arg;
-
   arg->inode = inode;
+
   if (arg->inode) {
     arg->file = inode->Open();
     if (arg->file) {
