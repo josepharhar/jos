@@ -69,7 +69,7 @@ int Filepath::Size() {
 #include "kernel/printk.h"
 stdj::string Filepath::ToString() {
   int one = 1;
-  //while (one);
+  while (one);
   printk("asdf\n");
   stdj::string output("/");
   for (int i = 0; i < strings_.Size(); i++) {
