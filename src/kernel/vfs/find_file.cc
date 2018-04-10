@@ -57,8 +57,9 @@ void FindFile(Inode* root_inode,
   /*(printk("calling kmalloc(8000)\n");
   printk("kmalloc(8000): %p\n", kmalloc(8000));*/
   //kmalloc(50);
-  uint64_t asdf = 0x800000010100;
-  printk("phys of %p: %p\n", asdf, page::GetPhysicalAddress(Getcr3(), asdf));
+  /*uint64_t asdf = 0x800000010100;
+  printk("phys of %p: %p\n", asdf, page::GetPhysicalAddress(Getcr3(), asdf));*/
+  uint64_t* asdf = (uint64_t*)kmalloc(10);
   printk("vfs::FindFile filepath: %s\n", filepath.ToString().c_str());
   stdj::Array<stdj::string> filepath_array = filepath.GetArray();
 
