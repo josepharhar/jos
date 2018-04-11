@@ -19,9 +19,12 @@ class Array {
   }
 
   virtual ~Array() {
+    // TODO
+#ifdef JOS
     if (array_) {
       delete[] array_;
     }
+#endif
   }
 
   Array<T>(const Array<T>& other) { CopyFrom(other); }

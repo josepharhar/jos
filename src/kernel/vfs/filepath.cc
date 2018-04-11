@@ -66,24 +66,11 @@ int Filepath::Size() {
   return strings_.Size();
 }
 
-#include "kernel/printk.h"
 stdj::string Filepath::ToString() {
-  int one = 1;
-  while (one);
-  printk("asdf\n");
   stdj::string output("/");
   for (int i = 0; i < strings_.Size(); i++) {
-    printk("asdf1\n");
-    stdj::string one = output;
-    printk("asdf2\n");
-    stdj::string two = one + stdj::string("/");
-    printk("asdf3\n");
-    stdj::string three = two + strings_.Get(i);
-    printk("asdf4\n");
-    output = three;
-    //output = output + stdj::string("/") + strings_.Get(i);
+    output = output + stdj::string("/") + strings_.Get(i);
   }
-  printk("asdfdone\n");
   return output;
 }
 
