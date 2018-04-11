@@ -176,9 +176,11 @@ void smartfree(void *address, char *file, int line)
 
    to_free = removeTrackNode(address);
    if (NULL == to_free) {
-      fprintf(stderr, 
+      /*fprintf(stderr, 
        "Attempt to free non-malloced space in file %s at line %d\n",
-       file, line);
+       file, line);*/
+      fprintf(stderr, "Attempt to free non-malloced space: 0x%016llX\n",
+          address);
       return;
    }
 

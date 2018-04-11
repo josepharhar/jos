@@ -18,7 +18,7 @@ class Array {
     memset(array_ + new_array_size, 0, sizeof(T));
   }
 
-  ~Array() {
+  virtual ~Array() {
     if (array_) {
       delete[] array_;
     }
