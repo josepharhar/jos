@@ -67,7 +67,7 @@ int Filepath::Size() {
 }
 
 stdj::string Filepath::ToString() {
-  stdj::string output("/");
+  stdj::string output;
   for (int i = 0; i < strings_.Size(); i++) {
     output = output + stdj::string("/") + strings_.Get(i);
   }

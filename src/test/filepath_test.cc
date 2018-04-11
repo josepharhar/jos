@@ -92,9 +92,20 @@ static void TestSize() {
   ASSERT_EQ(filepath.Size(), 0);
 }
 
+static void TestToString() {
+  vfs::Filepath filepath;
+  filepath.Append("hello");
+  ASSERT_EQ(std::string("/hello"), std::string(filepath.ToString().c_str()));
+
+  filepath.Append("world");
+  ASSERT_EQ(std::string("/hello/world"),
+            std::string(filepath.ToString().c_str()));
+}
+
 int main(int argc, char** argv) {
   TestAppend();
   TestParse();
   TestRemove();
   TestSize();
+  TestToString();
 }
