@@ -41,6 +41,6 @@ static void TestAdd() {
 }
 
 int main(int argc, char** argv) {
-  TestAssignment();
+  //TestAssignment();
   //TestAdd();
 }

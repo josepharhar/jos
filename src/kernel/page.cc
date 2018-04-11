@@ -465,4 +465,8 @@ int AllocateUserSpace(uint64_t cr3, uint64_t address, uint64_t num_bytes) {
   return 0;
 }
 
+uint64_t GetP4Index(uint64_t address) {
+  return VirtualAddress::FromPointer(address).p4_index;
+}
+
 }  // namespace page

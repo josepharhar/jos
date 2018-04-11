@@ -55,6 +55,8 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address);
 
 int AllocateUserSpace(uint64_t cr3, uint64_t address, uint64_t num_bytes);
 
+uint64_t GetP4Index(uint64_t address);
+
 }  // namespace page
 
 #endif  // PAGE_H_

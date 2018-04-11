@@ -110,9 +110,15 @@ void* kmalloc(uint64_t size) {
 }
 
 void kfree(void* address) {
+  uint64_t p4_index = page::GetP4Index((uint64_t)address);
+  if (p4_index < P4_KERNEL_HEAP || p4_index > P4_KERNEL_STACKS) {
+    printk("kfree() bad free: %p\n", address);
+    return;
+  }
+
   struct KmallocMetadata* metadata = (struct KmallocMetadata*)address;
-  metadata--;
   uint64_t* block = (uint64_t*)metadata;
+  metadata--;
 
   // push back onto free list, or free pages
   switch (metadata->pool) {
