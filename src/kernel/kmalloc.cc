@@ -3,6 +3,8 @@
 #include "page.h"
 #include "string.h"
 #include "printk.h"
+#include "asm.h"
+#include "frame.h"
 
 // zero can be used as a null pointer since we are using virtual addresses
 // we will never get zero as a valid address
@@ -64,8 +66,17 @@ void* kmalloc(uint64_t size) {
     if (!free_pool_p0) {
       // pool is empty, need to allocate a new one
       free_pool_p0 = AllocateNewPool(P0_SIZE);
+      printk("kmalloc() free_pool_p0 = AllocateNewPool(P0_SIZE)\n");
     }
     new_block = (uint64_t*)free_pool_p0;
+    {
+      if (page::GetPhysicalAddress(Getcr3(), (uint64_t)new_block) ==
+          NULL_FRAME) {
+        printk("kmalloc() unmapped address: %p\n", new_block);
+      } else {
+        printk("kmalloc() good address: %p\n", new_block);
+      }
+    }
     free_pool_p0 = (void*)*new_block;
     metadata.pool = P0;
   } else if (effective_size <= P1_SIZE) {

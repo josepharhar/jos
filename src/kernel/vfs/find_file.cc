@@ -59,7 +59,14 @@ void FindFile(Inode* root_inode,
   //kmalloc(50);
   /*uint64_t asdf = 0x800000010100;
   printk("phys of %p: %p\n", asdf, page::GetPhysicalAddress(Getcr3(), asdf));*/
+  for (int i = 0; i < 10; i++) {
   uint64_t* asdf = (uint64_t*)kmalloc(10);
+    printk("kmalloc(10): %p\n", asdf);
+    printk("*asdf = 0x1234\n");
+    *asdf = 0x1234;
+    printk("*asdf: %p\n", *asdf);
+  }
+  printk("done rofling\n");
   printk("vfs::FindFile filepath: %s\n", filepath.ToString().c_str());
   stdj::Array<stdj::string> filepath_array = filepath.GetArray();
 
