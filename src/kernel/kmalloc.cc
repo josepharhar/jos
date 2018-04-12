@@ -119,7 +119,8 @@ void kfree(void* address) {
       if (!page::GetPhysicalAddress(Getcr3(), (uint64_t)block) == NULL_FRAME) {
         free_pool_p0 = block;
       } else {
-        printk("kfree() bad block\n");
+        // TODO TODO TODO
+        //printk("kfree() bad block\n");
       }
       break;
 
