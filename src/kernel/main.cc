@@ -48,14 +48,14 @@ static void SuperblockReady(vfs::Superblock* new_superblock) {
 }
 
 static void ProcInit(void* arg) {
-  printk("Hello from Init process\n");
+  printk("Hello from KERNEL Init process\n");
 
   // TODO this would normally be called with interrupts disabled...
   //   maybe it doesnt matter since there is only one thing going on rn.
   vfs::ATADevice* ata_device = CreateATADevice();
   printk("got ata_device: %p\n", ata_device);
   vfs::Superblock::Create(ata_device, SuperblockReady);
-  while (!superblock) {}
+  while (!superblock) {} // TODO is this gross?
   printk("got superblock: %p\n", superblock);
   InitExec(superblock->GetRootInode());
 

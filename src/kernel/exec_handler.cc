@@ -72,19 +72,21 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   printk("HandleSyscallExec\n");
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
-  printk("1\n");
+  printk("HandleSyscallExec (char*)param_1: \"%s\"\n", (char*)param_1);
   vfs::Filepath filepath((char*)param_1);
-  printk("2\n");
+  printk("HandleSsycallExec successfully initialized filepath\n");
+  /*int one = 1;
+  while (one);*/
+  const char* filepath_string = filepath.ToString().c_str();
+  printk("HandleSyscallExec filepath.ToString(): \"%s\"\n", filepath_string);
 
   ExecContext* arg = new ExecContext();
-  printk("3\n");
   arg->proc_queue.BlockCurrentProcNoNesting();
   arg->file_data = 0;
   arg->file = 0;
   arg->inode = 0;
-  printk("4\n");
+  printk("HandleSyscallExec calling FindFile()...\n");
   FindFile(root_directory, filepath, FindFileCallback, arg);
-  printk("5\n");
 }
 
 void InitExec(vfs::Inode* new_root_directory) {

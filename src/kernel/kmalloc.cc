@@ -108,14 +108,19 @@ void kfree(void* address) {
   }
 
   struct KmallocMetadata* metadata = (struct KmallocMetadata*)address;
-  uint64_t* block = (uint64_t*)metadata;
+  // TODO WHICH OF THESE SHOULD COME FIRST!?
   metadata--;
+  uint64_t* block = (uint64_t*)metadata;
 
   // push back onto free list, or free pages
   switch (metadata->pool) {
     case P0:
       *block = (uint64_t)free_pool_p0;
-      free_pool_p0 = block;
+      if (!page::GetPhysicalAddress(Getcr3(), (uint64_t)block) == NULL_FRAME) {
+        free_pool_p0 = block;
+      } else {
+        printk("kfree() bad block\n");
+      }
       break;
 
     case P1:
