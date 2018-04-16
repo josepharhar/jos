@@ -42,7 +42,6 @@ static void ReadFileCallback(void* void_arg) {
 }
 
 static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
-  printk("FindFileCallback\n");
   ExecContext* arg = (ExecContext*)void_arg;
   arg->inode = inode;
 
@@ -50,7 +49,6 @@ static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
     arg->file = inode->Open();
     if (arg->file) {
       arg->file_data = (uint8_t*)kmalloc(arg->file->GetSize());
-      printk("FindFileCallback calling arg->file->Read\n");
       arg->file->Read(arg->file_data, arg->file->GetSize(), ReadFileCallback,
                       arg);
       return;
@@ -69,25 +67,16 @@ static void HandleSyscallExec(uint64_t interrupt_number,
                               uint64_t param_1,
                               uint64_t param_2,
                               uint64_t param_3) {
-  printk("HandleSyscallExec\n");
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
-  printk("HandleSyscallExec (char*)param_1: \"%s\"\n", (char*)param_1);
   stdj::string input_filepath((char*)param_1);
   vfs::Filepath filepath(input_filepath);
-  printk("HandleSsycallExec successfully initialized filepath\n");
-  int one = 1;
-  //while (one);
-  stdj::string filepath_jstring = filepath.ToString();
-  const char* filepath_string = filepath_jstring.c_str();
-  printk("HandleSyscallExec filepath.ToString(): \"%s\"\n", filepath_string);
 
   ExecContext* arg = new ExecContext();
   arg->proc_queue.BlockCurrentProcNoNesting();
   arg->file_data = 0;
   arg->file = 0;
   arg->inode = 0;
-  printk("HandleSyscallExec calling FindFile()...\n");
   FindFile(root_directory, filepath, FindFileCallback, arg);
 }
 
