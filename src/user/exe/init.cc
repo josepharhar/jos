@@ -31,7 +31,11 @@ int main() {
   // preempt_testing();
   // semaphore_testing();
   // exit_testing();
-  exec_testing();
+  // exec_testing();
+
+  printf("init calling exec(\"/user/jshell\")\n");
+  exec("/user/jshell");
+  printf("init exec failed!\n");
 
   while (1) {
     Putc(Getc());

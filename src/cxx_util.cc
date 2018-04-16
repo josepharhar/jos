@@ -17,8 +17,9 @@
 #else  // user executable
 
 #include "shared/stdio.h"
+#include "shared/umalloc.h"
 
-#define NOTIMPLEMENTED() printj("NOTIMPLEMENTED %s", __PRETTY_FUNCTION__);
+#define NOTIMPLEMENTED() printu("NOTIMPLEMENTED %s", __PRETTY_FUNCTION__);
 
 #endif  // KERNEL
 
@@ -26,23 +27,21 @@ static void* allocate(uint64_t size) {
 #ifdef KERNEL
   return kmalloc(size);
 #else
-  NOTIMPLEMENTED();
-  return 0;
+  return umalloc(size);
 #endif
 }
 static void* callocate(uint64_t size) {
 #ifdef KERNEL
   return kcalloc(size);
 #else
-  NOTIMPLEMENTED();
-  return 0;
+  return ucalloc(size);
 #endif
 }
 static void deallocate(void* address) {
 #ifdef KERNEL
   kfree(address);
 #else
-  NOTIMPLEMENTED();
+  ufree(address);
 #endif
 }
 

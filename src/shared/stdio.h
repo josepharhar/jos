@@ -7,7 +7,7 @@ extern "C" {
 
 #include <stdarg.h>
 
-int printj(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+int printu(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 
 #ifdef __cplusplus
 }

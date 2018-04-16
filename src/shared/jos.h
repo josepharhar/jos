@@ -2,7 +2,7 @@
 
 #ifdef JOS
 
-#define printf printj
+#define printf printu
 
 #endif
 

@@ -5,7 +5,7 @@
 #include "getc.h"
 #include "vprintf.h"
 
-int printj(const char* format, ...) {
+int printu(const char* format, ...) {
   va_list list;
   va_start(list, format);
   int ret_value = vprintf(format, list, Putc, Puts);
