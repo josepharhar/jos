@@ -19,12 +19,9 @@ class Array {
   }
 
   virtual ~Array() {
-    // TODO
-#ifdef JOS
     if (array_) {
       delete[] array_;
     }
-#endif
   }
 
   Array<T>(const Array<T>& other) { CopyFrom(other); }
@@ -72,7 +69,7 @@ class Array {
 
       if (old_array) {
         memcpy(array_, old_array, old_array_size * sizeof(T));
-        delete[] array_;
+        delete[] old_array;
       }
     }
 

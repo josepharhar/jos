@@ -22,7 +22,13 @@ static void TestAdd() {
                  stdj::string("one") + stdj::string("two")));
 }
 
+static void TestWeirdLength() {
+  const char test_string[] = "/user/init";
+  assert(IsEqual(std::string(test_string), stdj::string(test_string)));
+}
+
 int main(int argc, char** argv) {
   TestAssignment();
   TestAdd();
+  TestWeirdLength();
 }

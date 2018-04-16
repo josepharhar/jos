@@ -12,16 +12,10 @@ LOOP_ONE = /dev/loop7
 LOOP_TWO = /dev/loop8
 
 SHARED_SOURCE_DIR = src/shared
-#SHARED_BUILD_DIR = build/shared
 SHARED_SOURCES_CXX = $(shell find $(SHARED_SOURCE_DIR) -name "*.cc")
 SHARED_SOURCES_C = $(shell find $(SHARED_SOURCE_DIR) -name "*.c")
 SHARED_SOURCES_GAS = $(shell find $(SHARED_SOURCE_DIR) -name "*.s")
 SHARED_SOURCES_NASM = $(shell find $(SHARED_SOURCE_DIR) -name "*.asm")
-#SHARED_OBJECTS_CXX = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_CXX:$(SHARED_SOURCE_DIR)/%.cc=%.o))
-#SHARED_OBJECTS_C = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_C:$(SHARED_SOURCE_DIR)/%.c=%.o))
-#SHARED_OBJECTS_GAS = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_GAS:$(SHARED_SOURCE_DIR)/%.s=%.o))
-#SHARED_OBJECTS_NASM = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_NASM:$(SHARED_SOURCE_DIR)/%.asm=%.o))
-#SHARED_OBJECTS = $(SHARED_OBJECTS_CXX) $(SHARED_OBJECTS_C) $(SHARED_OBJECTS_GAS) $(SHARED_OBJECTS_NASM)
 
 KERNEL_SOURCE_DIR = src/kernel
 KERNEL_BUILD_DIR = build/kernel
@@ -93,6 +87,7 @@ CC_FLAGS = -DJOS -Werror -mno-red-zone -Wreturn-type -I $(SHARED_SOURCE_DIR) -I 
 # -fno-rtti is no runtime type information since we don't have libstdc++
 CXX_FLAGS = -DJOS -Werror -fno-threadsafe-statics -fno-exceptions -mno-red-zone -Wreturn-type -fno-rtti -mcmodel=large -I $(SHARED_SOURCE_DIR) -I src/ -std=c++11 #-g
 
+.PHONY: all
 all: run
 
 .PHONY: run
