@@ -4,7 +4,6 @@
 #include "asm.h"
 #include "stdio.h"
 #include "clone.h"
-#include "shared/ipc.h"
 #include "string.h"
 #include "unistd.h"
 #include "semaphore.h"

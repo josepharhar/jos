@@ -16,6 +16,9 @@ class string : public Array<char> {
   string(Array<char> array);
 
   const char* c_str();
+
+ private:
+  void CopyFrom(const char* other_string);
 };
 
 }  // namespace stdj

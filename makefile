@@ -11,6 +11,18 @@ LD = x86_64-elf-ld
 LOOP_ONE = /dev/loop7
 LOOP_TWO = /dev/loop8
 
+SHARED_SOURCE_DIR = src/shared
+#SHARED_BUILD_DIR = build/shared
+SHARED_SOURCES_CXX = $(shell find $(SHARED_SOURCE_DIR) -name "*.cc")
+SHARED_SOURCES_C = $(shell find $(SHARED_SOURCE_DIR) -name "*.c")
+SHARED_SOURCES_GAS = $(shell find $(SHARED_SOURCE_DIR) -name "*.s")
+SHARED_SOURCES_NASM = $(shell find $(SHARED_SOURCE_DIR) -name "*.asm")
+#SHARED_OBJECTS_CXX = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_CXX:$(SHARED_SOURCE_DIR)/%.cc=%.o))
+#SHARED_OBJECTS_C = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_C:$(SHARED_SOURCE_DIR)/%.c=%.o))
+#SHARED_OBJECTS_GAS = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_GAS:$(SHARED_SOURCE_DIR)/%.s=%.o))
+#SHARED_OBJECTS_NASM = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_NASM:$(SHARED_SOURCE_DIR)/%.asm=%.o))
+#SHARED_OBJECTS = $(SHARED_OBJECTS_CXX) $(SHARED_OBJECTS_C) $(SHARED_OBJECTS_GAS) $(SHARED_OBJECTS_NASM)
+
 KERNEL_SOURCE_DIR = src/kernel
 KERNEL_BUILD_DIR = build/kernel
 KERNEL_SOURCES_CXX = $(shell find $(KERNEL_SOURCE_DIR) -name "*.cc")
@@ -21,19 +33,11 @@ KERNEL_OBJECTS_CXX = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_CXX:$(KER
 KERNEL_OBJECTS_C = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_C:$(KERNEL_SOURCE_DIR)/%.c=%.o))
 KERNEL_OBJECTS_GAS = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_GAS:$(KERNEL_SOURCE_DIR)/%.s=%.o))
 KERNEL_OBJECTS_NASM = $(addprefix $(KERNEL_BUILD_DIR)/,$(KERNEL_SOURCES_NASM:$(KERNEL_SOURCE_DIR)/%.asm=%.o))
-KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM)
-
-SHARED_SOURCE_DIR = src/shared
-SHARED_BUILD_DIR = build/shared
-SHARED_SOURCES_CXX = $(shell find $(SHARED_SOURCE_DIR) -name "*.cc")
-SHARED_SOURCES_C = $(shell find $(SHARED_SOURCE_DIR) -name "*.c")
-SHARED_SOURCES_GAS = $(shell find $(SHARED_SOURCE_DIR) -name "*.s")
-SHARED_SOURCES_NASM = $(shell find $(SHARED_SOURCE_DIR) -name "*.asm")
-SHARED_OBJECTS_CXX = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_CXX:$(SHARED_SOURCE_DIR)/%.cc=%.o))
-SHARED_OBJECTS_C = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_C:$(SHARED_SOURCE_DIR)/%.c=%.o))
-SHARED_OBJECTS_GAS = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_GAS:$(SHARED_SOURCE_DIR)/%.s=%.o))
-SHARED_OBJECTS_NASM = $(addprefix $(SHARED_BUILD_DIR)/,$(SHARED_SOURCES_NASM:$(SHARED_SOURCE_DIR)/%.asm=%.o))
-SHARED_OBJECTS = $(SHARED_OBJECTS_CXX) $(SHARED_OBJECTS_C) $(SHARED_OBJECTS_GAS) $(SHARED_OBJECTS_NASM)
+KERNEL_SHARED_OBJECTS_CXX = $(addprefix $(KERNEL_BUILD_DIR)/,$(SHARED_SOURCES_CXX:$(SHARED_SOURCE_DIR)/%.cc=%.o))
+KERNEL_SHARED_OBJECTS_C = $(addprefix $(KERNEL_BUILD_DIR)/,$(SHARED_SOURCES_C:$(SHARED_SOURCE_DIR)/%.c=%.o))
+KERNEL_SHARED_OBJECTS_GAS = $(addprefix $(KERNEL_BUILD_DIR)/,$(SHARED_SOURCES_GAS:$(SHARED_SOURCE_DIR)/%.s=%.o))
+KERNEL_SHARED_OBJECTS_NASM = $(addprefix $(KERNEL_BUILD_DIR)/,$(SHARED_SOURCES_NASM:$(SHARED_SOURCE_DIR)/%.asm=%.o))
+KERNEL_OBJECTS = $(KERNEL_OBJECTS_CXX) $(KERNEL_OBJECTS_C) $(KERNEL_OBJECTS_GAS) $(KERNEL_OBJECTS_NASM) $(KERNEL_SHARED_OBJECTS_CXX) $(KERNEL_SHARED_OBJECTS_C) $(KERNEL_SHARED_OBJECTS_GAS) $(KERNEL_SHARED_OBJECTS_NASM)
 
 USER_SOURCE_DIR = src/user
 USER_BUILD_DIR = build/user
@@ -48,7 +52,11 @@ USER_LIB_OBJECTS_CXX = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_CXX
 USER_LIB_OBJECTS_C = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_C:$(USER_LIB_SOURCE_DIR)/%.c=%.o))
 USER_LIB_OBJECTS_GAS = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_GAS:$(USER_LIB_SOURCE_DIR)/%.s=%.o))
 USER_LIB_OBJECTS_NASM = $(addprefix $(USER_LIB_BUILD_DIR)/,$(USER_LIB_SOURCES_NASM:$(USER_LIB_SOURCE_DIR)/%.asm=%.o))
-USER_LIB_OBJECTS = $(USER_LIB_OBJECTS_CXX) $(USER_LIB_OBJECTS_C) $(USER_LIB_OBJECTS_GAS) $(USER_LIB_OBJECTS_NASM)
+USER_LIB_SHARED_OBJECTS_CXX = $(addprefix $(USER_LIB_BUILD_DIR)/,$(SHARED_SOURCES_CXX:$(SHARED_SOURCE_DIR)/%.cc=%.o))
+USER_LIB_SHARED_OBJECTS_C = $(addprefix $(USER_LIB_BUILD_DIR)/,$(SHARED_SOURCES_C:$(SHARED_SOURCE_DIR)/%.c=%.o))
+USER_LIB_SHARED_OBJECTS_GAS = $(addprefix $(USER_LIB_BUILD_DIR)/,$(SHARED_SOURCES_GAS:$(SHARED_SOURCE_DIR)/%.s=%.o))
+USER_LIB_SHARED_OBJECTS_NASM = $(addprefix $(USER_LIB_BUILD_DIR)/,$(SHARED_SOURCES_NASM:$(SHARED_SOURCE_DIR)/%.asm=%.o))
+USER_LIB_OBJECTS = $(USER_LIB_OBJECTS_CXX) $(USER_LIB_OBJECTS_C) $(USER_LIB_OBJECTS_GAS) $(USER_LIB_OBJECTS_NASM) $(USER_LIB_SHARED_OBJECTS_CXX) $(USER_LIB_SHARED_OBJECTS_C) $(USER_LIB_SHARED_OBJECTS_GAS) $(USER_LIB_SHARED_OBJECTS_NASM)
 
 USER_EXE_SOURCE_DIR = $(USER_SOURCE_DIR)/exe
 USER_EXE_BUILD_DIR = $(USER_BUILD_DIR)/exe
@@ -119,8 +127,10 @@ os.img: image/boot/kernel.bin image/boot/grub/grub.cfg $(IMAGE_USER_EXES)
 	mv build/os.img os.img
 
 
-image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
-	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
+image/boot/kernel.bin: $(KERNEL_SOURCE_DIR)/linker.ld $(KERNEL_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
+	$(LD) -n -o $@ -T $< $(KERNEL_OBJECTS) $(KERNEL_BUILD_DIR)/cxx_util.o
+
+# Kernel objects
 
 $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@ -g
@@ -137,6 +147,21 @@ $(KERNEL_BUILD_DIR)/%.o: $(KERNEL_SOURCE_DIR)/%.cc $(KERNEL_SOURCE_DIR)/*.h $(SH
 $(KERNEL_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
 
+# Kernel shared library objects
+
+$(KERNEL_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
+	$(NASM) $< -o $@ -g
+
+$(KERNEL_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.s
+	$(GAS) -g -c $< -o $@
+
+$(KERNEL_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.c $(SHARED_SOURCE_DIR)/*.h
+	$(CC) $(CC_FLAGS) -c $< -o $@ -g -DKERNEL
+
+$(KERNEL_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
+	$(CXX) $(CXX_FLAGS) -c $< -o $@ -g -DKERNEL
+
+# User executable objects
 
 $(USER_EXE_BUILD_DIR)/%.o: $(USER_EXE_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
@@ -155,6 +180,8 @@ $(IMAGE_USER_EXE_BUILD_DIR)/%: $(USER_SOURCE_DIR)/linker.ld $(USER_EXE_BUILD_DIR
 	$(LD) -n -o $@ -T $^
 
 
+# User library objects
+
 $(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
 
@@ -170,19 +197,22 @@ $(USER_LIB_BUILD_DIR)/%.o: $(USER_LIB_SOURCE_DIR)/%.cc $(USER_LIB_SOURCE_DIR)/*.
 $(USER_LIB_BUILD_DIR)/cxx_util.o: src/cxx_util.cc
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
+# User library shared library objects
 
-$(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
+$(USER_LIB_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.asm
 	$(NASM) $< -o $@
 
-$(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.s
+$(USER_LIB_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.s
 	$(GAS) -g -c $< -o $@
 
-$(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.c $(SHARED_SOURCE_DIR)/*.h
+$(USER_LIB_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.c $(SHARED_SOURCE_DIR)/*.h
 	$(CC) $(CC_FLAGS) -c $< -o $@
 
-$(SHARED_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
+$(USER_LIB_BUILD_DIR)/%.o: $(SHARED_SOURCE_DIR)/%.cc $(SHARED_SOURCE_DIR)/*.h
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
+
+# Generated source files
 
 src/multi_interrupt_handlers.asm: build/multi_interrupt_handlers_generate
 	build/multi_interrupt_handlers_generate > src/multi_interrupt_handlers.asm
@@ -205,8 +235,8 @@ $(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h
 	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
 .PRECIOUS: $(TEST_EXECS) # don't delete the test programs, make will always delete them otherwise.
-$(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
-	g++ -o $@ $< $(KERNEL_OBJECTS) $(SHARED_OBJECTS) build/test/smartalloc.o
+$(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) build/test/smartalloc.o
+	g++ -o $@ $< $(KERNEL_OBJECTS) build/test/smartalloc.o
 
 $(TEST_BUILD_DIR)/%.passed: $(TEST_BUILD_DIR)/%.out
 	./$<
@@ -218,7 +248,7 @@ build/test/smartalloc.o: src/test/smartalloc.c src/test/smartalloc.h
 
 .PHONY: clean
 clean:
-	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(SHARED_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out $(TEST_BUILD_DIR)/*.passed
+	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out $(TEST_BUILD_DIR)/*.passed
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)

@@ -73,6 +73,8 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
   printk("HandleSyscallExec (char*)param_1: \"%s\"\n", (char*)param_1);
+  int one = 1;
+  while (one);
   stdj::string input_filepath((char*)param_1);
   printk("HandleSyscallExec input_filepath.c_str(): \"%s\"\n",
          input_filepath.c_str());
