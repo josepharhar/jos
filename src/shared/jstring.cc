@@ -6,13 +6,6 @@ string::string() {}
 
 string::~string() {}
 
-string::string(const string& other) : stdj::Array<char>(other) {}
-
-string& string::operator=(const string& other) {
-  stdj::Array<char>::operator=(other);
-  return *this;
-}
-
 string::string(const char* other_string) {
   CopyFrom(other_string);
 }

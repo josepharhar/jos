@@ -40,8 +40,34 @@ class Array {
     return *this;
   }
 
-  Array<T>(Array<T>&& other) = default;
-  Array<T>& operator=(Array<T>&& other) = default;
+  Array<T>(Array<T>&& other) {
+    /*if (array_) {
+      delete[] array_;
+    }*/
+
+    /*array_ = other.array_;
+    other.array_ = 0;
+    array_size_ = other.array_size_;
+    other.array_size_ = 0;
+    size_ = other.size_;
+    other.size_ = 0;*/
+    CopyFrom(other);
+  }
+  Array<T>& operator=(Array<T>&& other) {
+    /*if (array_) {
+      delete[] array_;
+    }*/
+  
+    /*array_ = other.array_;
+    other.array_ = 0;
+    array_size_ = other.array_size_;
+    other.array_size_ = 0;
+    size_ = other.size_;
+    other.size_ = 0;*/
+    CopyFrom(other);
+
+    return *this;
+  }
 
   bool Equals(const Array<T>& other) const {
     if (size_ != other.size_) {

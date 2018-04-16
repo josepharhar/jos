@@ -76,7 +76,10 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   stdj::string input_filepath((char*)param_1);
   vfs::Filepath filepath(input_filepath);
   printk("HandleSsycallExec successfully initialized filepath\n");
-  const char* filepath_string = filepath.ToString().c_str();
+  int one = 1;
+  //while (one);
+  stdj::string filepath_jstring = filepath.ToString();
+  const char* filepath_string = filepath_jstring.c_str();
   printk("HandleSyscallExec filepath.ToString(): \"%s\"\n", filepath_string);
 
   ExecContext* arg = new ExecContext();

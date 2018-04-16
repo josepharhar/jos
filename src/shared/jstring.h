@@ -9,8 +9,7 @@ class string : public Array<char> {
  public:
   string();
   ~string() override;
-  string(const string& other);
-  string& operator=(const string& other);
+
   string(const char* other_string);
   string(char* other_string);
   string(Array<char> array);
