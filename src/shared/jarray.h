@@ -182,7 +182,10 @@ class Array {
 #ifdef TEST
       printf("%s array_: 0x%016lX\n", __FUNCTION__, array_);
 #endif
-      memcpy(array_, other.array_, array_size_ * sizeof(T));
+      for (int i = 0; i < size_; i++) {
+        array_[i] = other.array_[i];
+      }
+      //memset(array_ + size_, 0, (array_size_ - size_) * sizeof(T));
     }
   }
 };
