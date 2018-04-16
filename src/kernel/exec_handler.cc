@@ -73,17 +73,9 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   // param_1 is string of filename of target executable
   // TODO sanitize, max string length
   printk("HandleSyscallExec (char*)param_1: \"%s\"\n", (char*)param_1);
-  int one = 1;
-  //while (one);
   stdj::string input_filepath((char*)param_1);
-  printk("HandleSyscallExec input_filepath.c_str(): \"%s\"\n",
-         input_filepath.c_str());
-  printk("/user/init: \"%s\"\n", stdj::string("/user/init").c_str());
-  printk("/user/in: \"%s\"\n", stdj::string("/user/in").c_str());
   vfs::Filepath filepath(input_filepath);
   printk("HandleSsycallExec successfully initialized filepath\n");
-  /*int one = 1;
-  while (one);*/
   const char* filepath_string = filepath.ToString().c_str();
   printk("HandleSyscallExec filepath.ToString(): \"%s\"\n", filepath_string);
 

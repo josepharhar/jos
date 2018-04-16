@@ -226,13 +226,15 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 test: $(TEST_PASSED_FILES)
 
 # TODO make this depend on all headers in all source dirs?
-$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h
+.PRECIOUS: $(TEST_BUILD_DIR)/%.o
+$(TEST_BUILD_DIR)/%.o: $(TEST_SOURCE_DIR)/%.cc $(TEST_SOURCE_DIR)/*.h $(SHARED_SOURCE_DIR)/*.h
 	g++ -g -std=c++11 -I src/ -c $< -o $@ -DTEST
 
-.PRECIOUS: $(TEST_EXECS) # don't delete the test programs, make will always delete them otherwise.
+.PRECIOUS: $(TEST_BUILD_DIR)/%.out
 $(TEST_BUILD_DIR)/%.out: $(TEST_BUILD_DIR)/%.o $(KERNEL_OBJECTS) build/test/smartalloc.o
 	g++ -o $@ $< $(KERNEL_OBJECTS) build/test/smartalloc.o
 
+.PRECIOUS: $(TEST_BUILD_DIR)/%.passed
 $(TEST_BUILD_DIR)/%.passed: $(TEST_BUILD_DIR)/%.out
 	./$<
 	touch $@
@@ -243,7 +245,8 @@ build/test/smartalloc.o: src/test/smartalloc.c src/test/smartalloc.h
 
 .PHONY: clean
 clean:
-	-rm -f os.img build/os.img $(KERNEL_BUILD_DIR)/*.o $(USER_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.o $(TEST_BUILD_DIR)/*.out $(TEST_BUILD_DIR)/*.passed
+	-rm -f os.img 
+	-git clean -fdx build/
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)

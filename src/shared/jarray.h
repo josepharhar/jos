@@ -1,6 +1,10 @@
 #ifndef SHARED_JARRAY_H_
 #define SHARED_JARRAY_H_
 
+#ifdef TEST
+#include <stdio.h>
+#endif
+
 #include "string.h"
 #include "dcheck.h"
 
@@ -14,12 +18,18 @@ class Array {
       : array_(new T[new_array_size + 1]),
         array_size_(new_array_size + 1),
         size_(new_array_size) {
+#ifdef TEST
+    printf("%s array_: 0x%016lX\n", __PRETTY_FUNCTION__, array_);
+#endif
     memcpy(array_, new_array, new_array_size * sizeof(T));
     memset(array_ + new_array_size, 0, sizeof(T));
   }
 
   virtual ~Array() {
     if (array_) {
+#ifdef TEST
+      printf("%s deleting array_: 0x%016lX\n", __FUNCTION__, array_);
+#endif
       delete[] array_;
     }
   }
@@ -65,10 +75,16 @@ class Array {
 
       array_size_ = (old_array_size + 5) * 2;
       array_ = new T[array_size_];
+#ifdef TEST
+      printf("%s new resized array_: 0x%016lX\n", __FUNCTION__, array_);
+#endif
       memset(array_, 0, array_size_ * sizeof(T));
 
       if (old_array) {
         memcpy(array_, old_array, old_array_size * sizeof(T));
+#ifdef TEST
+        printf("%s deleting old array: 0x%016lX\n", __FUNCTION__, old_array);
+#endif
         delete[] old_array;
       }
     }
@@ -169,6 +185,9 @@ class Array {
     array_ = 0;
     if (array_size_) {
       array_ = new T[array_size_];
+#ifdef TEST
+      printf("%s array_: 0x%016lX\n", __FUNCTION__, array_);
+#endif
       memcpy(array_, other.array_, array_size_ * sizeof(T));
     }
   }
