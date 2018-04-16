@@ -21,12 +21,12 @@
 #include "getc_handler.h"
 #include "elf.h"
 #include "exec_handler.h"
-#include "exec.h"
 #include "clone_handler.h"
 #include "getpid_handler.h"
 #include "pit.h"
 #include "ipc_handler.h"
 #include "semaphore_handler.h"
+#include "unistd.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -72,7 +72,7 @@ static void ProcInit(void* arg) {
   // Exec("/user/init");
   // TODO make exec use absolute and relative filepaths
   printk("kernel init calling exec...\n");
-  Exec((char*)"/user/init");
+  exec("/user/init");
   printk("Perhaps not.\n");
   while (1) {
     asm volatile("hlt");

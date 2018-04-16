@@ -30,6 +30,8 @@ int close(int fd);
 
 int pipe(int pipefd[2]);
 
+void exec(const char* filepath);
+
 #endif  // JOS
 
 #ifdef __cplusplus

@@ -52,3 +52,7 @@ int pipe(int pipefd[2]) {
   // TODO
   return -1;
 }
+
+void exec(const char* filename) {
+  Syscall(SYSCALL_EXEC, (uint64_t) filename);
+}

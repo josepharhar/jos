@@ -19,6 +19,7 @@ void fork_testing();
 void preempt_testing();
 void semaphore_testing();
 void exit_testing();
+void exec_testing();
 int main() {
   Puts("Hello from USERSPACE init\n");
   // while (1);
@@ -29,7 +30,8 @@ int main() {
   // fork_testing();
   // preempt_testing();
   // semaphore_testing();
-  exit_testing();
+  // exit_testing();
+  exec_testing();
 
   while (1) {
     Putc(Getc());
@@ -296,6 +298,19 @@ void exit_testing() {
     printf("pid %d calling exit()...\n", getpid());
     exit();
     printf("RETURNED FROM exit()!!!\n");
+  }
+
+  while (1) {
+    Putc(Getc());
+  }
+}
+
+void exec_testing() {
+  printf("exec_testing()\n");
+
+  if (!fork()) {
+    printf("pid %d calling exec(\"/user/test/hello\")...\n", getpid());
+    exec("/user/test/hello");
   }
 
   while (1) {

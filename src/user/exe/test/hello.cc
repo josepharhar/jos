@@ -1,6 +1,11 @@
+#include "jos.h"
+
 #include "stdio.h"
+#include "unistd.h"
 
 int main() {
-  printj("Hello from hello.cc\n");
+  printf("hello from hello.cc\n");
+  printf("hello.cc calling exit()...\n");
+  exit();
   return 0;
 }
