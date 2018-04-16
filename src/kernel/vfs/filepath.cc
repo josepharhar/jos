@@ -25,6 +25,15 @@ Filepath::Filepath(stdj::string string) {
 
 Filepath::~Filepath() {}
 
+Filepath::Filepath(const Filepath& other) {
+  strings_ = other.strings_;
+}
+
+Filepath& Filepath::operator=(const Filepath& other) {
+  strings_ = other.strings_;
+  return *this;
+}
+
 void Filepath::Append(stdj::string string) {
   strings_.Add(string);
 }

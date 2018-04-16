@@ -8,7 +8,6 @@ namespace stdj {
 class string : public Array<char> {
  public:
   string();
-  ~string() override;
 
   string(const char* other_string);
   string(char* other_string);

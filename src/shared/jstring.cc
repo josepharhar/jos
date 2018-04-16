@@ -4,8 +4,6 @@ namespace stdj {
 
 string::string() {}
 
-string::~string() {}
-
 string::string(const char* other_string) {
   CopyFrom(other_string);
 }

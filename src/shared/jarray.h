@@ -25,11 +25,8 @@ class Array {
     memset(array_ + new_array_size, 0, sizeof(T));
   }
 
-  virtual ~Array() {
+  ~Array() {
     if (array_) {
-#ifdef TEST
-      printf("%s deleting array_: 0x%016lX\n", __FUNCTION__, array_);
-#endif
       delete[] array_;
     }
   }
@@ -37,35 +34,6 @@ class Array {
   Array<T>(const Array<T>& other) { CopyFrom(other); }
   Array<T>& operator=(const Array<T>& other) {
     CopyFrom(other);
-    return *this;
-  }
-
-  Array<T>(Array<T>&& other) {
-    /*if (array_) {
-      delete[] array_;
-    }*/
-
-    /*array_ = other.array_;
-    other.array_ = 0;
-    array_size_ = other.array_size_;
-    other.array_size_ = 0;
-    size_ = other.size_;
-    other.size_ = 0;*/
-    CopyFrom(other);
-  }
-  Array<T>& operator=(Array<T>&& other) {
-    /*if (array_) {
-      delete[] array_;
-    }*/
-  
-    /*array_ = other.array_;
-    other.array_ = 0;
-    array_size_ = other.array_size_;
-    other.array_size_ = 0;
-    size_ = other.size_;
-    other.size_ = 0;*/
-    CopyFrom(other);
-
     return *this;
   }
 
