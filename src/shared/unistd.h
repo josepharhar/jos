@@ -22,7 +22,6 @@ struct SyscallRdWrParams {
   int size;
   int size_writeback;
 };
-
 int write(int fd, const void* write_buffer, int write_size);
 int read(int fd, void* read_buffer, int read_size);
 
@@ -31,6 +30,11 @@ int close(int fd);
 int pipe(int pipefd[2]);
 
 void exec(const char* filepath);
+
+struct SyscallGetcwdParams {
+
+};
+char* getcwd(char* buf, int size);
 
 #endif  // JOS
 

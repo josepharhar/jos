@@ -27,6 +27,7 @@
 #include "ipc_handler.h"
 #include "semaphore_handler.h"
 #include "unistd.h"
+#include "getcwd_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -112,6 +113,7 @@ void KernelMain() {
   InitGetpid();
   InitClone();
   InitSemaphore();
+  InitGetcwd();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();
