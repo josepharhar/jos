@@ -3,8 +3,8 @@
 #include "string.h"
 
 void* umalloc(int size) {
-  // TODO
-  static uint64_t next_malloc = 0x9000000000000000;
+  // TODO write sbrk() and make a real user memory allocator
+  static uint64_t next_malloc = 0x0000090000000000;
   void* return_value = (void*)next_malloc;
   next_malloc += size;
   next_malloc += (next_malloc % 16);

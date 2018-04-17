@@ -7,6 +7,7 @@
 #include "stdint.h"
 #include "kernel/ipc.h"
 #include "semaphore_handler.h"
+#include "kernel/vfs/filepath.h"
 
 #include "shared/jmap.h"
 #include "shared/clone.h"
@@ -63,6 +64,9 @@ class ProcContext {
 
   void PrintValues();
   int GetNewFd();
+
+  // TODO use this
+  vfs::Filepath working_directory_;
 };
 
 void Init();  // initializes proc system, only call once

@@ -36,6 +36,7 @@ int main() {
   printf("init calling exec(\"/user/jshell\")\n");
   exec("/user/jshell");
   printf("init exec failed!\n");
+  exit();
 
   while (1) {
     Putc(Getc());
