@@ -56,3 +56,21 @@ int pipe(int pipefd[2]) {
 void exec(const char* filename) {
   Syscall(SYSCALL_EXEC, (uint64_t) filename);
 }
+
+
+char* getcwd(char* buf, int size) {
+  SyscallGetcwdParams params;
+  params.buf = buf;
+  params.size = size;
+  params.retval_writeback = -2;
+  Syscall(SYSCALL_GETCWD, (uint64_t)&params);
+  return params.retval_writeback;
+}
+
+int chdir(const char* path){
+  SyscallChdirParams params;
+  params.path = path;
+  params.status_writeback = -2;
+  Syscall(SYSCALL_CHDIR, (uint64_t)&params);
+  return params.status_writeback;
+}

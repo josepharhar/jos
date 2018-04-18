@@ -32,9 +32,16 @@ int pipe(int pipefd[2]);
 void exec(const char* filepath);
 
 struct SyscallGetcwdParams {
-
+  char* buf;
+  int size;
+  char* retval_writeback;
 };
 char* getcwd(char* buf, int size);
+struct SyscallChdirParams {
+  const char* path;
+  int status_writeback;
+};
+int chdir(const char* path);
 
 #endif  // JOS
 
