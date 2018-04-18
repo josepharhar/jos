@@ -27,8 +27,42 @@ static void TestWeirdLength() {
   assert(IsEqual(std::string(test_string), stdj::string(test_string)));
 }
 
+static void TestSplit() {
+  {
+    stdj::string string = "/user/init";
+    stdj::Array<stdj::string> expected;
+    expected.Add("user");
+    expected.Add("init");
+    stdj::Array<stdj::string> actual = string.Split("/");
+    ASSERT_EQ(expected, actual);
+  }
+  {
+    stdj::string string = "/user/init/";
+    stdj::Array<stdj::string> expected;
+    expected.Add("user");
+    expected.Add("init");
+    stdj::Array<stdj::string> actual = string.Split("/");
+    ASSERT_EQ(expected, actual);
+  }
+  {
+    stdj::string string = "user/init";
+    stdj::Array<stdj::string> expected;
+    expected.Add("user");
+    expected.Add("init");
+    stdj::Array<stdj::string> actual = string.Split("/");
+    ASSERT_EQ(expected, actual);
+  }
+  {
+    stdj::string string = "asdf";
+    stdj::Array<stdj::string> expected;
+    stdj::Array<stdj::string> actual = string.Split("asdf");
+    ASSERT_EQ(expected, actual);
+  }
+}
+
 int main(int argc, char** argv) {
   TestAssignment();
   TestAdd();
   TestWeirdLength();
+  TestSplit();
 }

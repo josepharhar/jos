@@ -14,6 +14,7 @@ class string : public Array<char> {
   string(Array<char> array);
 
   const char* c_str();
+  stdj::Array<stdj::string> Split(stdj::string delimiter);
 
  private:
   void CopyFrom(const char* other_string);

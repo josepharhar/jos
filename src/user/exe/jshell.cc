@@ -6,15 +6,18 @@
 #include "getc.h"
 
 int main() {
-  printf("jshell > ");
+  printf("welcome to jshell\n");
+
+  char buf[50];
+  memset(buf, 50, 0);
+  getcwd(buf, 50);
+  printf("%s > ", buf);
 
   stdj::string input_string;
 
   char input = 0;
   while (input != '\n') {
-    printf("1\n");
     input = Getc();
-    printf("2\n");
     input_string.Add(input);
     printf("%c", input);
   }

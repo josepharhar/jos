@@ -3,6 +3,8 @@
 
 #ifdef TEST
 #include <stdio.h>
+#include <iostream>
+#include <ostream>
 #endif
 
 #include "string.h"
@@ -18,9 +20,6 @@ class Array {
       : array_(new T[new_array_size + 1]),
         array_size_(new_array_size + 1),
         size_(new_array_size) {
-#ifdef TEST
-    printf("%s array_: 0x%016lX\n", __PRETTY_FUNCTION__, array_);
-#endif
     memcpy(array_, new_array, new_array_size * sizeof(T));
     memset(array_ + new_array_size, 0, sizeof(T));
   }
@@ -69,16 +68,10 @@ class Array {
 
       array_size_ = (old_array_size + 5) * 2;
       array_ = new T[array_size_];
-#ifdef TEST
-      printf("%s new resized array_: 0x%016lX\n", __FUNCTION__, array_);
-#endif
       memset(array_, 0, array_size_ * sizeof(T));
 
       if (old_array) {
         memcpy(array_, old_array, old_array_size * sizeof(T));
-#ifdef TEST
-        printf("%s deleting old array: 0x%016lX\n", __FUNCTION__, old_array);
-#endif
         delete[] old_array;
       }
     }
@@ -165,6 +158,20 @@ class Array {
     return new_array;
   }
 
+#ifdef TEST
+  friend std::ostream& operator<<(std::ostream& os, const Array<T> array) {
+    os << "[";
+    for (int i = 0; i < array.Size(); i++) {
+      os << array.Get(i);
+      if (i != array.Size() - 1) {
+        os << ",";
+      }
+    }
+    os << "]";
+    return os;
+  }
+#endif
+
  private:
   T* array_;
   // actual size
@@ -179,9 +186,6 @@ class Array {
     array_ = 0;
     if (array_size_) {
       array_ = new T[array_size_];
-#ifdef TEST
-      printf("%s array_: 0x%016lX\n", __FUNCTION__, array_);
-#endif
       for (int i = 0; i < size_; i++) {
         array_[i] = other.array_[i];
       }
