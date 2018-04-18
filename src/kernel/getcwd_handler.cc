@@ -22,12 +22,11 @@ static void HandleChdir(uint64_t interrupt_number,
                         uint64_t param_3) {
   SyscallChdirParams* params = (SyscallChdirParams*)param_1;
   vfs::Filepath filepath(params->path);
-  {
-    stdj::string filepath_string = filepath.ToString();
-    printk("HandleChdir changing pid %d working_directory to: %s\n",
-           proc::GetCurrentProc()->pid, filepath_string.c_str());
+  if (*(params->path) == '/') {
+    proc::GetCurrentProc()->working_directory_ = filepath;
+  } else {
+    proc::GetCurrentProc()->working_directory_.Append(filepath);
   }
-  proc::GetCurrentProc()->working_directory_ = filepath;
   params->status_writeback = 0;
 }
 
