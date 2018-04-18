@@ -62,7 +62,7 @@ char* getcwd(char* buf, int size) {
   SyscallGetcwdParams params;
   params.buf = buf;
   params.size = size;
-  params.retval_writeback = -2;
+  params.retval_writeback = 0;
   Syscall(SYSCALL_GETCWD, (uint64_t)&params);
   return params.retval_writeback;
 }

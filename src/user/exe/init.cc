@@ -32,6 +32,15 @@ int main() {
   // semaphore_testing();
   // exit_testing();
   // exec_testing();
+  
+  char buf[30];
+  memset(buf, 0, 30);
+  getcwd(buf, 30);
+  printf("getcwd(): \"%s\"\n", buf);
+  printf("chdir(\"user\"): %d\n", chdir("user"));
+  memset(buf, 0, 30);
+  getcwd(buf, 30);
+  printf("getcwd(): \"%s\"\n", buf);
 
   printf("init calling exec(\"/user/jshell\")\n");
   exec("/user/jshell");

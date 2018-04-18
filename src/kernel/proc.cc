@@ -463,7 +463,6 @@ void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
                           elf_info.num_bytes);
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
-  printk("load_address: %p\n", elf_info.load_address);
 
   // TODO write sbrk() and make a real user memroy allocator
   page::AllocateUserSpace(current_proc->cr3, 0x0000090000000000, 32768);
