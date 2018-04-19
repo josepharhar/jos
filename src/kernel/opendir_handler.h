@@ -1,0 +1,6 @@
+#ifndef KERNEL_OPENDIR_HANDLER_H_
+#define KERNEL_OPENDIR_HANDLER_H_
+
+void InitOpendir();
+
+#endif  // KERNEL_OPENDIR_HANDLER_H_

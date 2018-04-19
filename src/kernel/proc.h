@@ -65,7 +65,6 @@ class ProcContext {
   void PrintValues();
   int GetNewFd();
 
-  // TODO use this
   vfs::Filepath working_directory_;
 };
 

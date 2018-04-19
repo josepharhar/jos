@@ -28,6 +28,7 @@
 #include "semaphore_handler.h"
 #include "unistd.h"
 #include "getcwd_handler.h"
+#include "opendir_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -114,6 +115,7 @@ void KernelMain() {
   InitClone();
   InitSemaphore();
   InitGetcwd();
+  InitOpendir();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();
