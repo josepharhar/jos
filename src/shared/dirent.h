@@ -1,29 +1,33 @@
 #ifndef SHARED_DIRENT_H_
 #define SHARED_DIRENT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif  // __cplusplus
+#include "shared/jarray.h"
 
 struct dirent {
   char d_name[256];
 };
 struct DIR {
   uint64_t id;
+  stdj::Array<dirent*> ents;
 };
 
 struct SyscallOpendirParams {
-  DIR dir;
+  const char* filepath;
+  uint64_t id_writeback;
   bool success_writeback;
 }
-struct 
-
-struct DIR* opendir(const char* name);
-struct dirent* readdir(DIR* dir);
-int closedir(DIR* dir);
-
-#ifdef __cplusplus
+struct SyscallReaddirParams {
+  uint64_t id;
+  char filename_writeback[256];
+  bool success_writeback;
 }
-#endif  // __cplusplus
+struct SyscallClosedirParams {
+  uint64_t id;
+  int status_writeback;
+}
+
+DIR* opendir(const char* name);
+dirent* readdir(DIR* dir);
+int closedir(DIR* dir);
 
 #endif  // SHARED_DIRENT_H_
