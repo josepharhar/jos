@@ -29,6 +29,7 @@
 #include "unistd.h"
 #include "getcwd_handler.h"
 #include "opendir_handler.h"
+#include "kernel/vfs/globals.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -59,7 +60,7 @@ static void ProcInit(void* arg) {
   vfs::Superblock::Create(ata_device, SuperblockReady);
   while (!superblock) {} // TODO is this gross?
   printk("got superblock: %p\n", superblock);
-  InitExec(superblock->GetRootInode());
+  vfs::SetRootDirectory(superblock->GetRootInode());
 
   // TODO delet this
   uint64_t new_cr3 = page::CopyPageTable((uint64_t)Getcr3());
@@ -110,6 +111,7 @@ void KernelMain() {
   InitSyscall();
   proc::Init();
 
+  InitExec();
   GetcInit();
   InitGetpid();
   InitClone();

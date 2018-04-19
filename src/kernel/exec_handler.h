@@ -3,6 +3,6 @@
 
 #include "kernel/vfs/inode.h"
 
-void InitExec(vfs::Inode* root_directory);
+void InitExec();
 
 #endif  // EXEC_HANDLER_H_

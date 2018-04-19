@@ -394,7 +394,7 @@ void BlockedQueue::UnblockAll() {
 // Blocks the current process.
 // Called by system call handler.
 // void ProcBlockOn(struct ProcQueue* queue, int enable_ints) {
-void BlockedQueue::BlockCurrentProc() {
+/*void BlockedQueue::BlockCurrentProc() {
   // appending to the queue must be atomic, it can be edited by interrupt
   // handlers
   BEGIN_CS();
@@ -403,7 +403,7 @@ void BlockedQueue::BlockCurrentProc() {
   END_CS();
 
   Yield();  // i can do nested syscalls, right?
-}
+}*/
 
 void BlockedQueue::BlockCurrentProcNoNesting() {
   // appending to the queue must be atomic, it can be edited by interrupt
@@ -442,36 +442,43 @@ bool IsKernel() {
   return privilege_level == 0;  // zero is kernel, 3 is user
 }
 
-// Loads a program from memory to replace the current process's program
-void ExecCurrentProc(ELFInfo elf_info, uint8_t* file_data) {
+void ExecProc(ProcContext* proc, ELFInfo elf_info, uint8_t* file_data) {
+  bool switch_tables = proc != current_proc;
+
   // TODO create a new page table for this process
   //   and recursively free the current one and its frames in user space
-  // TODO blow away/sanitize current_proc's registers
+  // TODO blow away/sanitize proc's registers
   // TODO allocate user stack
   // TODO set to user mode? only if already user or supposed to be user?
   // TODO sanitize user proc's input
 
   // allocate user stack
-  page::AllocateUserSpace(current_proc->cr3, USER_STACK_TOP, USER_STACK_SIZE);
-  current_proc->rsp = USER_STACK_BOTTOM;
-  current_proc->rbp = USER_STACK_BOTTOM;
-  // TODO StackFree(current_proc->bottom_of_stack);
-  current_proc->bottom_of_stack = USER_STACK_BOTTOM;
+  page::AllocateUserSpace(proc->cr3, USER_STACK_TOP, USER_STACK_SIZE);
+  proc->rsp = USER_STACK_BOTTOM;
+  proc->rbp = USER_STACK_BOTTOM;
+  // TODO StackFree(proc->bottom_of_stack);
+  proc->bottom_of_stack = USER_STACK_BOTTOM;
 
   // allocate and fill user text/data
-  page::AllocateUserSpace(current_proc->cr3, elf_info.load_address,
+  page::AllocateUserSpace(proc->cr3, elf_info.load_address,
                           elf_info.num_bytes);
+  if (switch_tables) {
+    Setcr3(proc->cr3);
+  }
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
+  if (switch_tables) {
+    Setcr3(current_proc->cr3);
+  }
 
   // TODO write sbrk() and make a real user memroy allocator
-  page::AllocateUserSpace(current_proc->cr3, 0x0000090000000000, 32768);
+  page::AllocateUserSpace(proc->cr3, 0x0000090000000000, 32768);
 
-  current_proc->rip = elf_info.instruction_pointer;
-  // current_proc->rflags |= (3 << 12);
+  proc->rip = elf_info.instruction_pointer;
+  // proc->rflags |= (3 << 12);
   // TODO
-  current_proc->cs = GDT_USER_CS + DPL_USER;
-  current_proc->ss = GDT_USER_DS + DPL_USER;
+  proc->cs = GDT_USER_CS + DPL_USER;
+  proc->ss = GDT_USER_DS + DPL_USER;
 
   RestoreState(current_proc);
 }

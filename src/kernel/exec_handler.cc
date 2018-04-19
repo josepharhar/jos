@@ -12,11 +12,11 @@
 #include "string.h"
 #include "kernel/vfs/find_file.h"
 #include "kernel/vfs/file.h"
-
-static vfs::Inode* root_directory = 0;
+#include "kernel/vfs/globals.h"
 
 struct ExecContext {
   proc::BlockedQueue proc_queue;
+  proc::ProcContext* proc;
   uint8_t* file_data;
   vfs::File* file;
   vfs::Inode* inode;
@@ -27,7 +27,7 @@ static void ReadFileCallback(void* void_arg) {
 
   ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
   if (elf_info.success) {
-    proc::ExecCurrentProc(elf_info, arg->file_data);
+    proc::ExecProc(proc, elf_info, arg->file_data);
   } else {
     printk("HandleSyscallExec failed to exec\n");
   }
@@ -73,14 +73,14 @@ static void HandleSyscallExec(uint64_t interrupt_number,
   vfs::Filepath filepath(input_filepath);
 
   ExecContext* arg = new ExecContext();
+  arg->proc = proc::GetCurrentProc();
   arg->proc_queue.BlockCurrentProcNoNesting();
   arg->file_data = 0;
   arg->file = 0;
   arg->inode = 0;
-  FindFile(root_directory, filepath, FindFileCallback, arg);
+  FindFile(vfs::GetRootDirectory(), filepath, FindFileCallback, arg);
 }
 
-void InitExec(vfs::Inode* new_root_directory) {
+void InitExec() {
   SetSyscallHandler(SYSCALL_EXEC, HandleSyscallExec);
-  root_directory = new_root_directory;
 }

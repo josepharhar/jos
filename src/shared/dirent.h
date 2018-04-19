@@ -9,10 +9,14 @@ struct dirent {
   char d_name[256];
 };
 struct DIR {
+  uint64_t id;
 };
+
 struct SyscallOpendirParams {
+  DIR dir;
   bool success_writeback;
 }
+struct 
 
 struct DIR* opendir(const char* name);
 struct dirent* readdir(DIR* dir);
