@@ -442,7 +442,10 @@ bool IsKernel() {
   return privilege_level == 0;  // zero is kernel, 3 is user
 }
 
-void ExecProc(ProcContext* proc, ELFInfo elf_info, uint8_t* file_data) {
+void ExecProc(ProcContext* proc,
+              ELFInfo elf_info,
+              uint8_t* file_data,
+              char* const argv[]) {
   bool switch_tables = proc != current_proc;
 
   // TODO create a new page table for this process
@@ -460,8 +463,7 @@ void ExecProc(ProcContext* proc, ELFInfo elf_info, uint8_t* file_data) {
   proc->bottom_of_stack = USER_STACK_BOTTOM;
 
   // allocate and fill user text/data
-  page::AllocateUserSpace(proc->cr3, elf_info.load_address,
-                          elf_info.num_bytes);
+  page::AllocateUserSpace(proc->cr3, elf_info.load_address, elf_info.num_bytes);
   if (switch_tables) {
     Setcr3(proc->cr3);
   }
