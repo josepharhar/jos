@@ -21,9 +21,10 @@ dirent* readdir(DIR* dir) {
   params.id = dir->id;
   memset(params.filename_writeback, 0, 256);
   params.success_writeback = false;
+  params.end_of_files = false;
   Syscall(SYSCALL_READDIR, (uint64_t)&params);
 
-  if (!params.success_writeback) {
+  if (!params.success_writeback || params.end_of_files) {
     return 0;
   }
 

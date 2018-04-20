@@ -20,6 +20,7 @@ struct SyscallReaddirParams {
   uint64_t id;
   char filename_writeback[256];
   bool success_writeback;
+  bool end_of_files_writeback;
 }
 struct SyscallClosedirParams {
   uint64_t id;

@@ -109,10 +109,15 @@ static void HandleSyscallReaddir(uint64_t interrupt_number,
 
   OpendirHandle* handle = id_to_handle->Get(params->id);
   if (handle->inode_index >= handle->inodes.Size()) {
-    // ran out, this is OK but we have to return... what??
-    // TODO TODO TODO
+    params->success_writeback = true;
+    params->end_of_files_writeback = true;
+    return;
   }
+
   vfs::Inode next_inode = handle->inodes.Get(handle->inode_index++);
+  params->success_writeback = true;
+  params->end_of_files_writeback = false;
+  strncpy(params->filename_writeback, next_inode->filename, 256);
 }
 
 
@@ -120,8 +125,20 @@ static void HandleSyscallClosedir(uint64_t interrupt_number,
                                  uint64_t param_1,
                                  uint64_t param_2,
                                  uint64_t param_3) {
+  SyscallClosedirParams* params = (SyscallClosedirParams*)param_1;
   // TODO who will this get called when a dir is still open
   // and a proc exits???????
+  //  this wouldnt be a problem if it was stored in the proc context >_<
+  if (!id_to_handle->ContainsKey(params->id)) {
+    params->status_writeback = 1;
+    return;
+  }
+
+  OpendirHandle* handle_to_delete = id_to_handle.Get(params->id);
+  id_to_handle->Remove(params->id);
+  // TODO delete each inode in the array?
+  delete handle_to_delete;
+  params->status_writeback = 0;
 }
 
 void InitOpendir() {
