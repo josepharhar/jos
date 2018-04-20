@@ -3,6 +3,8 @@
 
 #include "stdint.h"
 
+#define PRIMARY_ATA_PORT 0x1F0
+
 namespace vfs {
 
 typedef void (*ATARequestCallback)(void*);

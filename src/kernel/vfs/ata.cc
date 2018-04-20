@@ -8,7 +8,6 @@
 
 // http://wiki.osdev.org/ATA_PIO_Mode
 
-#define PRIMARY_ATA_PORT 0x1F0
 #define PRIMARY_STATUS_PORT 0x3F6  // "alternate" status port
 #define PRIMARY_DEVICE_CONTROL_PORT \
   0x3F6  // 0x3F6 doubles as status read and control write

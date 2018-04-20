@@ -27,7 +27,7 @@ static void ReadFileCallback(void* void_arg) {
 
   ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
   if (elf_info.success) {
-    proc::ExecProc(proc, elf_info, arg->file_data);
+    proc::ExecProc(arg->proc, elf_info, arg->file_data);
   } else {
     printk("HandleSyscallExec failed to exec\n");
   }

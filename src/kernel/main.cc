@@ -11,7 +11,6 @@
 #include "page.h"
 #include "syscall.h"
 #include "proc.h"
-#include "ata_block_device.h"
 #include "kmalloc.h"
 #include "kernel/vfs/superblock.h"
 #include "kernel/vfs/inode.h"
