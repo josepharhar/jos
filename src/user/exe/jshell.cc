@@ -5,6 +5,7 @@
 #include "jstring.h"
 #include "getc.h"
 #include "dirent.h"
+#include "stdlib.h"
 
 void ls();
 
@@ -40,9 +41,10 @@ int main() {
       }
 
     } else if (args.Size() && args.Get(0) == stdj::string("ls")) {
-      char argv[2][10];
-      strcpy(argv[0], "/user/ls");
-      strcpy(argv[1], "/user");
+      char** argv = (char**)malloc(sizeof(uint64_t) * 3);
+      argv[0] = (char*)"/user/ls";
+      argv[1] = (char*)"/user";
+      argv[2] = 0;
       execv("/user/ls", (char**)argv);
       //ls();
     }

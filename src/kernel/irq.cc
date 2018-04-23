@@ -272,7 +272,6 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
         int one = 1;
         while (one) {
           //asm volatile ("hlt");
-      HALT_LOOP();
         }
       }
       break;

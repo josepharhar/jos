@@ -434,7 +434,8 @@ void ExecProc(ProcContext* proc,
               ELFInfo elf_info,
               uint8_t* file_data,
               char** argv_src) {
-  bool switch_tables = proc != current_proc;
+  uint64_t old_cr3 = Getcr3();
+  bool switch_tables = proc->cr3 != old_cr3;
   if (switch_tables) {
     Setcr3(proc->cr3);
   }
@@ -445,27 +446,6 @@ void ExecProc(ProcContext* proc,
   // TODO allocate user stack
   // TODO set to user mode? only if already user or supposed to be user?
   // TODO sanitize user proc's input
-
-  // allocate user stack
-  page::AllocateUserSpace(proc->cr3, USER_STACK_TOP, USER_STACK_SIZE);
-  proc->rsp = USER_STACK_BOTTOM;
-  proc->rbp = USER_STACK_BOTTOM;
-  // TODO StackFree(proc->bottom_of_stack);
-  proc->bottom_of_stack = USER_STACK_BOTTOM;
-
-  // allocate and fill user text/data
-  page::AllocateUserSpace(proc->cr3, elf_info.load_address, elf_info.num_bytes);
-  memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
-         elf_info.file_size);
-
-  proc->rip = elf_info.instruction_pointer;
-  // proc->rflags |= (3 << 12);
-  // TODO
-  proc->cs = GDT_USER_CS + DPL_USER;
-  proc->ss = GDT_USER_DS + DPL_USER;
-
-  // TODO write sbrk() and make a real user memroy allocator
-  page::AllocateUserSpace(proc->cr3, 0x0000090000000000, 32768);
 
   // TODO formalize the use of this address?
   //   get it from the normal user heap instead?
@@ -496,15 +476,29 @@ void ExecProc(ProcContext* proc,
   proc->rdi = (uint64_t)argv_size;
   proc->rsi = (uint64_t)argv_dest;
 
-  /*proc->rdi = 1;
-  proc->rsi = 2;
-  proc->rdx = 3;
-  proc->rcx = 4;
-  proc->r8 = 5;
-  proc->r9 = 6;*/
+  // allocate user stack
+  page::AllocateUserSpace(proc->cr3, USER_STACK_TOP, USER_STACK_SIZE);
+  proc->rsp = USER_STACK_BOTTOM;
+  proc->rbp = USER_STACK_BOTTOM;
+  // TODO StackFree(proc->bottom_of_stack);
+  proc->bottom_of_stack = USER_STACK_BOTTOM;
+
+  // allocate and fill user text/data
+  page::AllocateUserSpace(proc->cr3, elf_info.load_address, elf_info.num_bytes);
+  memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
+         elf_info.file_size);
+
+  proc->rip = elf_info.instruction_pointer;
+  // proc->rflags |= (3 << 12);
+  // TODO
+  proc->cs = GDT_USER_CS + DPL_USER;
+  proc->ss = GDT_USER_DS + DPL_USER;
+
+  // TODO write sbrk() and make a real user memroy allocator
+  page::AllocateUserSpace(proc->cr3, 0x0000090000000000, 32768);
 
   if (switch_tables) {
-    Setcr3(current_proc->cr3);
+    Setcr3(old_cr3);
   }
   RestoreState(current_proc);
 }

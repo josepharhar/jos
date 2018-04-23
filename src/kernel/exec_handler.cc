@@ -30,14 +30,13 @@ static void ReadFileCallback(void* void_arg) {
 
   ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
   if (elf_info.success) {
+    proc::ExecProc(arg->proc, elf_info, arg->file_data, arg->params->argv);
+
     bool change_cr3 = arg->proc->cr3 != Getcr3();
     uint64_t old_cr3 = Getcr3();
     if (change_cr3) {
-      // TODO is this OK to do for all of ExecProc()?
-      //   needed for argv to be in scope n stuff..
       Setcr3(arg->proc->cr3);
     }
-    proc::ExecProc(arg->proc, elf_info, arg->file_data, arg->params->argv);
     arg->params->status_writeback = 0;
     if (change_cr3) {
       Setcr3(old_cr3);

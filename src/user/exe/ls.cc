@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
   printf("ls argc: %d\n", argc);
   for (int i = 0; i < argc; i++) {
-    printf("ls argv[%d]: \"%s\"\n", i, argv[i]);
+    printf("ls argv[%d] (%p): \"%s\"\n", i, argv[i], argv[i]);
   }
   while (1) {
     Putc(Getc());
