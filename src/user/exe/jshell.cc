@@ -4,6 +4,9 @@
 #include "unistd.h"
 #include "jstring.h"
 #include "getc.h"
+#include "dirent.h"
+
+void ls();
 
 int main() {
   printf("welcome to jshell\n");
@@ -35,6 +38,9 @@ int main() {
           printf("failed to chdir() to \"%s\"\n", dir.c_str());
         }
       }
+
+    } else if (args.Size() && args.Get(0) == stdj::string("ls")) {
+      ls();
     }
   }
 
@@ -42,4 +48,19 @@ int main() {
     Putc(Getc());
   }
   return 0;
+}
+
+void ls() {
+  DIR* dir = opendir("/user");
+  if (!dir) {
+    printf("opendir(/user) failed\n");
+    return;
+  }
+
+  dirent* ent = readdir(dir);
+  while (ent) {
+    printf("ent->d_name: \"%s\"\n", ent->d_name);
+    ent = readdir(dir);
+  }
+  closedir(dir);
 }
