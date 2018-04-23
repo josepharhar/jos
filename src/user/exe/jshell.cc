@@ -58,10 +58,9 @@ int main() {
         exit(1);
 
       } else {
-        printf("jshell: calling wait()\n");
         int status;
         wait(&status);
-        printf("jshell: finished waiting, status: %d\n", status);
+        //printf("jshell: finished waiting, status: %d\n", status);
       }
     }
   }
