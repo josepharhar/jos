@@ -57,9 +57,8 @@ void exec(const char* filename) {
   Syscall(SYSCALL_EXEC, (uint64_t) filename);
 }
 
-int execv(const char* path, char* const argv[]) {
-
-}
+/*int execv(const char* path, char* const argv[]) {
+}*/
 
 char* getcwd(char* buf, int size) {
   SyscallGetcwdParams params;

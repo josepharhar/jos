@@ -103,7 +103,6 @@ class BlockedQueue {
   // Blocks the current process.
   // Called by system call handler.
   // void ProcBlockOn(struct ProcQueue* queue, int enable_ints);
-  // void BlockCurrentProc(); // TODO delet this
   void BlockCurrentProcNoNesting();
 
   int Size();
@@ -123,8 +122,8 @@ bool IsKernel();
 // Loads a program from memory to replace the current process's program
 void ExecProc(proc::ProcContext* proc,
               ELFInfo elf_info,
-              uint8_t* file_data,
-              char* const argv[]);
+              uint8_t* file_data);
+              //char* const argv[]);
 
 uint64_t GetCurrentPid();
 

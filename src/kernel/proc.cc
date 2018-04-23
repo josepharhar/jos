@@ -393,18 +393,6 @@ void BlockedQueue::UnblockAll() {
 
 // Blocks the current process.
 // Called by system call handler.
-// void ProcBlockOn(struct ProcQueue* queue, int enable_ints) {
-/*void BlockedQueue::BlockCurrentProc() {
-  // appending to the queue must be atomic, it can be edited by interrupt
-  // handlers
-  BEGIN_CS();
-  queue_.Add(current_proc);
-  current_proc->is_blocked = 1;
-  END_CS();
-
-  Yield();  // i can do nested syscalls, right?
-}*/
-
 void BlockedQueue::BlockCurrentProcNoNesting() {
   // appending to the queue must be atomic, it can be edited by interrupt
   // handlers
@@ -444,8 +432,8 @@ bool IsKernel() {
 
 void ExecProc(ProcContext* proc,
               ELFInfo elf_info,
-              uint8_t* file_data,
-              char* const argv[]) {
+              uint8_t* file_data) {
+              //char* const argv[]) {
   bool switch_tables = proc != current_proc;
 
   // TODO create a new page table for this process

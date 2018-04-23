@@ -1,4 +1,5 @@
 #include "jos.h"
 
-void main() {
+int main() {
+  return 0;
 }
