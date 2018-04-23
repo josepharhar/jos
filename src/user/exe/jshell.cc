@@ -40,7 +40,11 @@ int main() {
       }
 
     } else if (args.Size() && args.Get(0) == stdj::string("ls")) {
-      ls();
+      char argv[2][10];
+      strcpy(argv[0], "/user/ls");
+      strcpy(argv[1], "/user");
+      execv("/user/ls", (char**)argv);
+      //ls();
     }
   }
 

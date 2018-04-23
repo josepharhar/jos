@@ -68,14 +68,27 @@ int strcmp(const void* one, const void* two) {
   return *char_one - *char_two;
 }
 
-void strncpy(void* destination, const void* src, int num_bytes) {
-  uint8_t* char_dest = (uint8_t*)destination;
-  uint8_t* char_src = (uint8_t*)src;
+char* strcpy(char* dest, const char* src) {
+  for (int i = 0; src[i]; i++) {
+    dest[i] = src[i];
+  }
+  return dest;
+}
 
+char* strncpy(char* dest, const char* src, int num_bytes) {
   for (int i = 0; i < num_bytes; i++) {
-    char_dest[i] = char_src[i];
-    if (!char_src[i]) {
-      return;
+    dest[i] = src[i];
+    if (!src[i]) {
+      return dest;
     }
   }
+  return dest;
+}
+
+int strlen(const char* string) {
+  int length = 0;
+  while (*string++) {
+    length++;
+  }
+  return length;
 }

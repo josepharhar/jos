@@ -1,5 +1,16 @@
 #include "jos.h"
 
-int main() {
-  return 0;
+#include "stdio.h"
+#include "unistd.h"
+#include "getc.h"
+
+int main(int argc, char** argv) {
+  printf("ls argc: %d\n", argc);
+  for (int i = 0; i < argc; i++) {
+    printf("ls argv[%d]: \"%s\"\n", i, argv[i]);
+  }
+  while (1) {
+    Putc(Getc());
+  }
+  exit();
 }

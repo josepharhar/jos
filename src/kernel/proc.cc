@@ -432,9 +432,12 @@ bool IsKernel() {
 
 void ExecProc(ProcContext* proc,
               ELFInfo elf_info,
-              uint8_t* file_data) {
-              //char* const argv[]) {
+              uint8_t* file_data,
+              char** argv_src) {
   bool switch_tables = proc != current_proc;
+  if (switch_tables) {
+    Setcr3(proc->cr3);
+  }
 
   // TODO create a new page table for this process
   //   and recursively free the current one and its frames in user space
@@ -452,17 +455,8 @@ void ExecProc(ProcContext* proc,
 
   // allocate and fill user text/data
   page::AllocateUserSpace(proc->cr3, elf_info.load_address, elf_info.num_bytes);
-  if (switch_tables) {
-    Setcr3(proc->cr3);
-  }
   memcpy((void*)elf_info.load_address, file_data + elf_info.file_offset,
          elf_info.file_size);
-  if (switch_tables) {
-    Setcr3(current_proc->cr3);
-  }
-
-  // TODO write sbrk() and make a real user memroy allocator
-  page::AllocateUserSpace(proc->cr3, 0x0000090000000000, 32768);
 
   proc->rip = elf_info.instruction_pointer;
   // proc->rflags |= (3 << 12);
@@ -470,6 +464,48 @@ void ExecProc(ProcContext* proc,
   proc->cs = GDT_USER_CS + DPL_USER;
   proc->ss = GDT_USER_DS + DPL_USER;
 
+  // TODO write sbrk() and make a real user memroy allocator
+  page::AllocateUserSpace(proc->cr3, 0x0000090000000000, 32768);
+
+  // TODO formalize the use of this address?
+  //   get it from the normal user heap instead?
+  //   remotely access the user heap allocator?
+  static const uint64_t argv_addr = 0x00000A0000000000;
+
+  int argv_size;
+  uint64_t total_string_length = 0;
+  for (argv_size = 0; argv_src[argv_size]; argv_size++) {
+    total_string_length += strlen(argv_src[argv_size]) + 1;
+  }
+  total_string_length += (argv_size + 1) * sizeof(uint64_t);
+  page::AllocateUserSpace(proc->cr3, argv_addr, total_string_length);
+
+  char** argv_dest = (char**)argv_addr;
+  memset(argv_dest, 0, (argv_size + 1) * sizeof(uint64_t));
+  char* argv_string_dest = (char*)argv_addr;
+  argv_string_dest += (argv_size + 1) * sizeof(uint64_t);
+  for (int i = 0; i < argv_size; i++) {
+    strcpy(argv_string_dest, argv_src[i]);
+    argv_dest[i] = argv_string_dest;
+
+    argv_string_dest += strlen(argv_src[i]);
+    argv_string_dest[i] = 0;
+    argv_string_dest++;
+  }
+
+  proc->rdi = (uint64_t)argv_size;
+  proc->rsi = (uint64_t)argv_dest;
+
+  /*proc->rdi = 1;
+  proc->rsi = 2;
+  proc->rdx = 3;
+  proc->rcx = 4;
+  proc->r8 = 5;
+  proc->r9 = 6;*/
+
+  if (switch_tables) {
+    Setcr3(current_proc->cr3);
+  }
   RestoreState(current_proc);
 }
 

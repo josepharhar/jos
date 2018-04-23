@@ -43,7 +43,7 @@ int main() {
   printf("getcwd(): \"%s\"\n", buf);*/
 
   printf("init calling exec(\"/user/jshell\")\n");
-  exec("/user/jshell");
+  execv("/user/jshell", 0);
   printf("init exec failed!\n");
   exit();
 
@@ -324,7 +324,7 @@ void exec_testing() {
 
   if (!fork()) {
     printf("pid %d calling exec(\"/user/test/hello\")...\n", getpid());
-    exec("/user/test/hello");
+    execv("/user/test/hello", 0);
   }
 
   while (1) {

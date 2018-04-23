@@ -29,7 +29,11 @@ int close(int fd);
 
 int pipe(int pipefd[2]);
 
-void exec(const char* filepath);
+struct SyscallExecParams {
+  char* filepath;
+  char** argv;
+  int status_writeback;
+};
 int execv(const char* path, char* const argv[]);
 
 struct SyscallGetcwdParams {

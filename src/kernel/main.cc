@@ -71,10 +71,8 @@ static void ProcInit(void* arg) {
   }
 
   // exec will put this proc into user mode
-  // Exec("/user/init");
-  // TODO make exec use absolute and relative filepaths
   printk("kernel init calling exec...\n");
-  exec("/user/init");
+  execv("/user/init", 0);
   printk("Perhaps not.\n");
   while (1) {
     asm volatile("hlt");

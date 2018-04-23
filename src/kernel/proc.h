@@ -122,8 +122,8 @@ bool IsKernel();
 // Loads a program from memory to replace the current process's program
 void ExecProc(proc::ProcContext* proc,
               ELFInfo elf_info,
-              uint8_t* file_data);
-              //char* const argv[]);
+              uint8_t* file_data,
+              char** argv);
 
 uint64_t GetCurrentPid();
 

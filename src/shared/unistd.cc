@@ -53,12 +53,14 @@ int pipe(int pipefd[2]) {
   return -1;
 }
 
-void exec(const char* filename) {
-  Syscall(SYSCALL_EXEC, (uint64_t) filename);
+int execv(const char* path, char* const argv[]) {
+  SyscallExecParams params;
+  params.filepath = (char*)path;
+  params.argv = (char**)argv;
+  params.status_writeback = -2;
+  Syscall(SYSCALL_EXEC, (uint64_t)&params);
+  return params.status_writeback;
 }
-
-/*int execv(const char* path, char* const argv[]) {
-}*/
 
 char* getcwd(char* buf, int size) {
   SyscallGetcwdParams params;
