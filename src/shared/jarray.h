@@ -80,13 +80,15 @@ class Array {
     size_++;
   }
 
-  void RemoveAt(uint64_t index) {
+  T RemoveAt(uint64_t index) {
+    T value = Get(index);
     if (index >= size_) {
       // TODO assert
     }
     memmove(array_ + index, array_ + index + 1, (size_ - index) * sizeof(T));
     memset(array_ + size_, 0, sizeof(T));
     size_--;
+    return value;
   }
 
   void RemoveValue(T value) {

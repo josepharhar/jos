@@ -2,6 +2,7 @@
 
 #include "clone.h"
 #include "syscall.h"
+#include "stdio.h"
 
 pid_t fork() {
   return clone(0, 0, CLONE_FILES);
@@ -13,8 +14,14 @@ pid_t getpid() {
   return (int)pid;
 }
 
-void exit() {
-  Syscall(SYSCALL_EXIT);
+void exit(int status) {
+  SyscallExitParams params;
+  params.exit_status = status;
+  Syscall(SYSCALL_EXIT, (uint64_t)&params);
+  while (1) {
+    // this is necessary because this function is always marked as "noreturn"
+    printu("SYSCALL_EXIT returned. this should never happen!\n");
+  }
 }
 
 int write(int fd, const void* write_buffer, int write_size) {
@@ -71,10 +78,18 @@ char* getcwd(char* buf, int size) {
   return params.retval_writeback;
 }
 
-int chdir(const char* path){
+int chdir(const char* path) {
   SyscallChdirParams params;
   params.path = path;
   params.status_writeback = -2;
   Syscall(SYSCALL_CHDIR, (uint64_t)&params);
   return params.status_writeback;
+}
+
+pid_t wait(int* status) {
+  SyscallWaitParams params;
+  params.exit_status_writeback = status;
+  params.pid_writeback = -2;
+  Syscall(SYSCALL_WAIT, (uint64_t)&params);
+  return params.pid_writeback;
 }

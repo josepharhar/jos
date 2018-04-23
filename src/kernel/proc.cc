@@ -119,6 +119,8 @@ ProcContext* Clone(SyscallCloneParams* clone_options) {
 
   // TODO create more clone() settings to set new proc's registers?
 
+  new_proc->parent = current_proc;
+
   if (clone_options->callback) {
     new_proc->rip = clone_options->callback;
   } else {
@@ -331,6 +333,33 @@ static void HandleSyscallYield(uint64_t syscall_number,
   RestoreState(current_proc);
 }
 
+void TryFinishWaiting(ProcContext* proc) {
+  if (!proc || !proc->wait_for_zombie || !proc->wait_params ||
+      !proc->zombie_queue.Size()) {
+    return;
+  }
+
+  ZombieContext zombie = proc->zombie_queue.RemoveAt(0);
+
+  proc->wait_for_zombie->UnblockHead();
+  delete proc->wait_for_zombie;
+  proc->wait_for_zombie = 0;
+
+  uint64_t old_cr3 = Getcr3();
+  bool switch_tables = old_cr3 != proc->cr3;
+  if (switch_tables) {
+    Setcr3(proc->cr3);
+  }
+  *(proc->wait_params->exit_status_writeback) = zombie.exit_status;
+  proc->wait_params->pid_writeback = zombie.proc->pid;
+  if (switch_tables) {
+    Setcr3(old_cr3);
+  }
+  proc->wait_params = 0;
+
+  delete zombie.proc;
+}
+
 // TODO make this get handled on a different stack to stop the GP faults?
 static void HandleSyscallExit(uint64_t syscall_number,
                               uint64_t param_1,
@@ -341,13 +370,28 @@ static void HandleSyscallExit(uint64_t syscall_number,
     return;
   }
 
-  ProcContext* proc_to_delete = current_proc;
-  current_proc = proc_list->GetPreviousValue(current_proc);
+  SyscallExitParams* params = (SyscallExitParams*)param_1;
 
+  ProcContext* proc_to_delete = current_proc;
+
+  if (proc_to_delete->parent) {
+    ZombieContext new_zombie;
+    new_zombie.proc = proc_to_delete;
+    new_zombie.exit_status = params->exit_status;
+
+    proc_to_delete->parent->zombie_queue.Add(new_zombie);
+    for (int i = 0; i < proc_to_delete->zombie_queue.Size(); i++) {
+      proc_to_delete->parent->zombie_queue.Add(
+          proc_to_delete->zombie_queue.Get(i));
+    }
+    TryFinishWaiting(proc_to_delete->parent);
+  }
+
+  current_proc = proc_list->GetPreviousValue(current_proc);
   proc_list->RemoveValue(proc_to_delete);
   // TODO free page table
   // TODO free fd resources
-  kfree(proc_to_delete);
+  // kfree(proc_to_delete);
 
   if (proc_list->IsEmpty()) {
     printk("  no procs left, returning to kernel\n");

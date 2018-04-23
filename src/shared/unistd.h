@@ -14,7 +14,10 @@ typedef int pid_t;
 pid_t fork();
 pid_t getpid();
 
-void exit();
+struct SyscallExitParams {
+  int exit_status;
+};
+void exit(int status);
 
 struct SyscallRdWrParams {
   int fd;
@@ -47,6 +50,12 @@ struct SyscallChdirParams {
   int status_writeback;
 };
 int chdir(const char* path);
+
+struct SyscallWaitParams {
+  int* exit_status_writeback;
+  int pid_writeback;
+};
+pid_t wait(int* status);
 
 #endif  // JOS
 

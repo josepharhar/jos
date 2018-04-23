@@ -19,6 +19,12 @@ namespace proc {
 
 typedef stdj::Map<int, ipc::Pipe*, ((ipc::Pipe*)0)> FdMap;
 
+class ProcContext;
+struct ZombieContext {
+  ProcContext* proc;
+  int exit_status;
+};
+
 class ProcContext {
  public:
   // hardware context
@@ -66,6 +72,12 @@ class ProcContext {
   int GetNewFd();
 
   vfs::Filepath working_directory_;
+
+  // wait() state
+  ProcContext* parent;
+  stdj::Array<ZombieContext> zombie_queue;
+  BlockedQueue* wait_for_zombie = 0;
+  SyscallWaitParams* wait_params = 0;
 };
 
 void Init();  // initializes proc system, only call once
@@ -143,6 +155,8 @@ void PreemptProc();
 
 // required for new blocking
 void EndOfSyscallReschedule();
+
+void TryFinishWaiting(ProcContext* proc);
 
 }  // namespace proc
 

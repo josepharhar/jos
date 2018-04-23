@@ -29,6 +29,7 @@
 #include "getcwd_handler.h"
 #include "opendir_handler.h"
 #include "kernel/vfs/globals.h"
+#include "wait_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -115,6 +116,7 @@ void KernelMain() {
   InitSemaphore();
   InitGetcwd();
   InitOpendir();
+  InitWait();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();

@@ -12,5 +12,5 @@ int main(int argc, char** argv) {
   while (1) {
     Putc(Getc());
   }
-  exit();
+  exit(0);
 }

@@ -45,7 +45,7 @@ int main() {
   printf("init calling exec(\"/user/jshell\")\n");
   execv("/user/jshell", 0);
   printf("init exec failed!\n");
-  exit();
+  exit(1);
 
   while (1) {
     Putc(Getc());
@@ -299,18 +299,18 @@ void exit_testing() {
 
   if (!fork()) {
     printf("pid %d calling exit()...\n", getpid());
-    exit();
+    exit(0);
     printf("RETURNED FROM exit()!!!\n");
   }
 
   if (fork()) {
     printf("pid %d calling exit()...\n", getpid());
-    exit();
+    exit(0);
     printf("RETURNED FROM exit()!!!\n");
   }
   if (fork()) {
     printf("pid %d calling exit()...\n", getpid());
-    exit();
+    exit(0);
     printf("RETURNED FROM exit()!!!\n");
   }
 

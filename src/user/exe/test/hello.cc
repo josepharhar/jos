@@ -6,6 +6,6 @@
 int main() {
   printf("hello from hello.cc\n");
   printf("hello.cc calling exit()...\n");
-  exit();
+  exit(0);
   return 0;
 }
