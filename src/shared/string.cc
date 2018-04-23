@@ -69,19 +69,23 @@ int strcmp(const void* one, const void* two) {
 }
 
 char* strcpy(char* dest, const char* src) {
-  for (int i = 0; src[i]; i++) {
+  int i;
+  for (i = 0; src[i]; i++) {
     dest[i] = src[i];
   }
+  dest[i] = 0;
   return dest;
 }
 
 char* strncpy(char* dest, const char* src, int num_bytes) {
-  for (int i = 0; i < num_bytes; i++) {
+  int i;
+  for (i = 0; i < num_bytes; i++) {
     dest[i] = src[i];
     if (!src[i]) {
-      return dest;
+      break;
     }
   }
+  dest[i] = 0;
   return dest;
 }
 

@@ -7,8 +7,6 @@
 #include "dirent.h"
 #include "stdlib.h"
 
-void ls();
-
 int main() {
   printf("welcome to jshell\n");
 
@@ -40,13 +38,31 @@ int main() {
         }
       }
 
-    } else if (args.Size() && args.Get(0) == stdj::string("ls")) {
-      char** argv = (char**)malloc(sizeof(uint64_t) * 3);
-      argv[0] = (char*)"/user/ls";
-      argv[1] = (char*)"/user";
-      argv[2] = 0;
-      execv("/user/ls", (char**)argv);
-      //ls();
+    } else if (args.Size() && args.Get(0) == stdj::string("exit")) {
+      exit(0);
+
+    } else if (args.Size()) {
+      if (!fork()) {
+        char** argv = (char**)malloc(sizeof(uint64_t) * (args.Size() + 1));
+        for (int i = 0; i < args.Size(); i++) {
+          stdj::string arg = args.Get(i);
+          char* arg_string = (char*)malloc(arg.Size() + 1);
+          strcpy(arg_string, arg.c_str());
+          argv[i] = arg_string;
+        }
+        argv[args.Size() + 1] = 0;
+        stdj::string prog_filepath = args.Get(0);
+        execv(prog_filepath.c_str(), argv);
+        
+        printf("jshell: exec(\"%s\") failed!\n", prog_filepath.c_str());
+        exit(1);
+
+      } else {
+        printf("jshell: calling wait()\n");
+        int status;
+        wait(&status);
+        printf("jshell: finished waiting, status: %d\n", status);
+      }
     }
   }
 
@@ -54,19 +70,4 @@ int main() {
     Putc(Getc());
   }
   return 0;
-}
-
-void ls() {
-  DIR* dir = opendir("/user");
-  if (!dir) {
-    printf("opendir(/user) failed\n");
-    return;
-  }
-
-  dirent* ent = readdir(dir);
-  while (ent) {
-    printf("ent->d_name: \"%s\"\n", ent->d_name);
-    ent = readdir(dir);
-  }
-  closedir(dir);
 }
