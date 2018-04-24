@@ -605,13 +605,13 @@ int ProcContext::GetNewFd() {
 }
 
 // Returns new fd allocated for current proc
-int AddPipeToCurrentProc(ipc::Pipe* pipe) {
-  int new_fd = current_proc->GetNewFd();
+int AddPipeToProc(ProcContext* proc, ipc::Pipe* pipe) {
+  int new_fd = proc->GetNewFd();
   if (new_fd == -1) {
     // ran out of fds
     return new_fd;
   }
-  current_proc->fd_map_.Set(new_fd, pipe);
+  proc->fd_map_.Set(new_fd, pipe);
   return new_fd;
 }
 

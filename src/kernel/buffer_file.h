@@ -9,7 +9,6 @@
 class BufferFile : public ipc::File {
  public:
   BufferFile();
-  ~BufferFile() override;
 
   BufferFile(const BufferFile& other) = delete;
   BufferFile& operator=(const BufferFile& other) = delete;
@@ -52,7 +51,6 @@ class BufferFile : public ipc::File {
 class BufferPipe : public ipc::Pipe {
  public:
   BufferPipe(ipc::File* file, ipc::Mode mode);
-  ~BufferPipe() override;
 
   BufferPipe(const BufferPipe& other) = delete;
   BufferPipe& operator=(const BufferPipe& other) = delete;

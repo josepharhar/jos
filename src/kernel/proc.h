@@ -144,7 +144,7 @@ uint64_t GetCurrentPid();
 void SaveStateToCurrentProc();
 
 // Returns new fd allocated for current proc
-int AddPipeToCurrentProc(ipc::Pipe* pipe);
+int AddPipeToProc(ProcContext* proc, ipc::Pipe* pipe);
 
 ipc::Pipe* GetPipeForFdFromCurrentProc(int fd);
 

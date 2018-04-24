@@ -20,7 +20,6 @@ class Pipe;
 class File {
  public:
   File();
-  virtual ~File();
 
   // Opens a pipe to this file in the specified mode.
   virtual Pipe* Open(Mode mode) = 0;
@@ -45,7 +44,6 @@ class File {
 class Pipe {
  public:
   Pipe(File* file, Mode mode);
-  virtual ~Pipe();
 
   // these pass through to ipc::File::Write/Read
   void Write(const uint8_t* source_buffer, int write_size, int* size_writeback);

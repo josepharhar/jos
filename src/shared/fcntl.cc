@@ -1,5 +1,7 @@
 #include "fcntl.h"
 
+#include "syscall.h"
+
 int open(const char* pathname, int flags) {
   SyscallOpenParams params;
   params.filepath = pathname;

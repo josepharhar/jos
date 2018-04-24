@@ -46,7 +46,7 @@ void File::ReadReadCluster(void* void_arg) {
   }
 }
 
-int File::Read(uint8_t* dest,
+int File::Read(void* dest,
                uint64_t length,
                FileRdWrCallback callback,
                void* callback_arg) {
@@ -65,7 +65,7 @@ int File::Read(uint8_t* dest,
   if (length) {
     ReadReadClusterArg* arg = new ReadReadClusterArg();
     arg->file = this;
-    arg->dest = dest;
+    arg->dest = (uint8_t*)dest;
     arg->length = length;
     arg->length_remaining = length;
     arg->offset_into_block = offset_remaining;
@@ -81,7 +81,7 @@ int File::Read(uint8_t* dest,
   return 0;
 }
 
-int File::Write(uint8_t* src,
+int File::Write(void* src,
                 uint64_t length,
                 FileRdWrCallback callback,
                 void* callback_arg) {
@@ -104,6 +104,10 @@ int File::Close() {
 
 uint64_t File::GetSize() {
   return inode_->GetSize();
+}
+
+uint64_t File::GetOffset() {
+  return offset_;
 }
 
 }  // namespace vfs

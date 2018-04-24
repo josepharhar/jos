@@ -5,7 +5,6 @@
 #include "asm.h"
 
 BufferFile::BufferFile() : buffer_(4096) {}
-BufferFile::~BufferFile() {}
 
 ipc::Pipe* BufferFile::Open(ipc::Mode mode) {
   BufferPipe* pipe = new BufferPipe(this, mode);
@@ -111,4 +110,3 @@ void BufferFile::Read(ipc::Pipe* pipe,
 
 BufferPipe::BufferPipe(ipc::File* file, ipc::Mode mode)
     : ipc::Pipe(file, mode) {}
-BufferPipe::~BufferPipe() {}

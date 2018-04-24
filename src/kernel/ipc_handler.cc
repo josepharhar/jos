@@ -23,7 +23,7 @@ static void HandleSyscallWrite(uint64_t interrupt_number,
     // fd must have been invalid
     printk("HandleSyscallWrite() invalid fd: %d, listing fds:\n", params->fd);
     proc::FdMap* fd_map = &(proc::GetCurrentProc()->fd_map_);
-    //for (int i = 0; i < fd_map->GetKeyAt(i))
+    // for (int i = 0; i < fd_map->GetKeyAt(i))
     for (int i = 0; i < fd_map->Size(); i++) {
       int key = fd_map->GetKeyAt(i);
       ipc::Pipe* value = fd_map->Get(key);
@@ -59,8 +59,8 @@ static void HandleSyscallPipe(uint64_t interrupt_number,
   Pipe* read_pipe = new_file->Open(RDONLY);
   Pipe* write_pipe = new_file->Open(WRONLY);
 
-  int read_fd = proc::AddPipeToCurrentProc(read_pipe);
-  int write_fd = proc::AddPipeToCurrentProc(write_pipe);
+  int read_fd = proc::AddPipeToProc(proc::GetCurrentProc(), read_pipe);
+  int write_fd = proc::AddPipeToProc(proc::GetCurrentProc(), write_pipe);
 
   pipefd[0] = read_fd;
   pipefd[1] = write_fd;

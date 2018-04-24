@@ -13,11 +13,11 @@ class File {
   File(Inode* inode);
 
   typedef void (*FileRdWrCallback)(void*);
-  int Read(uint8_t* dest,
+  int Read(void* dest,
            uint64_t length,
            FileRdWrCallback callback,
            void* callback_arg);
-  int Write(uint8_t* src,
+  int Write(void* src,
             uint64_t length,
             FileRdWrCallback callback,
             void* callback_arg);
@@ -25,8 +25,8 @@ class File {
   int Close();
   // ? static int Close(File** file);
 
-  // todo eh
   uint64_t GetSize();
+  uint64_t GetOffset();
 
  private:
   Inode* inode_;
