@@ -17,8 +17,8 @@ class Array {
  public:
   Array() : array_(0), array_size_(0), size_(0) {}
   Array(T* new_array, int new_array_size)
-      : array_(new T[new_array_size + 1]),
-        array_size_(new_array_size + 1),
+      : array_(new T[new_array_size]),
+        array_size_(new_array_size),
         size_(new_array_size) {
     memcpy(array_, new_array, new_array_size * sizeof(T));
     memset(array_ + new_array_size, 0, sizeof(T));

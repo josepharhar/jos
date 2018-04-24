@@ -8,6 +8,7 @@
 namespace vfs {
 
 struct ReadDirCallbackArg {
+  Filepath original_filepath;
   Filepath filepath;
   FindFileCallback callback;
   void* callback_arg;
@@ -40,8 +41,6 @@ static void ReadDirCallback(stdj::Array<Inode*> inodes, void* void_arg) {
     }
   }
 
-  /*printk("vfs::ReadDirCallback failed to find \"%s\"\n",
-         target_filename.c_str());*/
   arg->callback(0, arg->callback_arg);
   delete arg;
   return;
@@ -60,6 +59,7 @@ void FindFile(Inode* root_inode,
   } else {
     ReadDirCallbackArg* arg = new ReadDirCallbackArg();
     arg->filepath = filepath;
+    arg->original_filepath = filepath;
     arg->callback = callback;
     arg->callback_arg = callback_arg;
 

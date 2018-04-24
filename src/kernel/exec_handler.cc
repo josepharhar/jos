@@ -1,3 +1,5 @@
+#include "exec_handler.h"
+
 #include "syscall_handler.h"
 #include "page.h"
 #include "kmalloc.h"
@@ -39,8 +41,6 @@ static void ReadFileCallback(void* void_arg) {
     if (change_cr3) {
       Setcr3(old_cr3);
     }
-  } else {
-    printk("HandleSyscallExec failed to exec\n");
   }
 
   arg->proc_queue.UnblockHead();
@@ -66,7 +66,6 @@ static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
     }
   }
 
-  //printk("FindFileCallback failed to find file\n");
   bool change_cr3 = arg->proc->cr3 != Getcr3();
   uint64_t old_cr3 = Getcr3();
   if (change_cr3) {

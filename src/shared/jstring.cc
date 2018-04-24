@@ -16,6 +16,7 @@ string::string(Array<char> array) {
   for (int i = 0; i < array.Size(); i++) {
     Add(array[i]);
   }
+  Add(0);
 }
 
 const char* string::c_str() {
@@ -26,6 +27,7 @@ void string::CopyFrom(const char* other_string) {
   while (*other_string) {
     Add(*other_string++);
   }
+  Add(0);
 }
 
 stdj::Array<stdj::string> string::Split(stdj::string delimiter) {
