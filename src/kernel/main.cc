@@ -30,6 +30,7 @@
 #include "opendir_handler.h"
 #include "kernel/vfs/globals.h"
 #include "wait_handler.h"
+#include "fcntl_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -117,6 +118,7 @@ void KernelMain() {
   InitGetcwd();
   InitOpendir();
   InitWait();
+  InitFcntl();
 
   /*// TODO error checking needed here
   ATABlockDevice* block_device = CreateATADevice();
