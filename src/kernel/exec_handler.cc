@@ -1,3 +1,5 @@
+#include "exec_handler.h"
+
 #include "syscall_handler.h"
 #include "page.h"
 #include "kmalloc.h"
@@ -66,7 +68,7 @@ static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
     }
   }
 
-  //printk("FindFileCallback failed to find file\n");
+  printk("FindFileCallback failed to find file\n");
   bool change_cr3 = arg->proc->cr3 != Getcr3();
   uint64_t old_cr3 = Getcr3();
   if (change_cr3) {

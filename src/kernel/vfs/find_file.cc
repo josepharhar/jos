@@ -40,8 +40,8 @@ static void ReadDirCallback(stdj::Array<Inode*> inodes, void* void_arg) {
     }
   }
 
-  /*printk("vfs::ReadDirCallback failed to find \"%s\"\n",
-         target_filename.c_str());*/
+  printk("vfs::ReadDirCallback failed to find \"%s\"\n",
+         target_filename.c_str());
   arg->callback(0, arg->callback_arg);
   delete arg;
   return;
