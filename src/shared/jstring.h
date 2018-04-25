@@ -1,6 +1,12 @@
 #ifndef SHARED_JSTRING_H_
 #define SHARED_JSTRING_H_
 
+#ifdef TEST
+#include <stdio.h>
+#include <iostream>
+#include <ostream>
+#endif
+
 #include "jarray.h"
 
 namespace stdj {
@@ -30,6 +36,13 @@ class string {
   bool Equals(const string& other) const;
   bool operator==(const string& other) const;
   bool operator!=(const string& other) const;
+
+#ifdef TEST
+  friend std::ostream& operator<<(std::ostream& os, const string& string) {
+    os << "\"" << string.array_ << "\"";
+    return os;
+  }
+#endif
 
  private:
   char* array_;

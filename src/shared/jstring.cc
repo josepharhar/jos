@@ -135,7 +135,7 @@ string string::Substring(int one, int two) {
 
   string substring;
   for (int i = one; i < two; i++) {
-    substring.Add(array_[one + i]);
+    substring.Add(array_[i]);
   }
   return substring;
 }

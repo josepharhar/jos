@@ -27,6 +27,15 @@ static void TestWeirdLength() {
   assert(IsEqual(std::string(test_string), stdj::string(test_string)));
 }
 
+static void TestSubstring() {
+  stdj::string string = "asdf";
+  ASSERT_EQ(string.Substring(0, 2), stdj::string("as"));
+  ASSERT_EQ(string.Substring(1, 2), stdj::string("s"));
+  ASSERT_EQ(string.Substring(4, 4), stdj::string(""));
+  ASSERT_EQ(string.Substring(0, 4), stdj::string("asdf"));
+  ASSERT_EQ(string.Substring(2, 4), stdj::string("df"));
+}
+
 static void TestSplit() {
   {
     stdj::string string = "/user/init";
@@ -64,5 +73,6 @@ int main(int argc, char** argv) {
   TestAssignment();
   TestAdd();
   TestWeirdLength();
+  TestSubstring();
   TestSplit();
 }
