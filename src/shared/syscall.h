@@ -2,6 +2,7 @@
 #define SYSCALL_H_
 
 #include "stdint.h"
+#include "syscall_params.h"
 
 #define SYSCALL_INT 0x80
 

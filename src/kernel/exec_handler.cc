@@ -68,7 +68,7 @@ static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
     }
   }
 
-  printk("FindFileCallback failed to find file\n");
+  printk("HandleSyscallExec FindFileCallback failed to find file\n");
   bool change_cr3 = arg->proc->cr3 != Getcr3();
   uint64_t old_cr3 = Getcr3();
   if (change_cr3) {
