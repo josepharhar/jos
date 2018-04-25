@@ -25,8 +25,17 @@ struct ExecContext {
   SyscallExecParams* params;
 };
 
-static void ReadFileCallback(void* void_arg) {
+static void ReadFileCallback(bool success, void* void_arg) {
   ExecContext* arg = (ExecContext*)void_arg;
+
+  if (!success) {
+    printk("HandleSyscallExec ReadFileCallback read failed!\n");
+    kfree(arg->file_data);
+    kfree(arg->file);
+    kfree(arg->inode);
+    delete arg;
+    return;
+  }
 
   ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
   if (elf_info.success) {

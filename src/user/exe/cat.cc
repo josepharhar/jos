@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   }
 
   char file_input = 0;
-  while (read(fd, &file_input, 1)) {
+  while (read(fd, &file_input, 1) > 0) {
     printf("%c", file_input);
   }
   exit(0);

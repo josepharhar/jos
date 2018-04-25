@@ -17,7 +17,7 @@ struct OpenContext {
 };
 
 static void FindFileCallback(vfs::Inode* inode, void* void_arg) {
-  OpenContext* arg = (OpenContext*)arg;
+  OpenContext* arg = (OpenContext*)void_arg;
 
   uint64_t old_cr3 = Getcr3();
   bool switch_tables = old_cr3 != arg->proc->cr3;

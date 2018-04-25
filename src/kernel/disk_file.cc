@@ -27,11 +27,11 @@ struct ReadFileContext {
   proc::BlockedQueue blocked_queue;
   void* read_kbuffer;
   int* size_writeback;
-  int size_to_read;
+  int read_size;
   void* dest_buffer;
 };
 
-static void ReadFileCallback(void* void_arg) {
+static void ReadFileCallback(bool success, void* void_arg) {
   ReadFileContext* arg = (ReadFileContext*)void_arg;
 
   uint64_t old_cr3 = Getcr3();
@@ -40,8 +40,14 @@ static void ReadFileCallback(void* void_arg) {
     Setcr3(arg->proc->cr3);
   }
 
-  memcpy(arg->dest_buffer, arg->read_kbuffer, arg->size_to_read);
-  *(arg->size_writeback) = arg->size_to_read;
+  if (success) {
+    memcpy(arg->dest_buffer, arg->read_kbuffer, arg->read_size);
+    *(arg->size_writeback) = arg->read_size;
+
+  } else {
+    printk("DiskFile::ReadFileCallback read failed!\n");
+    *(arg->size_writeback) = -1;
+  }
 
   if (switch_tables) {
     Setcr3(old_cr3);
@@ -52,32 +58,37 @@ static void ReadFileCallback(void* void_arg) {
   delete arg;
 }
 
+// TODO consolidate DiskFile and vfs::File
+
 void DiskFile::Read(ipc::Pipe* pipe,
                     uint8_t* dest_buffer,
                     int read_size,
                     int* size_writeback) {
   // this is being called from reading proc, i guess?
 
-  int size_to_read = file_->GetSize() - (file_->GetOffset() + 1);
-  if (!size_to_read) {
+  int size_remaining_in_file = file_->GetSize() - file_->GetOffset();
+  /*printk("size_remaining_in_file: %d\n", size_remaining_in_file);
+  printk("  file_->GetSize(): %d, file_->GetOffset(): %d\n",
+      file_->GetSize(), file_->GetOffset());*/
+  if (size_remaining_in_file < 1) {
     // end of file
     *size_writeback = 0;
     return;
   }
 
-  if (read_size < size_to_read) {
-    size_to_read = read_size;
+  if (read_size > size_remaining_in_file) {
+    read_size = size_remaining_in_file;
   }
-  void* read_kbuffer = kmalloc(size_to_read);
+  void* read_kbuffer = kmalloc(read_size);
 
   ReadFileContext* arg = new ReadFileContext();
   arg->proc = proc::GetCurrentProc();
   arg->blocked_queue.BlockCurrentProcNoNesting();
   arg->read_kbuffer = read_kbuffer;
   arg->size_writeback = size_writeback;
-  arg->size_to_read = size_to_read;
+  arg->read_size = read_size;
   arg->dest_buffer = dest_buffer;
-  if (file_->Read(read_kbuffer, size_to_read, ReadFileCallback, arg)) {
+  if (file_->Read(read_kbuffer, read_size, ReadFileCallback, arg)) {
     printk("DiskFile::Read file_->Read() failed!\n");
   }
 }

@@ -12,7 +12,7 @@ class File {
  public:
   File(Inode* inode);
 
-  typedef void (*FileRdWrCallback)(void*);
+  typedef void (*FileRdWrCallback)(bool, void*);
   int Read(void* dest,
            uint64_t length,
            FileRdWrCallback callback,

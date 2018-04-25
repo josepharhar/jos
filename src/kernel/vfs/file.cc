@@ -40,7 +40,7 @@ void File::ReadReadCluster(void* void_arg) {
                                                     ReadReadCluster, arg);
   } else {
     arg->file->offset_ += arg->length;
-    arg->callback(arg->callback_arg);
+    arg->callback(true, arg->callback_arg);
     kfree(arg->buffer);
     delete arg;
   }
@@ -51,7 +51,7 @@ int File::Read(void* dest,
                FileRdWrCallback callback,
                void* callback_arg) {
   if (offset_ + length > inode_->GetSize()) {
-    callback(callback_arg);
+    callback(false, callback_arg);
     return 1;
   }
 
@@ -76,7 +76,7 @@ int File::Read(void* dest,
     inode_->GetSuperblock()->ReadCluster(arg->cluster, arg->buffer,
                                          ReadReadCluster, arg);
   } else {
-    callback(callback_arg);
+    callback(false, callback_arg);
   }
   return 0;
 }
