@@ -251,8 +251,31 @@ uint64_t CopyPageTable(uint64_t cr3) {
   return (uint64_t)CopyPageTableLevel((void*)cr3, 4);
 }
 
+static void DeletePageTableLevel(uint64_t table_void, int level) {
+  PageTableEntry* table = (PageTableEntry*)table_void;
+  for (int i = 0; i < PAGE_SIZE_BYTES / sizeof(PageTableEntry); i++) {
+    if (level == 4 && i < P4_USERSPACE_START) {
+      // dont delete inner stuff, its the same for the kernel
+      continue;
+    }
+
+    if (!table[i].GetAddress()) {
+      // this page table entry doesn't point to anything.
+      continue;
+    }
+
+    uint64_t address = table[i].GetAddress();
+    if (level > 1) {
+      DeletePageTableLevel(address, level - 1);
+    }
+    FrameFree(address);
+  }
+}
+
 void DeletePageTable(uint64_t cr3) {
-  // TODO
+  DeletePageTableLevel(cr3, 4);
+  // TODO why does this cause a machine reset??
+  //FrameFree(cr3);
 }
 
 // points to next free page in kernel heap

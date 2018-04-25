@@ -14,6 +14,7 @@
 #include "ref_counted.h"
 #include "jarray.h"
 #include "irq.h"
+#include "page.h"
 
 #define INTERRUPT_ENABLE_BIT (1 << 9)
 
@@ -387,8 +388,13 @@ static void HandleSyscallExit(uint64_t syscall_number,
     TryFinishWaiting(proc_to_delete->parent);
   }
 
+  // free all process memory, keep the proc context as a zombie though.
+  page::DeletePageTable(proc_to_delete->cr3);
+
   current_proc = proc_list->GetPreviousValue(current_proc);
   proc_list->RemoveValue(proc_to_delete);
+
+  // TODO do these things when freeing the zombie in TryFinishWaiting()?
   // TODO free page table
   // TODO free fd resources
   // kfree(proc_to_delete);

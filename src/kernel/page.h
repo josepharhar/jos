@@ -17,6 +17,7 @@
 namespace page {
 
 uint64_t CopyPageTable(uint64_t cr3);
+void DeletePageTable(uint64_t cr3);
 
 enum GetPhysicalAddressRequestType {
   // DEMAND_ALLOCATION = 1,  // demand paging, address is valid

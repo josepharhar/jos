@@ -117,7 +117,7 @@ void* FrameAllocate() {
   // all regions here are REGION_MAX_SIZE_BYTES long
   uint64_t new_region_end = new_region_start + REGION_MAX_SIZE_BYTES;
   InitializeFrameRegion(new_region_start, new_region_end);
-  printk("initialized new frame region\n"); // TODO delet this
+  //printk("initialized new frame region\n");
 
   // return the first frame of the new region
   uint64_t* return_frame = (uint64_t*) new_region_start;
