@@ -231,6 +231,7 @@ build/irq_handlers_generate: src/irq_handlers_generate.c
 
 .PHONY: test
 test: $(TEST_PASSED_FILES)
+	echo all tests PASSED
 
 # TODO make this depend on all headers in all source dirs?
 .PRECIOUS: $(TEST_BUILD_DIR)/%.o
