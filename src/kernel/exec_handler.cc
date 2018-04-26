@@ -39,10 +39,18 @@ static void ReadFileCallback(bool success, void* void_arg) {
 
   ELFInfo elf_info = ELFGetInfo(arg->file_data, arg->file->GetSize());
   if (elf_info.success) {
-    proc::ExecProc(arg->proc, elf_info, arg->file_data, arg->params->argv);
-
-    bool change_cr3 = arg->proc->cr3 != Getcr3();
     uint64_t old_cr3 = Getcr3();
+    bool change_cr3 = arg->proc->cr3 != old_cr3;
+    if (change_cr3) {
+      Setcr3(arg->proc->cr3);
+    }
+    char** argv = arg->params->argv;
+    if (change_cr3) {
+      Setcr3(old_cr3);
+    }
+
+    proc::ExecProc(arg->proc, elf_info, arg->file_data, argv);
+
     if (change_cr3) {
       Setcr3(arg->proc->cr3);
     }

@@ -402,6 +402,11 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
   uint64_t cr3 = Getcr3();
   if (proc::IsRunning() && proc::GetCurrentProc()->cr3 != cr3) {
     printk("HandlePageFault() current proc's cr3 doesn't match actual cr3\n");
+    printk("  faulting_address: %p\n", faulting_address);
+    printk("  halting...\n");
+    int one = 1;
+    while (one);
+    return;
   }
 
   uint64_t physical_address = NULL_FRAME;
@@ -432,7 +437,9 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
              proc::GetCurrentProc()->rbp);
     }
     printk("  halting\n");
-    HALT_LOOP();
+    int one = 1;
+    while (one);
+    return;
   }
 
   if (!IsAddressValid(physical_address)) {

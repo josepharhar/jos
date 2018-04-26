@@ -50,7 +50,7 @@ int main() {
           strcpy(arg_string, arg.c_str());
           argv[i] = arg_string;
         }
-        argv[args.Size() + 1] = 0;
+        argv[args.Size()] = 0;
         stdj::string prog_filepath = args.Get(0);
         execv(prog_filepath.c_str(), argv);
         
