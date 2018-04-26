@@ -29,4 +29,26 @@ struct SyscallWaitParams {
   int pid_writeback;
 };
 
+struct SyscallOpendirParams {
+  const char* filepath;
+  uint64_t id_writeback;
+  bool success_writeback;
+};
+struct SyscallReaddirParams {
+  uint64_t id;
+  char filename_writeback[256];
+  bool success_writeback;
+  bool end_of_files_writeback;
+};
+struct SyscallClosedirParams {
+  uint64_t id;
+  int status_writeback;
+};
+
+struct SyscallOpenParams {
+  const char* filepath;
+  int flags;
+  int fd_writeback;
+};
+
 #endif  // SHARED_SYSCALL_PARAMS_H_

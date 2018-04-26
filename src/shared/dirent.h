@@ -12,22 +12,6 @@ struct DIR {
   stdj::Array<dirent*> ents;
 };
 
-struct SyscallOpendirParams {
-  const char* filepath;
-  uint64_t id_writeback;
-  bool success_writeback;
-};
-struct SyscallReaddirParams {
-  uint64_t id;
-  char filename_writeback[256];
-  bool success_writeback;
-  bool end_of_files_writeback;
-};
-struct SyscallClosedirParams {
-  uint64_t id;
-  int status_writeback;
-};
-
 DIR* opendir(const char* name);
 dirent* readdir(DIR* dir);
 int closedir(DIR* dir);
