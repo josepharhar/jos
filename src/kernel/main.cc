@@ -31,6 +31,7 @@
 #include "kernel/vfs/globals.h"
 #include "wait_handler.h"
 #include "fcntl_handler.h"
+#include "pci.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -128,6 +129,8 @@ void KernelMain() {
   InitExec(root_directory);*/
 
   ipc::Init();
+
+  InitPci();
 
   proc::CreateKthread(ProcInit, 0);
 
