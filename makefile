@@ -105,7 +105,7 @@ run: os.img
 	#qemu-system-x86_64 -serial stdio -drive format=raw,file=os.img -s
 
 #os.img: image/boot/kernel.bin image/boot/grub/grub.cfg image/user/init
-os.img: image/boot/kernel.bin image/boot/grub/grub.cfg $(IMAGE_USER_EXES)
+os.img: image/boot/kernel.bin image/boot/grub/grub.cfg $(IMAGE_USER_EXES) image/*
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
