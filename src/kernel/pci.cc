@@ -2,89 +2,82 @@
 
 #include "asm.h"
 #include "printk.h"
+#include "jarray.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
 
-/*struct Config {
-  uint32_t enable : 1;
-  uint32_t reserved : 7;
-  uint32_t bus_number : 8;
-  uint32_t device_number : 5;
+#define VENDOR_INTEL 0x8086
+#define DEVICE_E1000 0x100E
+
+// TODO why do i have to reverse the order of the fields?
+struct ConfigCommand {
+  uint32_t register_number : 8;  // bottom two bits must be zero
   uint32_t function_number : 3;
-  uint32_t register_number : 6;
-  uint32_t zero : 2;
-} __attribute__((packed));*/
+  uint32_t device_number : 5;
+  uint32_t bus_number : 8;
+  uint32_t reserved : 7;  // used in pci-express?
+  uint32_t enable : 1;    // determines when accesses to CONFIG_DATA should be
+                          // translated to configuration cycles
+} __attribute__((packed));
+static_assert(sizeof(ConfigCommand) == sizeof(uint32_t),
+              "bad ConfigCommand size");
 
-uint16_t pciConfigReadWord(uint8_t bus,
-                           uint8_t device,
-                           uint8_t func,
-                           uint8_t offset) {
-  uint32_t address;
-  uint32_t lbus = (uint32_t)bus;
-  uint32_t ldevice = (uint32_t)device;
-  uint32_t lfunc = (uint32_t)func;
+struct DeviceInfo {
+  uint16_t bus;  // uint16_t instead of uint8_t for 256 loop hack
+  uint8_t device;
+  uint16_t vendor_id;
+  uint16_t device_id;
+};
 
-  /* create configuration address as per Figure 1 */
-  address = (uint32_t)((lbus << 16) | (ldevice << 11) | (lfunc << 8) |
-                       (offset & 0xfc) | ((uint32_t)0x80000000));
+uint32_t ReadConfig(uint8_t bus,
+                    uint8_t device,
+                    uint8_t function,
+                    uint8_t offset) {
+  uint32_t address = 0;
+  ConfigCommand* cmd = (ConfigCommand*)&address;
+  cmd->enable = 1;
+  cmd->bus_number = bus;
+  cmd->device_number = device;
+  cmd->function_number = function;
+  cmd->register_number = offset & 0xFC;
 
-  /* write out the address */
   outl(0xCF8, address);
-  /* read in the data */
+  return inl(0xCFC);
+}
+
+uint16_t ReadConfig16(uint8_t bus,
+                      uint8_t device,
+                      uint8_t function,
+                      uint8_t offset) {
+  uint32_t full = ReadConfig(bus, device, function, offset);
   /* (offset & 2) * 8) = 0 will choose the first word of the 32 bits register */
-  return (uint16_t)((inl(0xCFC) >> ((offset & 2) * 8)) & 0xffff);
+  return (uint16_t)(full >> ((offset & 2) * 8)) & 0xFFFF;
 }
 
-uint16_t pciCheckVendor(uint8_t bus, uint8_t device) {
-  uint16_t vendor_id, device_id;
-  /* try and read the first configuration register. Since there are no */
-  /* vendors that == 0xFFFF, it must be a non-existent device. */
-  vendor_id = pciConfigReadWord(bus, device, 0, 0);
-  if (vendor_id != 0xFFFF) {
-    device_id = pciConfigReadWord(bus, device, 0, 2);
-    printk("bus: 0x%X, device: 0x%X, vendor_id: 0x%X, device_id: 0x%X\n", bus,
-           device, vendor_id, device_id);
-  }
-  return vendor_id;
-}
-
-/*void checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
-  printk("checkFunction bus: %d, device: %d, function: %d\n", bus, device,
-         function);
-}
-void checkDevice(uint8_t bus, uint8_t device) {
-  uint8_t function = 0;
-
-  uint16_t vendorID = pciCheckVendor(bus, device, function);
-  if (vendorID == 0xFFFF) {
-    return;  // Device doesn't exist
-  }
-  checkFunction(bus, device, function);
-  headerType = getHeaderType(bus, device, function);
-  if ((headerType & 0x80) != 0) {
-    // It is a multi-function device, so check remaining functions
-    for (function = 1; function < 8; function++) {
-      if (pciCheckVendor(bus, device, function) != 0xFFFF) {
-        checkFunction(bus, device, function);
+stdj::Array<DeviceInfo> GetDeviceInfo() {
+  stdj::Array<DeviceInfo> devices;
+  DeviceInfo device;
+  for (device.bus = 0; device.bus < 256; device.bus++) {
+    for (device.device = 0; device.device < 32; device.device++) {
+      device.vendor_id = ReadConfig16((uint8_t)device.bus, device.device, 0, 0);
+      if (device.vendor_id != 0xFFFF) {
+        device.device_id =
+            ReadConfig16((uint8_t)device.bus, device.device, 0, 2);
+        devices.Add(device);
       }
     }
   }
-}*/
-
-void checkAllBuses() {
-  uint16_t bus;
-  uint8_t device;
-
-  for (bus = 0; bus < 256; bus++) {
-    for (device = 0; device < 32; device++) {
-      // checkDevice(bus, device);
-      pciCheckVendor((uint8_t)bus, device);
-    }
-  }
+  return devices;
 }
 
 void InitPci() {
-  printk("calling checkAllBuses()\n");
-  checkAllBuses();
+  printk("InitPci()\n");
+  stdj::Array<DeviceInfo> devices = GetDeviceInfo();
+  for (int i = 0; i < devices.Size(); i++) {
+    DeviceInfo device = devices.Get(i);
+    printk("bus: 0x%X, device: 0x%X, vendor_id: 0x%X, device_id: 0x%X\n",
+           device.bus, device.device, device.vendor_id, device.device_id);
+  }
+  //printk("bus 0 device 0 32: %p\n", ReadConfig(0, 0, 0, 0));
 }
