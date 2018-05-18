@@ -67,7 +67,6 @@ uint32_t ReadConfig(uint8_t bus,
   outl(0xCF8, address);
   return inl(0xCFC);
 }
-
 uint16_t ReadConfig16(uint8_t bus,
                       uint8_t device,
                       uint8_t function,
@@ -79,7 +78,6 @@ uint16_t ReadConfig16(uint8_t bus,
     return (uint16_t)(full >> 16);
   }
 }
-
 uint8_t ReadConfig8(uint8_t bus,
                     uint8_t device,
                     uint8_t function,
@@ -90,6 +88,20 @@ uint8_t ReadConfig8(uint8_t bus,
   } else {
     return (uint8_t)(full >> 8);
   }
+}
+
+void WriteConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t new_value) {
+  uint32_t address = 0;
+  ConfigCommand* cmd = (ConfigCommand*)&address;
+  cmd->enable = 1;
+  cmd->bus_number = bus;
+  cmd->device_number = device;
+  cmd->function_number = function;
+  cmd->register_number = offset & 0xFC;
+
+  outl(0xCF8, address);
+  //uint32_t old_value = inl(0xCFC);
+  outl(0xCFC, new_value);
 }
 
 stdj::Array<DeviceInfo> GetDeviceInfo() {
@@ -139,13 +151,13 @@ void InitPci() {
       printk("  interrupt pin: 0x%02X, interrupt line: 0x%02X\n",
              ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN),
              ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE));
-      for (int j = 0; j < 0x18; j += 0x04) {
+      /*for (int j = 0; j < 0x18; j += 0x04) {
         if (j == 0x38 || j == 0x34 || j == 0x30 || j == 0x28) {
           break;
         }
         printk("[0x%02X] 0x%08X\n", j,
                ReadConfig(device.bus, device.device, 0, j));
-      }
+      }*/
     }
   }
   // printk("bus 0 device 0 32: %p\n", ReadConfig(0, 0, 0, 0));
