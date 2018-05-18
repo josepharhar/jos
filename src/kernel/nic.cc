@@ -343,8 +343,11 @@ void E1000::rxinit() {
   // In your case you should handle virtual and physical addresses as the
   // addresses passed to the NIC should be physical ones
 
-  ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
-      sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16));
+  /*ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
+      sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16));*/
+  // 512 + 16 bytes, less than one frame (4096)!
+  int num_bytes = sizeof(e1000_rx_dexc) * E1000_NUM_RX_DESC + 16;
+  ptr = (uint8_t*)FrameAllocate();
 
   descs = (struct e1000_rx_desc*)ptr;
   for (int i = 0; i < E1000_NUM_RX_DESC; i++) {
@@ -377,8 +380,9 @@ void E1000::txinit() {
   // address.
   // In your case you should handle virtual and physical addresses as the
   // addresses passed to the NIC should be physical ones
-  ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
-      sizeof(struct e1000_tx_desc) * E1000_NUM_TX_DESC + 16));
+  /*ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
+      sizeof(struct e1000_tx_desc) * E1000_NUM_TX_DESC + 16));*/
+  ptr = (uint8_t*)FrameAllocate();
 
   descs = (struct e1000_tx_desc*)ptr;
   for (int i = 0; i < E1000_NUM_TX_DESC; i++) {
@@ -417,8 +421,9 @@ void E1000::enableInterrupt() {
   readCommand(0xc0);
 }
 
-E1000::E1000(PCIConfigHeader* p_pciConfigHeader)
-    : NetworkDriver(p_pciConfigHeader) {
+/*E1000::E1000(PCIConfigHeader* p_pciConfigHeader)
+    : NetworkDriver(p_pciConfigHeader) {*/
+E1000::E1000(uint64_t interrupt_number) : interrupt_number_(interrupt_number) {
   // Get BAR0 type, io_base address and MMIO base address
   bar_type = pciConfigHeader->getPCIBarType(0);
   io_base = pciConfigHeader->getPCIBar(PCI_BAR_IO) & ~1;
@@ -432,6 +437,11 @@ E1000::E1000(PCIConfigHeader* p_pciConfigHeader)
   eerprom_exists = false;
 }
 
+static void GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
+  E1000* instance = (E1000*)arg;
+  instance->HandleInterrupt();
+}
+
 bool E1000::start() {
   detectEEProm();
   if (!readMACAddress())
@@ -441,35 +451,38 @@ bool E1000::start() {
 
   for (int i = 0; i < 0x80; i++)
     writeCommand(0x5200 + i * 4, 0);
-  if (interruptManager->registerInterrupt(IRQ0 + pciConfigHeader->getIntLine(),
-                                          this)) {
-    enableInterrupt();
-    rxinit();
-    txinit();
-    video.putString("E1000 card started\n", COLOR_RED, COLOR_WHITE);
-    return true;
-  } else
-    return false;
+  /*if (interruptManager->registerInterrupt(IRQ0 +
+     pciConfigHeader->getIntLine(),
+                                          this)) {*/
+  IRQSetHandler(GlobalInterruptHandler, interrupt_number_, this);
+  enableInterrupt();
+  rxinit();
+  txinit();
+  printk("E1000 driver started\n");
+  return true;
+  /*} else
+    return false;*/
 }
 
-void E1000::fire(InterruptContext* p_interruptContext) {
-  if (p_interruptContext->getInteruptNumber() ==
-      pciConfigHeader->getIntLine() + IRQ0) {
-    /* This might be needed here if your handler doesn't clear interrupts from
-       each device and must be done before EOI if using the PIC.
-       Without this, the card will spam interrupts as the int-line will stay
-       high. */
-    writeCommand(REG_IMASK, 0x1);
+// void E1000::fire(InterruptContext* p_interruptContext) {
+void E1000::HandleInterrupt() {
+  /*if (p_interruptContext->getInteruptNumber() ==
+      pciConfigHeader->getIntLine() + IRQ0) {*/
+  /* This might be needed here if your handler doesn't clear interrupts from
+     each device and must be done before EOI if using the PIC.
+     Without this, the card will spam interrupts as the int-line will stay
+     high. */
+  writeCommand(REG_IMASK, 0x1);
 
-    uint32_t status = readCommand(0xc0);
-    if (status & 0x04) {
-      startLink();
-    } else if (status & 0x10) {
-      // good threshold
-    } else if (status & 0x80) {
-      handleReceive();
-    }
+  uint32_t status = readCommand(0xc0);
+  if (status & 0x04) {
+    startLink();
+  } else if (status & 0x10) {
+    // good threshold
+  } else if (status & 0x80) {
+    handleReceive();
   }
+  //}
 }
 
 void E1000::handleReceive() {

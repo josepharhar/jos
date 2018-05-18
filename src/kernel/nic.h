@@ -22,17 +22,12 @@ class PCIConfigHeader {
 
 class E1000 {
  public:
-  E1000(PCIConfigHeader* _pciConfigHeader);  // Constructor. takes as a
-                                             // parameter a pointer to an object
-                                             // that encapsulate all he PCI
-                                             // configuration data of the device
-  void start();  // perform initialization tasks and starts the driver
-  void fire(InterruptContext* p_interruptContext);  // This method should be
-                                                    // called by the interrupt
-                                                    // handler
-  uint8_t* getMacAddress();                         // Returns the MAC address
+  E1000(uint64_t interrupt_number);
+
+  void start();
+  void HandleInterrupt();
+  uint8_t* getMacAddress();
   int sendPacket(const void* p_data, uint16_t p_len);  // Send a packet
-  ~E1000();                                            // Default Destructor
 
  private:
   uint8_t bar_type;     // Type of BOR0
@@ -46,6 +41,8 @@ class E1000 {
       tx_descs[E1000_NUM_TX_DESC];  // Transmit Descriptor Buffers
   uint16_t rx_cur;                  // Current Receive Descriptor Buffer
   uint16_t tx_cur;                  // Current Transmit Descriptor Buffer
+
+  uint64_t interrupt_number_;
 
   // Send Commands and read results From NICs either using MMIO or IO Ports
   void writeCommand(uint16_t p_address, uint32_t p_value);
