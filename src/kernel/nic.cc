@@ -1,5 +1,9 @@
 #include "nic.h"
 
+#include "frame.h"
+#include "printk.h"
+#include "irq.h"
+
 #define INTEL_VEND 0x8086  // Vendor ID for Intel
 #define E1000_DEV \
   0x100E  // Device ID for the e1000 Qemu, Bochs, and VirtualBox emmulated NICs
@@ -90,9 +94,6 @@
 #define TSTA_EC (1 << 1)  // Excess Collisions
 #define TSTA_LC (1 << 2)  // Late Collision
 #define LSTA_TU (1 << 3)  // Transmit Underrun
-
-#define E1000_NUM_RX_DESC 32
-#define E1000_NUM_TX_DESC 8
 
 struct e1000_rx_desc {
   volatile uint64_t addr;
@@ -346,13 +347,28 @@ void E1000::rxinit() {
   /*ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
       sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16));*/
   // 512 + 16 bytes, less than one frame (4096)!
-  int num_bytes = sizeof(e1000_rx_dexc) * E1000_NUM_RX_DESC + 16;
+  int num_bytes = sizeof(e1000_rx_desc) * E1000_NUM_RX_DESC + 16;
   ptr = (uint8_t*)FrameAllocate();
+
+  // hope to god that first FrameAllocate() calls in kernel initialization are
+  // contiguous?
+  uint64_t frame_one = (uint64_t)FrameAllocate();
+  uint64_t frame_two = (uint64_t)FrameAllocate();
+  uint64_t frame_three = (uint64_t)FrameAllocate();
+  if (!(frame_two == frame_one + (4096 / sizeof(uint64_t)) &&
+        frame_three == frame_two + (4096 / sizeof(uint64_t)))) {
+    printk("E1000::rxinit FRAMES ARE NOT CONTIGUOUS!!!\n");
+    printk("  frame_one: %p\n", frame_one);
+    printk("  frame_two: %p\n", frame_two);
+    printk("  frame_three: %p\n", frame_three);
+  }
 
   descs = (struct e1000_rx_desc*)ptr;
   for (int i = 0; i < E1000_NUM_RX_DESC; i++) {
     rx_descs[i] = (struct e1000_rx_desc*)((uint8_t*)descs + i * 16);
-    rx_descs[i]->addr = (uint64_t)(uint8_t*)(kmalloc_ptr->khmalloc(8192 + 16));
+    // rx_descs[i]->addr = (uint64_t)(uint8_t*)(kmalloc_ptr->khmalloc(8192 +
+    // 16));
+    rx_descs[i]->addr = frame_one;
     rx_descs[i]->status = 0;
   }
 
@@ -423,17 +439,26 @@ void E1000::enableInterrupt() {
 
 /*E1000::E1000(PCIConfigHeader* p_pciConfigHeader)
     : NetworkDriver(p_pciConfigHeader) {*/
-E1000::E1000(uint64_t interrupt_number) : interrupt_number_(interrupt_number) {
+E1000::E1000(uint64_t interrupt_number, uint32_t bar)
+    : interrupt_number_(interrupt_number) {
+  io_base = 0;
+  mem_base = 0;
+  if (bar & 1) {
+    // port based io
+    bar_type = 1;
+    io_base = bar & 0xFFFFFFFC;
+  } else {
+    // memory mapped io
+    bar_type = 0;
+    mem_base = bar & 0xFFFFFFF0;
+  }
   // Get BAR0 type, io_base address and MMIO base address
-  bar_type = pciConfigHeader->getPCIBarType(0);
+  /*bar_type = pciConfigHeader->getPCIBarType(0);
   io_base = pciConfigHeader->getPCIBar(PCI_BAR_IO) & ~1;
-  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;
-
-  // Off course you will need here to map the memory address into you page
-  // tables and use corresponding virtual addresses
+  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;*/
 
   // Enable bus mastering
-  pciConfigHeader->enablePCIBusMastering();
+  //pciConfigHeader->enablePCIBusMastering();
   eerprom_exists = false;
 }
 
@@ -446,8 +471,10 @@ bool E1000::start() {
   detectEEProm();
   if (!readMACAddress())
     return false;
-  printMac();
-  startLink();
+  printk("E1000::start() got mac: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0],
+         mac[1], mac[2], mac[3], mac[4], mac[5]);
+  // printMac();
+  // startLink();
 
   for (int i = 0; i < 0x80; i++)
     writeCommand(0x5200 + i * 4, 0);
@@ -476,7 +503,9 @@ void E1000::HandleInterrupt() {
 
   uint32_t status = readCommand(0xc0);
   if (status & 0x04) {
-    startLink();
+    // TODO reset network stack?
+    printk("TODO reset network stack?\n");
+    // startLink();
   } else if (status & 0x10) {
     // good threshold
   } else if (status & 0x80) {

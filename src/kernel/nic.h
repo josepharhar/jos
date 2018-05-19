@@ -3,28 +3,31 @@
 
 #include "stdint.h"
 
-class PCIConfigHeader {
+/*class PCIConfigHeader {
  public:
-  /*bar_type = pciConfigHeader->getPCIBarType(0);
+  bar_type = pciConfigHeader->getPCIBarType(0);
   io_base = pciConfigHeader->getPCIBar(PCI_BAR_IO) & ~1;
-  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;*/
+  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;
   uint8_t getPCIBarType(int);
   uint16_t getPCIBar(int);
   uint64_t getPCIBar(int);
 
   void enablePCIBusMastering();
 
-  /*if (interruptManager->registerInterrupt(IRQ0 +
+  if (interruptManager->registerInterrupt(IRQ0 +
      pciConfigHeader->getIntLine(),
-                                          this)) {*/
+                                          this)) {
   int getIntLine();
-};
+};*/
+
+#define E1000_NUM_RX_DESC 32
+#define E1000_NUM_TX_DESC 8
 
 class E1000 {
  public:
-  E1000(uint64_t interrupt_number);
+  E1000(uint64_t interrupt_number, uint32_t bar);
 
-  void start();
+  bool start();
   void HandleInterrupt();
   uint8_t* getMacAddress();
   int sendPacket(const void* p_data, uint16_t p_len);  // Send a packet
@@ -53,7 +56,7 @@ class E1000 {
   uint32_t eepromRead(
       uint8_t addr);       // Read 4 bytes from a specific EEProm Address
   bool readMACAddress();   // Read MAC Address
-  void startLink();        // Start up the network
+  //void startLink();        // Start up the network
   void rxinit();           // Initialize receive descriptors an buffers
   void txinit();           // Initialize transmit descriptors an buffers
   void enableInterrupt();  // Enable Interrupts
