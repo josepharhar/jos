@@ -289,6 +289,9 @@ void c_interrupt_handler_2param(uint64_t interrupt_number, uint64_t error_code) 
 }
 
 void c_interrupt_handler(uint64_t interrupt_number) {
+  if (interrupt_number != PIC1_OFFSET) {
+    printk("c_interrupt_handler interrupt_number: 0x%X\n", interrupt_number);
+  }
   PreInterrupt(INTERRUPT_CONTEXT_ONE_PARAM, interrupt_number);
 
   // TODO this is hacky, properly register page fault instead
@@ -456,6 +459,9 @@ void IRQInit() {
   IRQClearMask(4); // enable COM1 (serial) interrupts
   //IRQClearMask(0); // enables PIC timer interrupts
   //printk("pic mask: %X\n", IRQGetMask());
+
+  // network card interrupts??
+  IRQClearMask(0xB);
 
   // set up interrupt handler table
   for (int i = 0; i < NUM_IRQ_HANDLERS; i++) {

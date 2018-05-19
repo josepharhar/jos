@@ -469,8 +469,10 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
       asm volatile("hlt");
     }
   }
-  printk("virt %p -> phys %p, virtp4: %d\n", faulting_address, physical_address,
-         virtual_address.p4_index);
+  if (faulting_address != physical_address) {
+    printk("virt %p -> phys %p, virtp4: %d\n", faulting_address,
+           physical_address, virtual_address.p4_index);
+  }
 }
 
 // TODO move this to security.cc

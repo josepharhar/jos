@@ -180,3 +180,22 @@ void* FrameAllocateSafe() {
   }
   return pointer;
 }
+
+// TODO make this better
+void* FrameAllocateContiguous(uint64_t num_bytes) {
+  uint64_t num_frames = (num_bytes + 4095) / 4096;
+  if (!num_frames) {
+    return NULL_FRAME_PTR;
+  }
+
+  void* first_frame = FrameAllocateSafe();
+  uint64_t last_frame = (uint64_t)first_frame;
+  for (int i = 0; i < num_frames - 1; i++) {
+    uint64_t new_frame = (uint64_t)FrameAllocateSafe();
+    if (new_frame != last_frame + 4096) {
+      printk("FrameAllocateContiguous new_frame: %p, last_frame: %p\n");
+    }
+    last_frame = new_frame;
+  }
+  return first_frame;
+}

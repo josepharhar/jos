@@ -6,6 +6,7 @@
 #include "nic.h"
 #include "packets.h"
 #include "kmalloc.h"
+#include "irq.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
@@ -34,6 +35,19 @@
 #define OFFSET_BAR5 0x24            // 4 bytes
 #define OFFSET_INTERRUPT_PIN 0x3E   // 1 byte
 #define OFFSET_INTERRUPT_LINE 0x3F  // 1 byte
+
+// bits for command register
+#define COMMAND_PIO 1
+#define COMMAND_MMIO (1 << 1)
+#define COMMAND_BUS_MASTER (1 << 2)
+#define COMMAND_SPECIAL_CYCLES (1 << 3)
+#define COMMAND_WRITE_AND_INVALIDATE (1 << 4)
+#define COMMAND_VGA_SNOOP (1 << 5)
+#define COMMAND_PARITY_ERROR (1 << 6)
+#define COMMAND_RESERVED (1 << 7)
+#define COMMAND_SERR (1 << 8)
+#define COMMAND_FAST_BACK (1 << 9)
+#define COMMAND_INTERRUPT_DISABLE (1 << 10)
 
 // TODO why do i have to reverse the order of the fields?
 struct ConfigCommand {
@@ -188,13 +202,14 @@ static void PrintDeviceInfo(DeviceInfo device) {
 }
 
 static void StartDriver(DeviceInfo device) {
-  uint64_t interrupt_number =
-      ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
+  uint8_t interrupt_line = ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
+  uint64_t interrupt_number = (((uint64_t)interrupt_line) & 0xFF) + PIC1_OFFSET;
+      ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE) +
+      PIC1_OFFSET;
+  printk("passing interrupt_number: 0x%X\n", interrupt_number);
   uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
   uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
-  printk("doing the driver\n");
   E1000* driver = new E1000(interrupt_number, bar0);
-  printk("constructed driver, calling start()\n");
   if (!driver->start()) {
     printk("driver->start() failed\n");
     return;
@@ -259,36 +274,31 @@ void InitPci() {
       PrintDeviceInfo(device);
       uint16_t command =
           ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND);
-      command = command | (1 << 2);
-      // command = command | (1 << 1);
-      // command = command | 1;
-      command = command & ~1;
-      command = command & ~(1 << 8);
+      command = command | COMMAND_BUS_MASTER;
+      command = command & ~COMMAND_PIO;
+      command = command | COMMAND_MMIO;
+      command = command & ~COMMAND_SERR;
+      command = command & ~COMMAND_INTERRUPT_DISABLE;
+      // command = command | COMMAND_INTERRUPT_DISABLE;
+      command = command | COMMAND_WRITE_AND_INVALIDATE;
+      command = command | COMMAND_SPECIAL_CYCLES;
       WriteConfig16(device.bus, device.device, 0, OFFSET_COMMAND, command);
       printk("called Write16 on command register, printing again\n");
       PrintDeviceInfo(device);
 
-      /*printk("bar0: 0x%08X\n",
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));
-      printk("writing all ones to bar0\n");
-      // WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0xFFFFFFFF);
-      WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0x000F0000);
-      printk("bar0: 0x%08X\n",
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));
-      printk("bar0: 0x%08X\n",
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));*/
-
-      /*printk("writing 0x07000000 to bar0\n");
-      WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0x07000000);
-      printk("bar0: 0x%08X\n", ReadConfig(device.bus, device.device, 0,
-      OFFSET_BAR0));*/
+      /*uint8_t interrupt_line = ReadConfig8(device.bus, device.device, 0,
+      OFFSET_INTERRUPT_LINE);
+      WriteConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE, 50);
+      //WriteConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN, 0);
+      printk("changed interrupt line, printing again\n");
+      PrintDeviceInfo(device);*/
 
       StartDriver(device);
       printk("status register: 0x%04X\n",
              ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS));
     }
   }
-  /*while (1) {
+  while (1) {
     asm volatile("hlt");
-  }*/
+  }
 }

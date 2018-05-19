@@ -289,7 +289,6 @@ bool E1000::detectEEProm() {
     else
       eerprom_exists = false;
   }
-  printk("eeprom_exists: %d\n", eerprom_exists);
   return eerprom_exists;
 }
 
@@ -333,8 +332,8 @@ bool E1000::readMACAddress() {
       return false;
     }
   }
-  printk("mac address: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2],
-         mac[3], mac[4], mac[5]);
+  /*printk("mac address: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2],
+         mac[3], mac[4], mac[5]);*/
   return true;
 }
 
@@ -354,25 +353,12 @@ void E1000::rxinit() {
   int num_bytes = sizeof(e1000_rx_desc) * E1000_NUM_RX_DESC + 16;
   ptr = (uint8_t*)FrameAllocate();
 
-  // hope to god that first FrameAllocate() calls in kernel initialization are
-  // contiguous?
-  uint64_t frame_one = (uint64_t)FrameAllocate();
-  uint64_t frame_two = (uint64_t)FrameAllocate();
-  uint64_t frame_three = (uint64_t)FrameAllocate();
-  if (!(frame_two == frame_one + (4096 / sizeof(uint64_t)) &&
-        frame_three == frame_two + (4096 / sizeof(uint64_t)))) {
-    printk("E1000::rxinit FRAMES ARE NOT CONTIGUOUS!!!\n");
-    printk("  frame_one: %p\n", frame_one);
-    printk("  frame_two: %p\n", frame_two);
-    printk("  frame_three: %p\n", frame_three);
-  }
-
   descs = (struct e1000_rx_desc*)ptr;
   for (int i = 0; i < E1000_NUM_RX_DESC; i++) {
     rx_descs[i] = (struct e1000_rx_desc*)((uint8_t*)descs + i * 16);
     // rx_descs[i]->addr = (uint64_t)(uint8_t*)(kmalloc_ptr->khmalloc(8192 +
     // 16));
-    rx_descs[i]->addr = frame_one;
+    rx_descs[i]->addr = (uint64_t)FrameAllocateContiguous(8192 + 16);
     rx_descs[i]->status = 0;
   }
 
@@ -456,7 +442,7 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
     // memory mapped io
     bar_type = 0;
     mem_base = bar & 0xFFFFFFF0;
-    printk("E1000::E1000 using mem_base: 0x%08X\n", mem_base);
+    //printk("E1000::E1000 using mem_base: 0x%08X\n", mem_base);
   }
   // Get BAR0 type, io_base address and MMIO base address
   /*bar_type = pciConfigHeader->getPCIBarType(0);
@@ -488,11 +474,11 @@ bool E1000::start() {
   /*if (interruptManager->registerInterrupt(IRQ0 +
      pciConfigHeader->getIntLine(),
                                           this)) {*/
+  printk("e1000 calling irqsethandler for interrupt number: 0x%X\n", interrupt_number_);
   IRQSetHandler(GlobalInterruptHandler, interrupt_number_, this);
   enableInterrupt();
   rxinit();
   txinit();
-  printk("E1000 driver started\n");
   return true;
   /*} else
     return false;*/
@@ -509,6 +495,7 @@ void E1000::HandleInterrupt() {
   writeCommand(REG_IMASK, 0x1);
 
   uint32_t status = readCommand(0xc0);
+  printk("E1000::HandleInterrupt status: 0x%08X\n", status);
   if (status & 0x04) {
     // TODO reset network stack?
     printk("TODO reset network stack?\n");

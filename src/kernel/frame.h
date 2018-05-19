@@ -22,4 +22,6 @@ uint64_t AlignAddressDown(uint64_t address);
 // same as FrameAllocate() but halts when space runs out
 void* FrameAllocateSafe();
 
+void* FrameAllocateContiguous(uint64_t num_bytes);
+
 #endif  // FRAME_H_
