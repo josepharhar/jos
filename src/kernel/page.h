@@ -28,6 +28,7 @@ enum GetPhysicalAddressRequestType {
   GET_P3,                  // no allocation, just get this PageTableEntry
   GET_P2,                  // no allocation, just get this PageTableEntry
   GET_P1,                  // no allocation, just get this PageTableEntry
+  FULL_ALLOCATION_KERNEL_IDENTITY,
 };
 
 // Given a virtual address, returns the physical address it is mapped to.

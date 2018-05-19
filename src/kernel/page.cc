@@ -116,6 +116,7 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
           printk("GetPhysicalAddress() null p4\n");
         }
         return NULL_FRAME;
+      case FULL_ALLOCATION_KERNEL_IDENTITY:
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p4_entry, user_accessible);
@@ -144,6 +145,7 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
           printk("GetPhysicalAddress() null p3\n");
         }
         return NULL_FRAME;
+      case FULL_ALLOCATION_KERNEL_IDENTITY:
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p3_entry, user_accessible);
@@ -172,6 +174,7 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
           printk("GetPhysicalAddress() null p2\n");
         }
         return NULL_FRAME;
+      case FULL_ALLOCATION_KERNEL_IDENTITY:
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         AllocatePageTableEntry(p2_entry, user_accessible);
@@ -200,6 +203,15 @@ uint64_t GetPhysicalAddress(uint64_t cr3,
           printk("GetPhysicalAddress() null p1\n");
         }
         return NULL_FRAME;
+      case FULL_ALLOCATION_KERNEL_IDENTITY:
+        // identity map it
+        p1_entry->present = 1;
+        p1_entry->writable = 1;
+        if (user_accessible) {
+          p1_entry->user_accessible = 1;
+        }
+        p1_entry->SetAddress((void*)address);
+        break;
       case FULL_ALLOCATION_USER:
       case FULL_ALLOCATION_KERNEL:
         uint64_t old_phys = p1_entry->GetAddress();
@@ -414,9 +426,10 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
 
   if (virtual_address.p4_index == P4_IDENTITY_MAP) {
     // identity map, physical address is virtual address!
-    // physical_address = faulting_address;
-    physical_address = GetPhysicalAddress(cr3, faulting_address,
-                                          FULL_ALLOCATION_KERNEL, debug);
+    // TODO make use of huge pages here?
+    physical_address = GetPhysicalAddress(
+        cr3, faulting_address, FULL_ALLOCATION_KERNEL_IDENTITY, debug);
+
   } else if (virtual_address.p4_index >= P4_KERNEL_HEAP &&
              virtual_address.p4_index <= P4_KERNEL_STACKS) {
     physical_address = GetPhysicalAddress(cr3, faulting_address,

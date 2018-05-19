@@ -200,7 +200,7 @@ static void StartDriver(DeviceInfo device) {
     return;
   }
   printk("driver->start() succeeded\n");
-  //printk("calling sendpacket()\n");
+  printk("calling sendpacket()\n");
 
   int size = sizeof(Ethernet) + sizeof(ARP);
   Ethernet* ethernet = (Ethernet*)kmalloc(size);
@@ -244,7 +244,7 @@ static void StartDriver(DeviceInfo device) {
   arp->target_ip[2] = 2;
   arp->target_ip[3] = 2;
 
-  //printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
+  printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
 }
 
 void InitPci() {
@@ -280,14 +280,15 @@ void InitPci() {
 
       /*printk("writing 0x07000000 to bar0\n");
       WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0x07000000);
-      printk("bar0: 0x%08X\n", ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));*/
+      printk("bar0: 0x%08X\n", ReadConfig(device.bus, device.device, 0,
+      OFFSET_BAR0));*/
 
       StartDriver(device);
       printk("status register: 0x%04X\n",
              ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS));
     }
   }
-  while (1) {
+  /*while (1) {
     asm volatile("hlt");
-  }
+  }*/
 }
