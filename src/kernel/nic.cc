@@ -463,6 +463,7 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
 }
 
 static void GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
+  printk("network GlobalInterruptHandler, interrupt_number: %p\n");
   E1000* instance = (E1000*)arg;
   instance->HandleInterrupt();
 }

@@ -3,6 +3,7 @@
 #include "asm.h"
 #include "printk.h"
 #include "jarray.h"
+#include "nic.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
@@ -90,7 +91,11 @@ uint8_t ReadConfig8(uint8_t bus,
   }
 }
 
-void WriteConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t new_value) {
+void WriteConfig(uint8_t bus,
+                 uint8_t device,
+                 uint8_t function,
+                 uint8_t offset,
+                 uint32_t new_value) {
   uint32_t address = 0;
   ConfigCommand* cmd = (ConfigCommand*)&address;
   cmd->enable = 1;
@@ -100,8 +105,40 @@ void WriteConfig(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, 
   cmd->register_number = offset & 0xFC;
 
   outl(0xCF8, address);
-  //uint32_t old_value = inl(0xCFC);
+  // uint32_t old_value = inl(0xCFC);
   outl(0xCFC, new_value);
+}
+
+void WriteConfig16(uint8_t bus,
+                   uint8_t device,
+                   uint8_t function,
+                   uint8_t offset,
+                   uint16_t new_value) {
+  uint32_t original = ReadConfig(bus, device, function, offset);
+  uint32_t new_32 = 0;
+  if (offset & 2) {
+    // take left of original, right of new
+    new_32 = (original & 0xFFFF0000) | (0x0000FFFF & (uint32_t)new_value);
+  } else {
+    new_32 =
+        (original & 0x0000FFFF) | (0xFFFF0000 & (((uint32_t)new_value) << 16));
+  }
+  WriteConfig(bus, device, function, offset, new_32);
+}
+
+void WriteConfig8(uint8_t bus,
+                  uint8_t device,
+                  uint8_t function,
+                  uint8_t offset,
+                  uint8_t new_value) {
+  uint16_t original = ReadConfig16(bus, device, function, offset);
+  uint16_t new_16 = 0;
+  if (offset & 1) {
+    new_16 = (original & 0xFF00) | (0x00FF & (uint16_t)new_value);
+  } else {
+    new_16 = (original & 0x00FF) | (0xFF00 & (((uint16_t)new_value) << 8));
+  }
+  WriteConfig16(bus, device, function, offset, new_16);
 }
 
 stdj::Array<DeviceInfo> GetDeviceInfo() {
@@ -121,6 +158,34 @@ stdj::Array<DeviceInfo> GetDeviceInfo() {
   return devices;
 }
 
+static void PrintDeviceInfo(DeviceInfo device) {
+  printk(
+      "  status: 0x%04X, command: 0x%04X, bist: 0x%02X, headertype: 0x%02X\n",
+      ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS),
+      ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND),
+      ReadConfig8(device.bus, device.device, 0, OFFSET_BIST),
+      ReadConfig8(device.bus, device.device, 0, OFFSET_HEADER_TYPE));
+  printk("  classcode: 0x%02X, subclass: 0x%02X, progIF: 0x%02X, rev: 0x%02X\n",
+         ReadConfig8(device.bus, device.device, 0, OFFSET_CLASS_CODE),
+         ReadConfig8(device.bus, device.device, 0, OFFSET_SUBCLASS),
+         ReadConfig8(device.bus, device.device, 0, OFFSET_PROG_IF),
+         ReadConfig8(device.bus, device.device, 0, OFFSET_REVISION_ID));
+  printk("  BAR0: 0x%08X, BAR1: 0x%08X, BAR2: 0x%08X\n",
+         ReadConfig(device.bus, device.device, 0, OFFSET_BAR0),
+         ReadConfig(device.bus, device.device, 0, OFFSET_BAR1),
+         ReadConfig(device.bus, device.device, 0, OFFSET_BAR2));
+  printk("  interrupt pin: 0x%02X, interrupt line: 0x%02X\n",
+         ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN),
+         ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE));
+  /*for (int j = 0; j < 0x18; j += 0x04) {
+    if (j == 0x38 || j == 0x34 || j == 0x30 || j == 0x28) {
+      break;
+    }
+    printk("[0x%02X] 0x%08X\n", j,
+           ReadConfig(device.bus, device.device, 0, j));
+  }*/
+}
+
 void InitPci() {
   printk("InitPci()\n");
   stdj::Array<DeviceInfo> devices = GetDeviceInfo();
@@ -130,35 +195,23 @@ void InitPci() {
            device.bus, device.device, device.vendor_id, device.device_id);*/
     if (device.vendor_id == VENDOR_INTEL && device.device_id == DEVICE_E1000) {
       printk("found e1000 in bus %d, device %d\n", device.bus, device.device);
-      printk(
-          "  status: 0x%04X, command: 0x%04X, bist: 0x%02X, headertype: "
-          "0x%02X\n",
-          ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS),
-          ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND),
-          ReadConfig8(device.bus, device.device, 0, OFFSET_BIST),
-          ReadConfig8(device.bus, device.device, 0, OFFSET_HEADER_TYPE));
-      printk(
-          "  classcode: 0x%02X, subclass: 0x%02X, progIF: 0x%02X, rev: "
-          "0x%02X\n",
-          ReadConfig8(device.bus, device.device, 0, OFFSET_CLASS_CODE),
-          ReadConfig8(device.bus, device.device, 0, OFFSET_SUBCLASS),
-          ReadConfig8(device.bus, device.device, 0, OFFSET_PROG_IF),
-          ReadConfig8(device.bus, device.device, 0, OFFSET_REVISION_ID));
-      printk("  BAR0: 0x%08X, BAR1: 0x%08X, BAR2: 0x%08X\n",
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0),
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR1),
-             ReadConfig(device.bus, device.device, 0, OFFSET_BAR2));
-      printk("  interrupt pin: 0x%02X, interrupt line: 0x%02X\n",
-             ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN),
-             ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE));
-      /*for (int j = 0; j < 0x18; j += 0x04) {
-        if (j == 0x38 || j == 0x34 || j == 0x30 || j == 0x28) {
-          break;
-        }
-        printk("[0x%02X] 0x%08X\n", j,
-               ReadConfig(device.bus, device.device, 0, j));
-      }*/
+      PrintDeviceInfo(device);
+      uint16_t command =
+          ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND);
+      command = command | (1 << 2);
+      WriteConfig16(device.bus, device.device, 0, OFFSET_COMMAND, command);
+      printk("called Write16 on command register, printing again\n");
+      PrintDeviceInfo(device);
+
+      uint64_t interrupt_number =
+          ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
+      uint32_t bar = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
+
+      printk("doing the driver\n");
+      E1000* driver = new E1000(interrupt_number, bar);
+      printk("constructed driver, calling start()\n");
+      driver->start();
+      printk("driver->start() returned\n");
     }
   }
-  // printk("bus 0 device 0 32: %p\n", ReadConfig(0, 0, 0, 0));
 }
