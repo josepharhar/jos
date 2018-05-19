@@ -545,3 +545,7 @@ int E1000::sendPacket(const void* p_data, uint16_t p_len) {
     ;
   return 0;
 }
+
+uint8_t* E1000::getMacAddress() {
+  return mac;
+}

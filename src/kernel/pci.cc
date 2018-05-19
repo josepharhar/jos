@@ -4,6 +4,8 @@
 #include "printk.h"
 #include "jarray.h"
 #include "nic.h"
+#include "packets.h"
+#include "kmalloc.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
@@ -205,13 +207,59 @@ void InitPci() {
 
       uint64_t interrupt_number =
           ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
-      uint32_t bar = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
+      uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
+      uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
 
       printk("doing the driver\n");
-      E1000* driver = new E1000(interrupt_number, bar);
+      E1000* driver = new E1000(interrupt_number, bar1);
       printk("constructed driver, calling start()\n");
       driver->start();
       printk("driver->start() returned\n");
+      printk("calling sendpacket()\n");
+
+      int size = sizeof(Ethernet) + sizeof(ARP);
+      Ethernet* ethernet = (Ethernet*)kmalloc(size);
+      ARP* arp = (ARP*)(ethernet + 1);
+      ethernet->mac_src[0] = driver->getMacAddress()[0];
+      ethernet->mac_src[1] = driver->getMacAddress()[1];
+      ethernet->mac_src[2] = driver->getMacAddress()[2];
+      ethernet->mac_src[3] = driver->getMacAddress()[3];
+      ethernet->mac_src[4] = driver->getMacAddress()[4];
+      ethernet->mac_src[5] = driver->getMacAddress()[5];
+      ethernet->mac_dest[0] = 0xFF;
+      ethernet->mac_dest[1] = 0xFF;
+      ethernet->mac_dest[2] = 0xFF;
+      ethernet->mac_dest[3] = 0xFF;
+      ethernet->mac_dest[4] = 0xFF;
+      ethernet->mac_dest[5] = 0xFF;
+      ethernet->SetType(ETHERTYPE_ARP);
+      arp->SetHardwareType(1);
+      arp->SetProtocol(0x0800);
+      arp->hardware_size = 6;
+      arp->protocol_size = 4;
+      arp->SetOpcode(1);
+      arp->sender_mac[0] = 0;
+      arp->sender_mac[1] = 0;
+      arp->sender_mac[2] = 0;
+      arp->sender_mac[3] = 0;
+      arp->sender_mac[4] = 0;
+      arp->sender_mac[5] = 0;
+      arp->sender_ip[0] = 10;
+      arp->sender_ip[1] = 0;
+      arp->sender_ip[2] = 2;
+      arp->sender_ip[3] = 15;
+      arp->target_mac[0] = 0;
+      arp->target_mac[1] = 0;
+      arp->target_mac[2] = 0;
+      arp->target_mac[3] = 0;
+      arp->target_mac[4] = 0;
+      arp->target_mac[5] = 0;
+      arp->target_ip[0] = 10;
+      arp->target_ip[1] = 0;
+      arp->target_ip[2] = 2;
+      arp->target_ip[3] = 2;
+
+      printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
     }
   }
 }
