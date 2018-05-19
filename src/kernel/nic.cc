@@ -289,6 +289,7 @@ bool E1000::detectEEProm() {
     else
       eerprom_exists = false;
   }
+  printk("eeprom_exists: %d\n", eerprom_exists);
   return eerprom_exists;
 }
 
@@ -328,9 +329,12 @@ bool E1000::readMACAddress() {
         mac[i] = mem_base_mac_8[i];
       }
     } else {
+      printk("readMACAddress failed\n");
       return false;
     }
   }
+  printk("mac address: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2],
+         mac[3], mac[4], mac[5]);
   return true;
 }
 
@@ -447,10 +451,12 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
     // port based io
     bar_type = 1;
     io_base = bar & 0xFFFFFFFC;
+    printk("E1000::E1000 using port io_base: 0x%08X\n", io_base);
   } else {
     // memory mapped io
     bar_type = 0;
     mem_base = bar & 0xFFFFFFF0;
+    printk("E1000::E1000 using mem_base: 0x%08X\n", mem_base);
   }
   // Get BAR0 type, io_base address and MMIO base address
   /*bar_type = pciConfigHeader->getPCIBarType(0);
@@ -458,7 +464,7 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
   mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;*/
 
   // Enable bus mastering
-  //pciConfigHeader->enablePCIBusMastering();
+  // pciConfigHeader->enablePCIBusMastering();
   eerprom_exists = false;
 }
 

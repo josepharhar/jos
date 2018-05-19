@@ -107,7 +107,6 @@ void WriteConfig(uint8_t bus,
   cmd->register_number = offset & 0xFC;
 
   outl(0xCF8, address);
-  // uint32_t old_value = inl(0xCFC);
   outl(0xCFC, new_value);
 }
 
@@ -188,6 +187,66 @@ static void PrintDeviceInfo(DeviceInfo device) {
   }*/
 }
 
+static void StartDriver(DeviceInfo device) {
+  uint64_t interrupt_number =
+      ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
+  uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
+  uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
+  printk("doing the driver\n");
+  E1000* driver = new E1000(interrupt_number, bar1);
+  printk("constructed driver, calling start()\n");
+  if (!driver->start()) {
+    printk("driver->start() failed\n");
+    return;
+  }
+  printk("driver->start() succeeded\n");
+  //printk("calling sendpacket()\n");
+
+  int size = sizeof(Ethernet) + sizeof(ARP);
+  Ethernet* ethernet = (Ethernet*)kmalloc(size);
+  ARP* arp = (ARP*)(ethernet + 1);
+  ethernet->mac_src[0] = driver->getMacAddress()[0];
+  ethernet->mac_src[1] = driver->getMacAddress()[1];
+  ethernet->mac_src[2] = driver->getMacAddress()[2];
+  ethernet->mac_src[3] = driver->getMacAddress()[3];
+  ethernet->mac_src[4] = driver->getMacAddress()[4];
+  ethernet->mac_src[5] = driver->getMacAddress()[5];
+  ethernet->mac_dest[0] = 0xFF;
+  ethernet->mac_dest[1] = 0xFF;
+  ethernet->mac_dest[2] = 0xFF;
+  ethernet->mac_dest[3] = 0xFF;
+  ethernet->mac_dest[4] = 0xFF;
+  ethernet->mac_dest[5] = 0xFF;
+  ethernet->SetType(ETHERTYPE_ARP);
+  arp->SetHardwareType(1);
+  arp->SetProtocol(0x0800);
+  arp->hardware_size = 6;
+  arp->protocol_size = 4;
+  arp->SetOpcode(1);
+  arp->sender_mac[0] = 0;
+  arp->sender_mac[1] = 0;
+  arp->sender_mac[2] = 0;
+  arp->sender_mac[3] = 0;
+  arp->sender_mac[4] = 0;
+  arp->sender_mac[5] = 0;
+  arp->sender_ip[0] = 10;
+  arp->sender_ip[1] = 0;
+  arp->sender_ip[2] = 2;
+  arp->sender_ip[3] = 15;
+  arp->target_mac[0] = 0;
+  arp->target_mac[1] = 0;
+  arp->target_mac[2] = 0;
+  arp->target_mac[3] = 0;
+  arp->target_mac[4] = 0;
+  arp->target_mac[5] = 0;
+  arp->target_ip[0] = 10;
+  arp->target_ip[1] = 0;
+  arp->target_ip[2] = 2;
+  arp->target_ip[3] = 2;
+
+  //printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
+}
+
 void InitPci() {
   printk("InitPci()\n");
   stdj::Array<DeviceInfo> devices = GetDeviceInfo();
@@ -201,65 +260,30 @@ void InitPci() {
       uint16_t command =
           ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND);
       command = command | (1 << 2);
+      // command = command | (1 << 1);
+      // command = command | 1;
+      command = command & ~1;
+      command = command & ~(1 << 8);
       WriteConfig16(device.bus, device.device, 0, OFFSET_COMMAND, command);
       printk("called Write16 on command register, printing again\n");
       PrintDeviceInfo(device);
 
-      uint64_t interrupt_number =
-          ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
-      uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
-      uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
+      /*printk("bar0: 0x%08X\n",
+             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));
+      printk("writing all ones to bar0\n");
+      // WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0xFFFFFFFF);
+      WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0x000F0000);
+      printk("bar0: 0x%08X\n",
+             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));
+      printk("bar0: 0x%08X\n",
+             ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));*/
 
-      printk("doing the driver\n");
-      E1000* driver = new E1000(interrupt_number, bar1);
-      printk("constructed driver, calling start()\n");
-      driver->start();
-      printk("driver->start() returned\n");
-      printk("calling sendpacket()\n");
-
-      int size = sizeof(Ethernet) + sizeof(ARP);
-      Ethernet* ethernet = (Ethernet*)kmalloc(size);
-      ARP* arp = (ARP*)(ethernet + 1);
-      ethernet->mac_src[0] = driver->getMacAddress()[0];
-      ethernet->mac_src[1] = driver->getMacAddress()[1];
-      ethernet->mac_src[2] = driver->getMacAddress()[2];
-      ethernet->mac_src[3] = driver->getMacAddress()[3];
-      ethernet->mac_src[4] = driver->getMacAddress()[4];
-      ethernet->mac_src[5] = driver->getMacAddress()[5];
-      ethernet->mac_dest[0] = 0xFF;
-      ethernet->mac_dest[1] = 0xFF;
-      ethernet->mac_dest[2] = 0xFF;
-      ethernet->mac_dest[3] = 0xFF;
-      ethernet->mac_dest[4] = 0xFF;
-      ethernet->mac_dest[5] = 0xFF;
-      ethernet->SetType(ETHERTYPE_ARP);
-      arp->SetHardwareType(1);
-      arp->SetProtocol(0x0800);
-      arp->hardware_size = 6;
-      arp->protocol_size = 4;
-      arp->SetOpcode(1);
-      arp->sender_mac[0] = 0;
-      arp->sender_mac[1] = 0;
-      arp->sender_mac[2] = 0;
-      arp->sender_mac[3] = 0;
-      arp->sender_mac[4] = 0;
-      arp->sender_mac[5] = 0;
-      arp->sender_ip[0] = 10;
-      arp->sender_ip[1] = 0;
-      arp->sender_ip[2] = 2;
-      arp->sender_ip[3] = 15;
-      arp->target_mac[0] = 0;
-      arp->target_mac[1] = 0;
-      arp->target_mac[2] = 0;
-      arp->target_mac[3] = 0;
-      arp->target_mac[4] = 0;
-      arp->target_mac[5] = 0;
-      arp->target_ip[0] = 10;
-      arp->target_ip[1] = 0;
-      arp->target_ip[2] = 2;
-      arp->target_ip[3] = 2;
-
-      printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
+      StartDriver(device);
+      printk("status register: 0x%04X\n",
+             ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS));
     }
+  }
+  while (1) {
+    asm volatile("hlt");
   }
 }
