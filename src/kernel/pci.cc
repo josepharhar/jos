@@ -193,7 +193,7 @@ static void StartDriver(DeviceInfo device) {
   uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
   uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
   printk("doing the driver\n");
-  E1000* driver = new E1000(interrupt_number, bar1);
+  E1000* driver = new E1000(interrupt_number, bar0);
   printk("constructed driver, calling start()\n");
   if (!driver->start()) {
     printk("driver->start() failed\n");
@@ -277,6 +277,10 @@ void InitPci() {
              ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));
       printk("bar0: 0x%08X\n",
              ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));*/
+
+      /*printk("writing 0x07000000 to bar0\n");
+      WriteConfig(device.bus, device.device, 0, OFFSET_BAR0, 0x07000000);
+      printk("bar0: 0x%08X\n", ReadConfig(device.bus, device.device, 0, OFFSET_BAR0));*/
 
       StartDriver(device);
       printk("status register: 0x%04X\n",

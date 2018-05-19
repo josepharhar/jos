@@ -275,7 +275,7 @@ static void DeletePageTableLevel(uint64_t table_void, int level) {
 void DeletePageTable(uint64_t cr3) {
   DeletePageTableLevel(cr3, 4);
   // TODO why does this cause a machine reset??
-  //FrameFree(cr3);
+  // FrameFree(cr3);
 }
 
 // points to next free page in kernel heap
@@ -405,14 +405,20 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     printk("  faulting_address: %p\n", faulting_address);
     printk("  halting...\n");
     int one = 1;
-    while (one);
+    while (one)
+      ;
     return;
   }
 
   uint64_t physical_address = NULL_FRAME;
 
-  if (virtual_address.p4_index >= P4_KERNEL_HEAP &&
-      virtual_address.p4_index <= P4_KERNEL_STACKS) {
+  if (virtual_address.p4_index == P4_IDENTITY_MAP) {
+    // identity map, physical address is virtual address!
+    // physical_address = faulting_address;
+    physical_address = GetPhysicalAddress(cr3, faulting_address,
+                                          FULL_ALLOCATION_KERNEL, debug);
+  } else if (virtual_address.p4_index >= P4_KERNEL_HEAP &&
+             virtual_address.p4_index <= P4_KERNEL_STACKS) {
     physical_address = GetPhysicalAddress(cr3, faulting_address,
                                           FULL_ALLOCATION_KERNEL, debug);
 
@@ -438,7 +444,8 @@ void HandlePageFault(uint64_t error_code, uint64_t faulting_address) {
     }
     printk("  halting\n");
     int one = 1;
-    while (one);
+    while (one)
+      ;
     return;
   }
 

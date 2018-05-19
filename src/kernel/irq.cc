@@ -518,7 +518,7 @@ void IRQEndOfInterrupt(int irq) {
 
 void IRQSetHandler(IRQHandler handler, uint64_t interrupt_number, void* arg) {
   if (interrupt_number > NUM_IRQ_HANDLERS) {
-    printk("IRQSetHandler cannot set an interrupt higher than %q, requested: %q\n", NUM_IRQ_HANDLERS, interrupt_number);
+    printk("IRQSetHandler cannot set an interrupt higher than %d, requested: %d\n", NUM_IRQ_HANDLERS, interrupt_number);
     return;
   }
 
