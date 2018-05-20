@@ -284,10 +284,11 @@ bool E1000::detectEEProm() {
 
   for (int i = 0; i < 1000 && !eerprom_exists; i++) {
     val = readCommand(REG_EEPROM);
-    if (val & 0x10)
+    if (val & 0x10) {
       eerprom_exists = true;
-    else
+    } else {
       eerprom_exists = false;
+    }
   }
   return eerprom_exists;
 }
@@ -332,8 +333,6 @@ bool E1000::readMACAddress() {
       return false;
     }
   }
-  /*printk("mac address: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2],
-         mac[3], mac[4], mac[5]);*/
   return true;
 }
 
@@ -341,14 +340,6 @@ void E1000::rxinit() {
   uint8_t* ptr;
   struct e1000_rx_desc* descs;
 
-  // Allocate buffer for receive descriptors. For simplicity, in my case
-  // khmalloc returns a virtual address that is identical to it physical mapped
-  // address.
-  // In your case you should handle virtual and physical addresses as the
-  // addresses passed to the NIC should be physical ones
-
-  /*ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
-      sizeof(struct e1000_rx_desc) * E1000_NUM_RX_DESC + 16));*/
   // 512 + 16 bytes, less than one frame (4096)!
   int num_bytes = sizeof(e1000_rx_desc) * E1000_NUM_RX_DESC + 16;
   ptr = (uint8_t*)FrameAllocate();
@@ -356,8 +347,6 @@ void E1000::rxinit() {
   descs = (struct e1000_rx_desc*)ptr;
   for (int i = 0; i < E1000_NUM_RX_DESC; i++) {
     rx_descs[i] = (struct e1000_rx_desc*)((uint8_t*)descs + i * 16);
-    // rx_descs[i]->addr = (uint64_t)(uint8_t*)(kmalloc_ptr->khmalloc(8192 +
-    // 16));
     rx_descs[i]->addr = (uint64_t)FrameAllocateContiguous(8192 + 16);
     rx_descs[i]->status = 0;
   }
@@ -381,13 +370,6 @@ void E1000::rxinit() {
 void E1000::txinit() {
   uint8_t* ptr;
   struct e1000_tx_desc* descs;
-  // Allocate buffer for receive descriptors. For simplicity, in my case
-  // khmalloc returns a virtual address that is identical to it physical mapped
-  // address.
-  // In your case you should handle virtual and physical addresses as the
-  // addresses passed to the NIC should be physical ones
-  /*ptr = (uint8_t*)(kmalloc_ptr->khmalloc(
-      sizeof(struct e1000_tx_desc) * E1000_NUM_TX_DESC + 16));*/
   ptr = (uint8_t*)FrameAllocate();
 
   descs = (struct e1000_tx_desc*)ptr;
@@ -404,7 +386,6 @@ void E1000::txinit() {
   // now setup total length of descriptors
   writeCommand(REG_TXDESCLEN, E1000_NUM_TX_DESC * 16);
 
-  // setup numbers
   writeCommand(REG_TXDESCHEAD, 0);
   writeCommand(REG_TXDESCTAIL, 0);
   tx_cur = 0;
@@ -417,7 +398,7 @@ void E1000::txinit() {
   // each bit, please refer to the Intel Manual.
   // In the case of I217 and 82577LM packets will not be sent if the TCTRL is
   // not configured using the following bits.
-  writeCommand(REG_TCTRL, 0b0110000000000111111000011111010);
+  //writeCommand(REG_TCTRL, 0b0110000000000111111000011111010);
   writeCommand(REG_TIPG, 0x0060200A);
 }
 
@@ -427,8 +408,6 @@ void E1000::enableInterrupt() {
   readCommand(0xc0);
 }
 
-/*E1000::E1000(PCIConfigHeader* p_pciConfigHeader)
-    : NetworkDriver(p_pciConfigHeader) {*/
 E1000::E1000(uint64_t interrupt_number, uint32_t bar)
     : interrupt_number_(interrupt_number) {
   io_base = 0;
@@ -442,12 +421,8 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
     // memory mapped io
     bar_type = 0;
     mem_base = bar & 0xFFFFFFF0;
-    //printk("E1000::E1000 using mem_base: 0x%08X\n", mem_base);
+    // printk("E1000::E1000 using mem_base: 0x%08X\n", mem_base);
   }
-  // Get BAR0 type, io_base address and MMIO base address
-  /*bar_type = pciConfigHeader->getPCIBarType(0);
-  io_base = pciConfigHeader->getPCIBar(PCI_BAR_IO) & ~1;
-  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;*/
 
   // Enable bus mastering
   // pciConfigHeader->enablePCIBusMastering();
@@ -455,39 +430,31 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
 }
 
 static void GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
-  printk("network GlobalInterruptHandler, interrupt_number: %p\n");
   E1000* instance = (E1000*)arg;
   instance->HandleInterrupt();
 }
 
 bool E1000::start() {
   detectEEProm();
-  if (!readMACAddress())
+  if (!readMACAddress()) {
     return false;
+  }
   printk("E1000::start() got mac: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0],
          mac[1], mac[2], mac[3], mac[4], mac[5]);
-  // printMac();
   // startLink();
 
   for (int i = 0; i < 0x80; i++)
     writeCommand(0x5200 + i * 4, 0);
-  /*if (interruptManager->registerInterrupt(IRQ0 +
-     pciConfigHeader->getIntLine(),
-                                          this)) {*/
-  printk("e1000 calling irqsethandler for interrupt number: 0x%X\n", interrupt_number_);
+  printk("e1000 calling irqsethandler for interrupt number: 0x%X\n",
+         interrupt_number_);
   IRQSetHandler(GlobalInterruptHandler, interrupt_number_, this);
   enableInterrupt();
   rxinit();
   txinit();
   return true;
-  /*} else
-    return false;*/
 }
 
-// void E1000::fire(InterruptContext* p_interruptContext) {
 void E1000::HandleInterrupt() {
-  /*if (p_interruptContext->getInteruptNumber() ==
-      pciConfigHeader->getIntLine() + IRQ0) {*/
   /* This might be needed here if your handler doesn't clear interrupts from
      each device and must be done before EOI if using the PIC.
      Without this, the card will spam interrupts as the int-line will stay
@@ -505,7 +472,6 @@ void E1000::HandleInterrupt() {
   } else if (status & 0x80) {
     handleReceive();
   }
-  //}
 }
 
 void E1000::handleReceive() {
@@ -518,6 +484,7 @@ void E1000::handleReceive() {
     uint16_t len = rx_descs[rx_cur]->length;
 
     // Here you should inject the received packet into your network stack
+    printk("successfully received packet!\n");
 
     rx_descs[rx_cur]->status = 0;
     old_cur = rx_cur;

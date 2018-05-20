@@ -220,12 +220,13 @@ static void StartDriver(DeviceInfo device) {
   int size = sizeof(Ethernet) + sizeof(ARP);
   Ethernet* ethernet = (Ethernet*)kmalloc(size);
   ARP* arp = (ARP*)(ethernet + 1);
-  ethernet->mac_src[0] = driver->getMacAddress()[0];
+  /*ethernet->mac_src[0] = driver->getMacAddress()[0];
   ethernet->mac_src[1] = driver->getMacAddress()[1];
   ethernet->mac_src[2] = driver->getMacAddress()[2];
   ethernet->mac_src[3] = driver->getMacAddress()[3];
   ethernet->mac_src[4] = driver->getMacAddress()[4];
-  ethernet->mac_src[5] = driver->getMacAddress()[5];
+  ethernet->mac_src[5] = driver->getMacAddress()[5];*/
+  memcpy(ethernet->mac_src, driver->getMacAddress(), 6);
   ethernet->mac_dest[0] = 0xFF;
   ethernet->mac_dest[1] = 0xFF;
   ethernet->mac_dest[2] = 0xFF;
@@ -238,12 +239,13 @@ static void StartDriver(DeviceInfo device) {
   arp->hardware_size = 6;
   arp->protocol_size = 4;
   arp->SetOpcode(1);
-  arp->sender_mac[0] = 0;
+  /*arp->sender_mac[0] = 0;
   arp->sender_mac[1] = 0;
   arp->sender_mac[2] = 0;
   arp->sender_mac[3] = 0;
   arp->sender_mac[4] = 0;
-  arp->sender_mac[5] = 0;
+  arp->sender_mac[5] = 0;*/
+  memcpy(arp->sender_mac, driver->getMacAddress(), 6);
   arp->sender_ip[0] = 10;
   arp->sender_ip[1] = 0;
   arp->sender_ip[2] = 2;
