@@ -100,7 +100,8 @@ all: run
 .PHONY: run
 run: os.img
 	# TODO: -d int
-	qemu-system-x86_64 -curses -drive format=raw,file=os.img -s
+	qemu-system-x86_64 -curses -drive format=raw,file=os.img -s -net nic,model=e1000 -net dump,file=dump.pcap -net user
+	#qemu-system-x86_64 -curses -drive format=raw,file=os.img -s
 	#qemu-system-x86_64 -curses -serial stdio -drive format=raw,file=os.img -s
 	#qemu-system-x86_64 -serial stdio -drive format=raw,file=os.img -s
 

@@ -4,13 +4,14 @@
 #include "string.h"
 
 uint16_t ntohs(uint16_t network_short) {
-  return ((network_short << 8) & 0xFF00) | (network_short & 0x00FF);
+  return ((network_short << 8) & 0xFF00) | ((network_short >> 8) & 0x00FF);
 }
 
 uint32_t ntohl(uint32_t network_long) {
   return ((network_long << (8 + 8 + 8)) & 0xFF000000) |
-         ((network_long << (8 + 8)) & 0x00FF0000) |
-         ((network_long << 8) & 0x0000FF00) | (network_long & 0x000000FF);
+         ((network_long << 8) & 0x00FF0000) |
+         ((network_long >> 8) & 0x0000FF00) |
+         ((network_long >> (8 + 8 + 8)) & 0x000000FF);
 }
 
 uint16_t htons(uint16_t host_short) {

@@ -7,6 +7,7 @@
 #include "packets.h"
 #include "kmalloc.h"
 #include "irq.h"
+#include "frame.h"
 
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
@@ -218,14 +219,14 @@ static void StartDriver(DeviceInfo device) {
   printk("calling sendpacket()\n");
 
   int size = sizeof(Ethernet) + sizeof(ARP);
-  Ethernet* ethernet = (Ethernet*)kmalloc(size);
+  if (size < 60) {
+    // TODO min ethernet packet size?
+    size = 60;
+  }
+  //Ethernet* ethernet = (Ethernet*)kcalloc(size);
+  // TODO make physical address allocator?
+  Ethernet* ethernet = (Ethernet*)FrameAllocateSafe();
   ARP* arp = (ARP*)(ethernet + 1);
-  /*ethernet->mac_src[0] = driver->getMacAddress()[0];
-  ethernet->mac_src[1] = driver->getMacAddress()[1];
-  ethernet->mac_src[2] = driver->getMacAddress()[2];
-  ethernet->mac_src[3] = driver->getMacAddress()[3];
-  ethernet->mac_src[4] = driver->getMacAddress()[4];
-  ethernet->mac_src[5] = driver->getMacAddress()[5];*/
   memcpy(ethernet->mac_src, driver->getMacAddress(), 6);
   ethernet->mac_dest[0] = 0xFF;
   ethernet->mac_dest[1] = 0xFF;
@@ -234,17 +235,22 @@ static void StartDriver(DeviceInfo device) {
   ethernet->mac_dest[4] = 0xFF;
   ethernet->mac_dest[5] = 0xFF;
   ethernet->SetType(ETHERTYPE_ARP);
+  {
+    uint8_t* asdf = (uint8_t*)ethernet;
+    printk("packet:\n");
+    for (int i = 0; i < 2; i++) {
+      printk("  0x");
+      for (int j = 0; j < 16; j++) {
+        printk("%02X", *asdf++);
+      }
+      printk("\n");
+    }
+  }
   arp->SetHardwareType(1);
   arp->SetProtocol(0x0800);
   arp->hardware_size = 6;
   arp->protocol_size = 4;
   arp->SetOpcode(1);
-  /*arp->sender_mac[0] = 0;
-  arp->sender_mac[1] = 0;
-  arp->sender_mac[2] = 0;
-  arp->sender_mac[3] = 0;
-  arp->sender_mac[4] = 0;
-  arp->sender_mac[5] = 0;*/
   memcpy(arp->sender_mac, driver->getMacAddress(), 6);
   arp->sender_ip[0] = 10;
   arp->sender_ip[1] = 0;
@@ -261,6 +267,7 @@ static void StartDriver(DeviceInfo device) {
   arp->target_ip[2] = 2;
   arp->target_ip[3] = 2;
 
+  printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
   printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
 }
 
