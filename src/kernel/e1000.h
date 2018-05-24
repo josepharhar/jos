@@ -1,31 +1,17 @@
-#ifndef KERNEL_NIC_H_
-#define KERNEL_NIC_H_
+#ifndef KERNEL_E1000_H_
+#define KERNEL_E1000_H_
 
 #include "stdint.h"
-
-/*class PCIConfigHeader {
- public:
-  bar_type = pciConfigHeader->getPCIBarType(0);
-  io_base = pciConfigHeader->getPCIBar(PCI_BAR_IO) & ~1;
-  mem_base = pciConfigHeader->getPCIBar(PCI_BAR_MEM) & ~3;
-  uint8_t getPCIBarType(int);
-  uint16_t getPCIBar(int);
-  uint64_t getPCIBar(int);
-
-  void enablePCIBusMastering();
-
-  if (interruptManager->registerInterrupt(IRQ0 +
-     pciConfigHeader->getIntLine(),
-                                          this)) {
-  int getIntLine();
-};*/
+#include "net.h"
 
 #define E1000_NUM_RX_DESC 32
 #define E1000_NUM_TX_DESC 8
 
+namespace net {
+
 class E1000 {
  public:
-  E1000(uint64_t interrupt_number, uint32_t bar);
+  E1000(uint64_t interrupt_number, uint32_t bar, PacketReceivedHandler handler);
 
   bool start();
   void HandleInterrupt();
@@ -42,8 +28,10 @@ class E1000 {
       rx_descs[E1000_NUM_RX_DESC];  // Receive Descriptor Buffers
   struct e1000_tx_desc*
       tx_descs[E1000_NUM_TX_DESC];  // Transmit Descriptor Buffers
-  uint16_t rx_cur;                  // Current Receive Descriptor Buffer
-  uint16_t tx_cur;                  // Current Transmit Descriptor Buffer
+  void* tx_frames[E1000_NUM_TX_DESC];
+  uint16_t rx_cur;  // Current Receive Descriptor Buffer
+  uint16_t tx_cur;  // Current Transmit Descriptor Buffer
+  PacketReceivedHandler handler_;
 
   uint64_t interrupt_number_;
 
@@ -54,13 +42,15 @@ class E1000 {
   bool detectEEProm();  // Return true if EEProm exist, else it returns false
                         // and set the eerprom_existsdata member
   uint32_t eepromRead(
-      uint8_t addr);       // Read 4 bytes from a specific EEProm Address
-  bool readMACAddress();   // Read MAC Address
-  //void startLink();        // Start up the network
+      uint8_t addr);      // Read 4 bytes from a specific EEProm Address
+  bool readMACAddress();  // Read MAC Address
+  // void startLink();        // Start up the network
   void rxinit();           // Initialize receive descriptors an buffers
   void txinit();           // Initialize transmit descriptors an buffers
   void enableInterrupt();  // Enable Interrupts
   void handleReceive();    // Handle a packet reception.
 };
 
-#endif  // KERNEL_NIC_H_
+}  // namespace net
+
+#endif  // KERNEL_E1000_H_

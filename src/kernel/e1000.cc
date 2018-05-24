@@ -1,8 +1,9 @@
-#include "nic.h"
+#include "e1000.h"
 
 #include "frame.h"
 #include "printk.h"
 #include "irq.h"
+#include "string.h"
 
 #define INTEL_VEND 0x8086  // Vendor ID for Intel
 #define E1000_DEV \
@@ -94,6 +95,8 @@
 #define TSTA_EC (1 << 1)  // Excess Collisions
 #define TSTA_LC (1 << 2)  // Late Collision
 #define LSTA_TU (1 << 3)  // Transmit Underrun
+
+namespace net {
 
 struct e1000_rx_desc {
   volatile uint64_t addr;
@@ -398,7 +401,7 @@ void E1000::txinit() {
   // each bit, please refer to the Intel Manual.
   // In the case of I217 and 82577LM packets will not be sent if the TCTRL is
   // not configured using the following bits.
-  //writeCommand(REG_TCTRL, 0b0110000000000111111000011111010);
+  // writeCommand(REG_TCTRL, 0b0110000000000111111000011111010);
   writeCommand(REG_TIPG, 0x0060200A);
 }
 
@@ -408,8 +411,10 @@ void E1000::enableInterrupt() {
   readCommand(0xc0);
 }
 
-E1000::E1000(uint64_t interrupt_number, uint32_t bar)
-    : interrupt_number_(interrupt_number) {
+E1000::E1000(uint64_t interrupt_number,
+             uint32_t bar,
+             PacketReceivedHandler handler)
+    : interrupt_number_(interrupt_number), handler_(handler) {
   io_base = 0;
   mem_base = 0;
   if (bar & 1) {
@@ -427,6 +432,10 @@ E1000::E1000(uint64_t interrupt_number, uint32_t bar)
   // Enable bus mastering
   // pciConfigHeader->enablePCIBusMastering();
   eerprom_exists = false;
+
+  for (int i = 0; i < E1000_NUM_TX_DESC; i++) {
+    tx_frames[i] = FrameAllocateSafe();
+  }
 }
 
 static void GlobalInterruptHandler(uint64_t interrupt_number, void* arg) {
@@ -462,7 +471,7 @@ void E1000::HandleInterrupt() {
   writeCommand(REG_IMASK, 0x1);
 
   uint32_t status = readCommand(0xc0);
-  printk("E1000::HandleInterrupt status: 0x%08X\n", status);
+  //printk("E1000::HandleInterrupt status: 0x%08X\n", status);
   if (status & 0x04) {
     // TODO reset network stack?
     printk("TODO reset network stack?\n");
@@ -483,8 +492,7 @@ void E1000::handleReceive() {
     uint8_t* buf = (uint8_t*)rx_descs[rx_cur]->addr;
     uint16_t len = rx_descs[rx_cur]->length;
 
-    // Here you should inject the received packet into your network stack
-    printk("successfully received packet!\n");
+    handler_(buf, len);
 
     rx_descs[rx_cur]->status = 0;
     old_cur = rx_cur;
@@ -494,7 +502,8 @@ void E1000::handleReceive() {
 }
 
 int E1000::sendPacket(const void* p_data, uint16_t p_len) {
-  tx_descs[tx_cur]->addr = (uint64_t)p_data;
+  memcpy(tx_frames[tx_cur], p_data, p_len);
+  tx_descs[tx_cur]->addr = (uint64_t)tx_frames[tx_cur];
   tx_descs[tx_cur]->length = p_len;
   tx_descs[tx_cur]->cmd = CMD_EOP | CMD_IFCS | CMD_RS | CMD_RPS;
   tx_descs[tx_cur]->status = 0;
@@ -509,3 +518,5 @@ int E1000::sendPacket(const void* p_data, uint16_t p_len) {
 uint8_t* E1000::getMacAddress() {
   return mac;
 }
+
+}  // namespace net

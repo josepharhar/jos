@@ -32,6 +32,7 @@
 #include "wait_handler.h"
 #include "fcntl_handler.h"
 #include "pci.h"
+#include "net.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -128,7 +129,7 @@ void KernelMain() {
 
   ipc::Init();
 
-  InitPci();
+  net::Init();
 
   proc::CreateKthread(ProcInit, 0);
 

@@ -3,7 +3,6 @@
 #include "asm.h"
 #include "printk.h"
 #include "jarray.h"
-#include "nic.h"
 #include "packets.h"
 #include "kmalloc.h"
 #include "irq.h"
@@ -12,43 +11,7 @@
 #define CONFIG_ADDRESS 0xCF8
 #define CONFIG_DATA 0xCFC
 
-#define VENDOR_INTEL 0x8086
-#define DEVICE_E1000 0x100E
-
-// offsets into the 256 byte configuration space, in bytes
-#define OFFSET_DEVICE_ID 0x0        // 2 bytes
-#define OFFSET_VENDOR_ID 0x2        // 2 bytes
-#define OFFSET_STATUS 0x4           // 2 bytes
-#define OFFSET_COMMAND 0x6          // 2 bytes
-#define OFFSET_CLASS_CODE 0x8       // 1 byte
-#define OFFSET_SUBCLASS 0x9         // 1 byte
-#define OFFSET_PROG_IF 0xA          // 1 byte
-#define OFFSET_REVISION_ID 0xB      // 1 byte
-#define OFFSET_BIST 0xC             // 1 byte
-#define OFFSET_HEADER_TYPE 0xD      // 1 byte
-#define OFFSET_LATENCY_TIMER 0xE    // 1 byte
-#define OFFSET_CACHE_LINE_SIZE 0xF  // 1 byte
-#define OFFSET_BAR0 0x10            // 4 bytes
-#define OFFSET_BAR1 0x14            // 4 bytes
-#define OFFSET_BAR2 0x18            // 4 bytes
-#define OFFSET_BAR3 0x1C            // 4 bytes
-#define OFFSET_BAR4 0x20            // 4 bytes
-#define OFFSET_BAR5 0x24            // 4 bytes
-#define OFFSET_INTERRUPT_PIN 0x3E   // 1 byte
-#define OFFSET_INTERRUPT_LINE 0x3F  // 1 byte
-
-// bits for command register
-#define COMMAND_PIO 1
-#define COMMAND_MMIO (1 << 1)
-#define COMMAND_BUS_MASTER (1 << 2)
-#define COMMAND_SPECIAL_CYCLES (1 << 3)
-#define COMMAND_WRITE_AND_INVALIDATE (1 << 4)
-#define COMMAND_VGA_SNOOP (1 << 5)
-#define COMMAND_PARITY_ERROR (1 << 6)
-#define COMMAND_RESERVED (1 << 7)
-#define COMMAND_SERR (1 << 8)
-#define COMMAND_FAST_BACK (1 << 9)
-#define COMMAND_INTERRUPT_DISABLE (1 << 10)
+namespace pci {
 
 // TODO why do i have to reverse the order of the fields?
 struct ConfigCommand {
@@ -62,13 +25,6 @@ struct ConfigCommand {
 } __attribute__((packed));
 static_assert(sizeof(ConfigCommand) == sizeof(uint32_t),
               "bad ConfigCommand size");
-
-struct DeviceInfo {
-  uint16_t bus;  // uint16_t instead of uint8_t for 256 loop hack
-  uint8_t device;
-  uint16_t vendor_id;
-  uint16_t device_id;
-};
 
 uint32_t ReadConfig(uint8_t bus,
                     uint8_t device,
@@ -157,7 +113,7 @@ void WriteConfig8(uint8_t bus,
   WriteConfig16(bus, device, function, offset, new_16);
 }
 
-stdj::Array<DeviceInfo> GetDeviceInfo() {
+stdj::Array<DeviceInfo> GetDevices() {
   stdj::Array<DeviceInfo> devices;
   DeviceInfo device;
   for (device.bus = 0; device.bus < 256; device.bus++) {
@@ -174,7 +130,7 @@ stdj::Array<DeviceInfo> GetDeviceInfo() {
   return devices;
 }
 
-static void PrintDeviceInfo(DeviceInfo device) {
+void PrintDeviceInfo(DeviceInfo device) {
   printk(
       "  status: 0x%04X, command: 0x%04X, bist: 0x%02X, headertype: 0x%02X\n",
       ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS),
@@ -193,121 +149,6 @@ static void PrintDeviceInfo(DeviceInfo device) {
   printk("  interrupt pin: 0x%02X, interrupt line: 0x%02X\n",
          ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN),
          ReadConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE));
-  /*for (int j = 0; j < 0x18; j += 0x04) {
-    if (j == 0x38 || j == 0x34 || j == 0x30 || j == 0x28) {
-      break;
-    }
-    printk("[0x%02X] 0x%08X\n", j,
-           ReadConfig(device.bus, device.device, 0, j));
-  }*/
 }
 
-static void StartDriver(DeviceInfo device) {
-  uint8_t interrupt_line = ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE);
-  uint64_t interrupt_number = (((uint64_t)interrupt_line) & 0xFF) + PIC1_OFFSET;
-      ReadConfig(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE) +
-      PIC1_OFFSET;
-  printk("passing interrupt_number: 0x%X\n", interrupt_number);
-  uint32_t bar0 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR0);
-  uint32_t bar1 = ReadConfig(device.bus, device.device, 0, OFFSET_BAR1);
-  E1000* driver = new E1000(interrupt_number, bar0);
-  if (!driver->start()) {
-    printk("driver->start() failed\n");
-    return;
-  }
-  printk("driver->start() succeeded\n");
-  printk("calling sendpacket()\n");
-
-  int size = sizeof(Ethernet) + sizeof(ARP);
-  if (size < 60) {
-    // TODO min ethernet packet size?
-    size = 60;
-  }
-  //Ethernet* ethernet = (Ethernet*)kcalloc(size);
-  // TODO make physical address allocator?
-  Ethernet* ethernet = (Ethernet*)FrameAllocateSafe();
-  ARP* arp = (ARP*)(ethernet + 1);
-  memcpy(ethernet->mac_src, driver->getMacAddress(), 6);
-  ethernet->mac_dest[0] = 0xFF;
-  ethernet->mac_dest[1] = 0xFF;
-  ethernet->mac_dest[2] = 0xFF;
-  ethernet->mac_dest[3] = 0xFF;
-  ethernet->mac_dest[4] = 0xFF;
-  ethernet->mac_dest[5] = 0xFF;
-  ethernet->SetType(ETHERTYPE_ARP);
-  {
-    uint8_t* asdf = (uint8_t*)ethernet;
-    printk("packet:\n");
-    for (int i = 0; i < 2; i++) {
-      printk("  0x");
-      for (int j = 0; j < 16; j++) {
-        printk("%02X", *asdf++);
-      }
-      printk("\n");
-    }
-  }
-  arp->SetHardwareType(1);
-  arp->SetProtocol(0x0800);
-  arp->hardware_size = 6;
-  arp->protocol_size = 4;
-  arp->SetOpcode(1);
-  memcpy(arp->sender_mac, driver->getMacAddress(), 6);
-  arp->sender_ip[0] = 10;
-  arp->sender_ip[1] = 0;
-  arp->sender_ip[2] = 2;
-  arp->sender_ip[3] = 15;
-  arp->target_mac[0] = 0;
-  arp->target_mac[1] = 0;
-  arp->target_mac[2] = 0;
-  arp->target_mac[3] = 0;
-  arp->target_mac[4] = 0;
-  arp->target_mac[5] = 0;
-  arp->target_ip[0] = 10;
-  arp->target_ip[1] = 0;
-  arp->target_ip[2] = 2;
-  arp->target_ip[3] = 2;
-
-  printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
-  printk("sendpacket(): %d\n", driver->sendPacket(ethernet, size));
-}
-
-void InitPci() {
-  printk("InitPci()\n");
-  stdj::Array<DeviceInfo> devices = GetDeviceInfo();
-  for (int i = 0; i < devices.Size(); i++) {
-    DeviceInfo device = devices.Get(i);
-    /*printk("bus: 0x%X, device: 0x%X, vendor_id: 0x%04X, device_id: 0x%04X\n",
-           device.bus, device.device, device.vendor_id, device.device_id);*/
-    if (device.vendor_id == VENDOR_INTEL && device.device_id == DEVICE_E1000) {
-      printk("found e1000 in bus %d, device %d\n", device.bus, device.device);
-      PrintDeviceInfo(device);
-      uint16_t command =
-          ReadConfig16(device.bus, device.device, 0, OFFSET_COMMAND);
-      command = command | COMMAND_BUS_MASTER;
-      command = command & ~COMMAND_PIO;
-      command = command | COMMAND_MMIO;
-      command = command & ~COMMAND_SERR;
-      command = command & ~COMMAND_INTERRUPT_DISABLE;
-      // command = command | COMMAND_INTERRUPT_DISABLE;
-      command = command | COMMAND_WRITE_AND_INVALIDATE;
-      command = command | COMMAND_SPECIAL_CYCLES;
-      WriteConfig16(device.bus, device.device, 0, OFFSET_COMMAND, command);
-      printk("called Write16 on command register, printing again\n");
-      PrintDeviceInfo(device);
-
-      /*uint8_t interrupt_line = ReadConfig8(device.bus, device.device, 0,
-      OFFSET_INTERRUPT_LINE);
-      WriteConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_LINE, 50);
-      //WriteConfig8(device.bus, device.device, 0, OFFSET_INTERRUPT_PIN, 0);
-      printk("changed interrupt line, printing again\n");
-      PrintDeviceInfo(device);*/
-
-      StartDriver(device);
-      printk("status register: 0x%04X\n",
-             ReadConfig16(device.bus, device.device, 0, OFFSET_STATUS));
-    }
-  }
-  while (1) {
-    asm volatile("hlt");
-  }
-}
+}  // namespace pci
