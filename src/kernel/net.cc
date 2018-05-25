@@ -6,21 +6,24 @@
 #include "printk.h"
 #include "kmalloc.h"
 #include "irq.h"
+#include "jmap.h"
+#include "arp.h"
 
 namespace net {
 
 static E1000* driver = 0;
-// static stdj::Array<PacketReceivedHandler> handlers;
-static MAC my_mac;
-static IPAddr my_ip;
-static MAC gateway_mac;
-static IPAddr gateway_ip;
+static Mac my_mac;
+static IpAddr my_ip;
+static Mac gateway_mac;
+static IpAddr gateway_ip;
 
-static void PrintMac(MAC mac) {
+// static stdj::Array<PacketReceivedHandler> handlers;
+
+static void PrintMac(Mac mac) {
   printk("%02X:%02X:%02X:%02X:%02X:%02X", mac.addr[0], mac.addr[1],
          mac.addr[2], mac.addr[3], mac.addr[4], mac.addr[5]);
 }
-static void PrintIp(IPAddr ip) {
+static void PrintIp(IpAddr ip) {
   printk("%d.%d.%d.%d", ip.addr[0], ip.addr[1], ip.addr[2], ip.addr[3]);
 }
 
@@ -83,7 +86,7 @@ void SendPacket(uint8_t* packet, uint64_t length) {
 
 void SetPacketReceivedHandler() {}
 
-static void SendArp(IPAddr target) {
+static void SendArp(IpAddr target) {
   int size = sizeof(Ethernet) + sizeof(ARP);
   if (size < 64) {
     // TODO min ethernet packet size?
@@ -136,7 +139,7 @@ static int StartE1000(pci::DeviceInfo device) {
     return 1;
   }
   printk("driver->start() succeeded\n");
-  my_mac = MAC(driver->getMacAddress());
+  my_mac = Mac(driver->getMacAddress());
   return 0;
 }
 
@@ -153,13 +156,21 @@ static pci::DeviceInfo GetFirstE1000() {
   return bad_device;
 }
 
+IpAddr GetMyIp() {
+  return my_ip;
+}
+
+Mac GetMyMac() {
+  return my_mac;
+}
+
 void Init() {
   driver = 0;
-  my_mac = MAC(0, 0, 0, 0, 0, 0);
-  gateway_mac = MAC(0, 0, 0, 0, 0, 0);
+  my_mac = Mac(0, 0, 0, 0, 0, 0);
+  gateway_mac = Mac(0, 0, 0, 0, 0, 0);
   // https://wiki.qemu.org/images/9/93/Slirp_concept.png
-  my_ip = IPAddr(10, 0, 2, 15);
-  gateway_ip = IPAddr(10, 0, 2, 2);
+  my_ip = IpAddr(10, 0, 2, 15);
+  gateway_ip = IpAddr(10, 0, 2, 2);
 
   pci::DeviceInfo device = GetFirstE1000();
   if (device.bus == 0xFFFF) {
@@ -168,9 +179,6 @@ void Init() {
   }
   printk("found an e1000 in bus %d, device %d\n", device.bus, device.device);
   StartE1000(device);
-
-  // TODO delet this
-  SendArp(gateway_ip);
 }
 
 }  // namespace net

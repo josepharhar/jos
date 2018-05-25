@@ -29,11 +29,12 @@ unsigned short in_cksum(void* addr, int len);
 #define ICMP_PING_REQUEST 8
 #define ICMP_PING_REPLY 0
 
-class MAC {
+class Mac {
  public:
-  MAC() {}
-  MAC(const uint8_t* new_addr) { memcpy(addr, new_addr, 6); }
-  MAC(uint8_t one,
+  //Mac() : Mac(0, 0, 0, 0, 0, 0) {}
+  constexpr Mac() : addr{0,0,0,0,0,0} {}
+  Mac(const uint8_t* new_addr) { memcpy(addr, new_addr, 6); }
+  Mac(uint8_t one,
       uint8_t two,
       uint8_t three,
       uint8_t four,
@@ -55,7 +56,7 @@ class MAC {
     return number;
   }
 
-  bool operator==(const MAC& other) {
+  bool operator==(const Mac& other) {
     for (int i = 0; i < 6; i++) {
       if (addr[i] != other.addr[i]) {
         return false;
@@ -63,17 +64,17 @@ class MAC {
     }
     return true;
   }
-  bool operator!=(const MAC& other) { return !operator==(other); }
-  friend bool operator<(const MAC& left, const MAC& right) {
+  bool operator!=(const Mac& other) { return !operator==(other); }
+  friend bool operator<(const Mac& left, const Mac& right) {
     return left.ToNumber() < right.ToNumber();
   }
 } __attribute__((packed));
 
-class IPAddr {
+class IpAddr {
  public:
-  IPAddr() {}
-  IPAddr(const uint8_t* new_addr) { memcpy(addr, new_addr, 4); }
-  IPAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
+  IpAddr() {}
+  IpAddr(const uint8_t* new_addr) { memcpy(addr, new_addr, 4); }
+  IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
     addr[0] = one;
     addr[1] = two;
     addr[2] = three;
@@ -87,7 +88,7 @@ class IPAddr {
     memcpy(&number, addr, 4);
     return number;
   }
-  bool operator==(const IPAddr& other) {
+  bool operator==(const IpAddr& other) {
     for (int i = 0; i < 4; i++) {
       if (addr[i] != other.addr[i]) {
         return false;
@@ -95,8 +96,8 @@ class IPAddr {
     }
     return true;
   }
-  bool operator!=(const IPAddr& other) { return !operator==(other); }
-  friend bool operator<(const IPAddr& left, const IPAddr& right) {
+  bool operator!=(const IpAddr& other) { return !operator==(other); }
+  friend bool operator<(const IpAddr& left, const IpAddr& right) {
     return left.ToNumber() < right.ToNumber();
   }
 } __attribute__((packed));
@@ -112,12 +113,12 @@ class Ethernet {
  public:
   uint16_t GetType() { return ntohs(type); }
   void SetType(uint16_t new_type) { type = htons(new_type); }
-  MAC GetDest() { return MAC(mac_dest); }
-  MAC GetSrc() { return MAC(mac_src); }
+  Mac GetDest() { return Mac(mac_dest); }
+  Mac GetSrc() { return Mac(mac_src); }
 } __attribute__((packed));
 
-static const uint8_t MAC_BCAST_ARRAY[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const MAC MAC_BCAST(MAC_BCAST_ARRAY);
+static const uint8_t Mac_BCAST_ARRAY[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static const Mac Mac_BCAST(Mac_BCAST_ARRAY);
 
 class IP {
  public:
@@ -169,14 +170,14 @@ class ARP {
   void SetProtocol(uint16_t new_protocol) { protocol = htons(new_protocol); }
   void SetOpcode(uint16_t new_opcode) { opcode = htons(new_opcode); }
   uint16_t GetOpcode() { return ntohs(opcode); }
-  void SetSourceMac(MAC mac) { memcpy(sender_mac, mac.addr, 6); }
-  void SetSourceIp(IPAddr ip) { memcpy(sender_ip, ip.addr, 4); }
-  void SetTargetMac(MAC mac) { memcpy(target_mac, mac.addr, 6); }
-  void SetTargetIp(IPAddr ip) { memcpy(target_ip, ip.addr, 6); }
-  MAC GetSourceMac() { return MAC(sender_mac); }
-  MAC GetTargetMac() { return MAC(target_mac); }
-  IPAddr GetSourceIp() { return IPAddr(sender_ip); }
-  IPAddr GetTargetIp() { return IPAddr(target_ip); }
+  void SetSourceMac(Mac mac) { memcpy(sender_mac, mac.addr, 6); }
+  void SetSourceIp(IpAddr ip) { memcpy(sender_ip, ip.addr, 4); }
+  void SetTargetMac(Mac mac) { memcpy(target_mac, mac.addr, 6); }
+  void SetTargetIp(IpAddr ip) { memcpy(target_ip, ip.addr, 6); }
+  Mac GetSourceMac() { return Mac(sender_mac); }
+  Mac GetTargetMac() { return Mac(target_mac); }
+  IpAddr GetSourceIp() { return IpAddr(sender_ip); }
+  IpAddr GetTargetIp() { return IpAddr(target_ip); }
 } __attribute__((packed));
 
 class ICMP {
