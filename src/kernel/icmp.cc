@@ -27,7 +27,8 @@ void Ping(IpAddr ip_address, PingCallback callback, void* callback_param) {
   icmp->code = ICMP_CODE_PING;
   memset(icmp->rest, 0, 4);
   icmp->checksum = in_cksum(icmp, sizeof(ICMP));
-  SendIpPacket(icmp, sizeof(ICMP));
+  SendIpPacket(icmp, sizeof(ICMP), ip_address, IP_PROTOCOL_ICMP);
+  kfree(icmp);
 }
 
 void HandleIcmpPacket(Ethernet* ethernet, uint64_t length) {

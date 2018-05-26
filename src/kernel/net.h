@@ -9,7 +9,7 @@ namespace net {
 void Init();
 
 typedef void (*PacketReceivedHandler)(uint8_t*, uint64_t);
-void SendPacket(uint8_t* packet, uint64_t length);
+void SendPacket(void* packet, uint64_t length);
 void SetPacketReceivedHandler(PacketReceivedHandler handler);
 
 IpAddr GetMyIp();

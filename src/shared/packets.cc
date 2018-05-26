@@ -58,3 +58,5 @@ void PrintMac(Mac mac) {
 void PrintIp(IpAddr ip) {
   printf("%d.%d.%d.%d", ip.addr[0], ip.addr[1], ip.addr[2], ip.addr[3]);
 }
+
+Mac::BCAST = Mac(255, 255, 255, 255, 255, 255);

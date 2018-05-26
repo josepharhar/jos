@@ -2,15 +2,19 @@
 
 #include "net.h"
 #include "syscall_params.h"
+#include "syscall_handler.h"
+#include "syscall.h"
+#include "proc.h"
+#include "icmp.h"
 
 namespace net {
 
 struct PingState {
-  proc::BlockedQueue* proc_queue;
+  proc::BlockedQueue proc_queue;
   proc::ProcContext* proc;
 };
 
-static void PingCallback(void* arg) {
+static void ReceivedPingResponseCallback(void* arg) {
   PingState* state = (PingState*)arg;
   state->proc_queue.UnblockHead();
   delete state;
@@ -28,7 +32,7 @@ static void HandleSyscallPing(uint64_t interrupt_number,
   state->proc_queue = proc::BlockedQueue();
   state->proc_queue.BlockCurrentProcNoNesting();
 
-  Ping(ip_addr, PingCallback, state);
+  Ping(ip_addr, ReceivedPingResponseCallback, state);
 }
 
 void InitPing() {

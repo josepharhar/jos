@@ -9,7 +9,7 @@ void* malloc(uint64_t num_bytes);
 void* calloc(uint64_t num_bytes);
 void free(void* address);
 
-int atoi(char* string);
+int atoi(const char* string);
 
 }  // extern "C"
 

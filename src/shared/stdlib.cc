@@ -7,7 +7,7 @@ static int pow_helper(int base, int power) {
   return base * pow_helper(base, power - 1);
 }
 
-int atoi(char* string) {
+int atoi(const char* string) {
   bool negative = false;
   if (*string == '-') {
     negative = true;

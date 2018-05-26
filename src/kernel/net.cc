@@ -9,13 +9,13 @@
 #include "jmap.h"
 #include "arp.h"
 #include "icmp.h"
+#include "ip.h"
 
 namespace net {
 
 static E1000* driver = 0;
 static Mac my_mac;
 static IpAddr my_ip;
-static Mac gateway_mac;
 static IpAddr gateway_ip;
 
 static stdj::Array<PacketReceivedHandler>* handlers = 0;
@@ -53,7 +53,7 @@ static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
   }
 }
 
-void SendPacket(uint8_t* packet, uint64_t length) {
+void SendPacket(void* packet, uint64_t length) {
   driver->sendPacket(packet, length);
 }
 
@@ -132,23 +132,16 @@ static pci::DeviceInfo GetFirstE1000() {
 IpAddr GetMyIp() {
   return my_ip;
 }
-
 Mac GetMyMac() {
   return my_mac;
 }
-
-IpAddr GetMyIp() {
-  return my_ip;
-}
-
-Mac GetMyMac() {
-  return my_mac;
+IpAddr GetGatewayIp() {
+  return gateway_ip;
 }
 
 void Init() {
   driver = 0;
   my_mac = Mac(0, 0, 0, 0, 0, 0);
-  gateway_mac = Mac(0, 0, 0, 0, 0, 0);
   // https://wiki.qemu.org/images/9/93/Slirp_concept.png
   my_ip = IpAddr(10, 0, 2, 15);
   gateway_ip = IpAddr(10, 0, 2, 2);

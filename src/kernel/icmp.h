@@ -1,5 +1,5 @@
-#ifndef KERNEL_IP_H_
-#define KERNEL_IP_H_
+#ifndef KERNEL_ICMP_H_
+#define KERNEL_ICMP_H_
 
 #include "packets.h"
 
@@ -12,4 +12,4 @@ void HandleIcmpPacket(Ethernet* ethernet, uint64_t length);
 
 }  // namespace net
 
-#endif  // KERNEL_IP_H_
+#endif  // KERNEL_ICMP_H_

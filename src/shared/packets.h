@@ -3,6 +3,8 @@
 
 #include "string.h"
 #include "stdlib.h"
+#include "jarray.h"
+#include "jstring.h"
 
 // https://www.tcpdump.org/pcap.html
 
@@ -13,6 +15,7 @@
 #define IP_PROTOCOL_ICMP 1
 #define IP_PROTOCOL_TCP 6
 #define IP_PROTOCOL_UDP 17
+#define IP_VERSION_IPV4 4
 
 #define ARP_HARDWARE_TYPE_ETHERNET 1
 #define ARP_PROTOCOL_IP 0x0800
@@ -49,6 +52,8 @@ class Mac {
     addr[4] = five;
     addr[5] = six;
   }
+
+  static const Mac BCAST;
 
   uint8_t addr[6];
 
@@ -90,10 +95,14 @@ class IpAddr {
     if (splits.Size() != 4) {
       return addr;
     }
-    addr.addr[0] = atoi(splits.Get(0));
-    addr.addr[1] = atoi(splits.Get(1));
-    addr.addr[2] = atoi(splits.Get(2));
-    addr.addr[3] = atoi(splits.Get(3));
+    stdj::string str = splits.Get(0);
+    addr.addr[0] = atoi(str.c_str());
+    str = splits.Get(1);
+    addr.addr[1] = atoi(str.c_str());
+    str = splits.Get(2);
+    addr.addr[2] = atoi(str.c_str());
+    str = splits.Get(3);
+    addr.addr[3] = atoi(str.c_str());
     return addr;
   }
 
@@ -131,19 +140,19 @@ class Ethernet {
   void SetType(uint16_t new_type) { type = htons(new_type); }
   Mac GetDest() { return Mac(mac_dest); }
   Mac GetSrc() { return Mac(mac_src); }
+  void SetDest(Mac mac) { memcpy(mac_dest, mac.addr, 6); }
+  void SetSrc(Mac mac) { memcpy(mac_src, mac.addr, 6); }
 } __attribute__((packed));
-
-static const uint8_t Mac_BCAST_ARRAY[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-static const Mac Mac_BCAST(Mac_BCAST_ARRAY);
 
 class IP {
  public:
   uint8_t version : 4;
-  uint8_t length : 4;                     // sizeof this struct / 32
-  uint8_t differentiated_services_field;  // aka TOS
+  uint8_t length : 4;  // sizeof this struct / 32
+  // uint8_t differentiated_services_field;  // aka TOS
+  uint8_t tos;  // aka TOS
  private:
   uint16_t total_length;  // entire packet - sizeof ethernet header
-  uint16_t identification;
+  uint16_t id;
 
  public:
   uint8_t flags;
@@ -151,15 +160,21 @@ class IP {
   uint8_t time_to_live;
   uint8_t protocol;  // TCP = 6
   uint16_t checksum;
-
- public:
   uint8_t source[4];
-  uint8_t destination[4];
+  uint8_t dest[4];
 
  public:
   uint16_t GetTotalLength() { return ntohs(total_length); }
-  uint16_t GetId() { return ntohs(identification); }
+  uint16_t GetId() { return ntohs(id); }
   uint16_t GetChecksum() { return ntohs(checksum); }
+  void SetTotalLength(uint16_t new_total_length) {
+    total_length = htons(new_total_length);
+  }
+  void SetId(uint16_t new_id) { id = ntohs(new_id); }
+  void SetDest(IpAddr addr) { memcpy(dest, addr.addr, 4); }
+  void SetSource(IpAddr addr) { memcpy(source, addr.addr, 4); }
+  IpAddr GetDest() { return IpAddr(dest); }
+  IpAddr GetSource() { return IpAddr(source); }
 } __attribute__((packed));
 
 class ARP {

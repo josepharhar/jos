@@ -57,6 +57,17 @@ bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   new_request.callback = callback;
   new_request.callback_arg = callback_arg;
   AddRequest(target, new_request);
+
+  ARP* arp = new ARP();
+  memset(arp, 0, sizeof(ARP));
+  arp->SetHardwareType(ARP_HARDWARE_TYPE_ETHERNET);
+  arp->SetProtocol(ARP_PROTOCOL_IP);
+  arp->hardware_size = ARP_HARDWARE_SIZE;
+  arp->protocol_size = ARP_PROTOCOL_SIZE;
+  arp->SetOpcode(ARP_OPCODE_REQUEST);
+  SendEthernetPacket(arp, sizeof(ARP), Mac::BCAST, ETHERTYPE_ARP);
+  delete arp;
+
   return true;
 }
 
@@ -89,7 +100,6 @@ void HandleArp(ARP* arp, uint64_t arp_size) {
     printk("\n");
     // TODO make arp response
   }
-
 }
 
 }  // namespace net
