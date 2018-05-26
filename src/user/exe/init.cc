@@ -7,7 +7,6 @@
 #include "string.h"
 #include "unistd.h"
 #include "semaphore.h"
-#include "jos.h"
 
 // TODO the first piece of code in this file is what gets run by
 // exec(), make it always look for main() somehow instead

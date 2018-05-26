@@ -1,6 +1,5 @@
 #include "dcheck.h"
 
-#include "jos.h"
 #include "stdio.h"
 #include "getc.h"
 #include "vprintf.h"

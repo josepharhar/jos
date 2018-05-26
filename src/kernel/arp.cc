@@ -1,6 +1,8 @@
 #include "arp.h"
 
 #include "jmap.h"
+#include "jarray.h"
+#include "printk.h"
 
 namespace net {
 
@@ -8,14 +10,38 @@ typedef stdj::DefaultMap<IpAddr, Mac> ArpTable;
 static ArpTable* arp_table = 0;
 
 struct IpRequest {
-  ArpGotIpCallback callback;
+  ArpGotMacCallback callback;
   void* callback_arg;
 };
 
-static stdj::DefaultMap<IpAddr, stdj::Array<IpRequest> > ip_to_requests;
-//void AddRequest(
+typedef stdj::DefaultMap<IpAddr, stdj::Array<IpRequest>> RequestTable;
+static RequestTable* ip_to_requests = 0;
+static void AddRequest(IpAddr addr, IpRequest request) {
+  if (!ip_to_requests) {
+    ip_to_requests = new RequestTable();
+  }
+  if (!ip_to_requests->ContainsKey(addr)) {
+    ip_to_requests->Get(addr) = stdj::Array<IpRequest>();
+  }
+  // TODO can i use copy elision stuff to make this better?
+  stdj::Array<IpRequest> new_request_array = ip_to_requests->Get(addr);
+  new_request_array.Add(request);
+  ip_to_requests->Set(addr, new_request_array);
+}
+static stdj::Array<IpRequest> GetRequests(IpAddr addr) {
+  if (!ip_to_requests || !ip_to_requests->ContainsKey(addr)) {
+    return stdj::Array<IpRequest>();
+  }
+  return ip_to_requests->Get(addr);
+}
+static void ClearRequests(IpAddr addr) {
+  if (!ip_to_requests || !ip_to_requests->ContainsKey(addr)) {
+    return;
+  }
+  ip_to_requests->Remove(addr);
+}
 
-bool ArpGetIp(IpAddr target, ArpGotIpCallback callback, void* callback_arg) {
+bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   if (!arp_table) {
     arp_table = new ArpTable();
   }
@@ -26,9 +52,25 @@ bool ArpGetIp(IpAddr target, ArpGotIpCallback callback, void* callback_arg) {
   }
 
   // target wasn't found, make an arp request for it
+  IpRequest new_request;
+  new_request.callback = callback;
+  new_request.callback_arg = callback_arg;
+  AddRequest(target, new_request);
+  return true;
 }
 
-
-arp_table = new stdj::DefaultMap<IpAddr, Mac>();
+void HandleARP(ARP* arp, uint64_t arp_size) {
+  if (arp->GetOpcode() == ARP_OPCODE_REPLY) {
+    printk("received arp reply from: ");
+    PrintMac(arp->GetSourceMac());
+    printk(" ");
+    PrintIp(arp->GetSourceIp());
+    printk("\n");
+  } else if (arp->GetOpcode() == ARP_OPCODE_REQUEST) {
+    printk("received arp request for: ");
+    PrintMac(arp->GetTargetMac());
+    printk("\n");
+  }
+}
 
 }  // namespace net

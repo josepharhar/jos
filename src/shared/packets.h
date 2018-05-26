@@ -3,12 +3,6 @@
 
 #include "string.h"
 
-uint16_t ntohs(uint16_t network_short);
-uint32_t ntohl(uint32_t network_long);
-uint16_t htons(uint16_t host_short);
-uint32_t htonl(uint32_t host_long);
-unsigned short in_cksum(void* addr, int len);
-
 // https://www.tcpdump.org/pcap.html
 
 #define ETHERTYPE_IP 0x0800
@@ -29,10 +23,16 @@ unsigned short in_cksum(void* addr, int len);
 #define ICMP_PING_REQUEST 8
 #define ICMP_PING_REPLY 0
 
+uint16_t ntohs(uint16_t network_short);
+uint32_t ntohl(uint32_t network_long);
+uint16_t htons(uint16_t host_short);
+uint32_t htonl(uint32_t host_long);
+unsigned short in_cksum(void* addr, int len);
+
 class Mac {
  public:
-  //Mac() : Mac(0, 0, 0, 0, 0, 0) {}
-  constexpr Mac() : addr{0,0,0,0,0,0} {}
+  // Mac() : Mac(0, 0, 0, 0, 0, 0) {}
+  constexpr Mac() : addr{0, 0, 0, 0, 0, 0} {}
   Mac(const uint8_t* new_addr) { memcpy(addr, new_addr, 6); }
   Mac(uint8_t one,
       uint8_t two,
@@ -194,5 +194,8 @@ class ICMP {
  public:
   uint16_t GetChecksum() { return ntohs(checksum); }
 } __attribute__((packed));
+
+void PrintMac(Mac mac);
+void PrintIp(IpAddr ip);
 
 #endif  // PACKETS_H_

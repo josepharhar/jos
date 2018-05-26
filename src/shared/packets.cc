@@ -1,5 +1,7 @@
 #include "packets.h"
 
+#include "stdio.h"
+
 uint16_t ntohs(uint16_t network_short) {
   return ((network_short << 8) & 0xFF00) | ((network_short >> 8) & 0x00FF);
 }
@@ -46,4 +48,13 @@ unsigned short in_cksum(void* addr, int len) {
   sum += (sum >> 16);                 /* add carry */
   answer = ~sum;                      /* truncate to 16 bits */
   return (answer);
+}
+
+void PrintMac(Mac mac) {
+  printf("%02X:%02X:%02X:%02X:%02X:%02X", mac.addr[0], mac.addr[1], mac.addr[2],
+         mac.addr[3], mac.addr[4], mac.addr[5]);
+}
+
+void PrintIp(IpAddr ip) {
+  printf("%d.%d.%d.%d", ip.addr[0], ip.addr[1], ip.addr[2], ip.addr[3]);
 }

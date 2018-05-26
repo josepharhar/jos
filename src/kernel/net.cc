@@ -17,35 +17,7 @@ static IpAddr my_ip;
 static Mac gateway_mac;
 static IpAddr gateway_ip;
 
-// static stdj::Array<PacketReceivedHandler> handlers;
-
-static void PrintMac(Mac mac) {
-  printk("%02X:%02X:%02X:%02X:%02X:%02X", mac.addr[0], mac.addr[1],
-         mac.addr[2], mac.addr[3], mac.addr[4], mac.addr[5]);
-}
-static void PrintIp(IpAddr ip) {
-  printk("%d.%d.%d.%d", ip.addr[0], ip.addr[1], ip.addr[2], ip.addr[3]);
-}
-
-static void HandleARP(Ethernet* ethernet, uint64_t length) {
-  if (length < sizeof(Ethernet) + sizeof(ARP)) {
-    printk("packet length is less than ethernet + arp: %d\n", length);
-    return;
-  }
-
-  ARP* arp = (ARP*)(ethernet + 1);
-  if (arp->GetOpcode() == ARP_OPCODE_REPLY) {
-    printk("received arp reply from: ");
-    PrintMac(arp->GetSourceMac());
-    printk(" ");
-    PrintIp(arp->GetSourceIp());
-    printk("\n");
-  } else if (arp->GetOpcode() == ARP_OPCODE_REQUEST) {
-    printk("received arp request for: ");
-    PrintMac(arp->GetTargetMac());
-    printk("\n");
-  }
-}
+static stdj::Array<PacketReceivedHandler>* handlers = 0;
 
 static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
   if (length < sizeof(Ethernet)) {
@@ -67,7 +39,7 @@ static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
       break;
 
     case ETHERTYPE_ARP:
-      HandleARP(ethernet, length);
+      HandleArp((ARP*)(ethernet + 1), length - sizeof(Ethernet));
       break;
 
     case ETHERTYPE_IPV6:

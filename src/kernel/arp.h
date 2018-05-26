@@ -5,9 +5,11 @@
 
 namespace net {
 
-typedef void (*ArpGotIpCallback)(IpAddr, void*);
+typedef void (*ArpGotMacCallback)(Mac, void*);
 // returns true if there was a cache miss and an arp request will be made.
-bool ArpGetIp(IpAddr target, ArpGotIpCallback callback, void* callback_arg);
+bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg);
+
+void HandleArp(ARP* arp, uint64_t arp_size);
 
 }  // namespace net
 
