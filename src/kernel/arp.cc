@@ -16,6 +16,7 @@ struct IpRequest {
 
 typedef stdj::DefaultMap<IpAddr, stdj::Array<IpRequest>> RequestTable;
 static RequestTable* ip_to_requests = 0;
+
 static void AddRequest(IpAddr addr, IpRequest request) {
   if (!ip_to_requests) {
     ip_to_requests = new RequestTable();
@@ -59,18 +60,36 @@ bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   return true;
 }
 
-void HandleARP(ARP* arp, uint64_t arp_size) {
+void HandleArp(ARP* arp, uint64_t arp_size) {
+  if (!arp_table) {
+    arp_table = new ArpTable();
+  }
+
   if (arp->GetOpcode() == ARP_OPCODE_REPLY) {
     printk("received arp reply from: ");
     PrintMac(arp->GetSourceMac());
     printk(" ");
     PrintIp(arp->GetSourceIp());
     printk("\n");
+
+    IpAddr new_ip = arp->GetSourceIp();
+    Mac new_mac = arp->GetSourceMac();
+    arp_table->Set(new_ip, new_mac);
+
+    stdj::Array<IpRequest> requests = GetRequests(new_ip);
+    for (int i = 0; i < requests.Size(); i++) {
+      IpRequest request = requests.Get(i);
+      request.callback(new_mac, request.callback_arg);
+    }
+    ClearRequests(new_ip);
+
   } else if (arp->GetOpcode() == ARP_OPCODE_REQUEST) {
     printk("received arp request for: ");
     PrintMac(arp->GetTargetMac());
     printk("\n");
+    // TODO make arp response
   }
+
 }
 
 }  // namespace net
