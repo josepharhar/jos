@@ -8,6 +8,7 @@
 #include "irq.h"
 #include "jmap.h"
 #include "arp.h"
+#include "icmp.h"
 
 namespace net {
 
@@ -35,7 +36,7 @@ static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
 
   switch (ethernet->GetType()) {
     case ETHERTYPE_IP:
-      printk("received ipv4 packet\n");
+      HandleIpPacket(ethernet, length);
       break;
 
     case ETHERTYPE_ARP:
@@ -126,6 +127,14 @@ static pci::DeviceInfo GetFirstE1000() {
   pci::DeviceInfo bad_device;
   bad_device.bus = 0xFFFF;
   return bad_device;
+}
+
+IpAddr GetMyIp() {
+  return my_ip;
+}
+
+Mac GetMyMac() {
+  return my_mac;
 }
 
 IpAddr GetMyIp() {

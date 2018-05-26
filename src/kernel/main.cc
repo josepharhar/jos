@@ -33,6 +33,7 @@
 #include "fcntl_handler.h"
 #include "pci.h"
 #include "net.h"
+#include "ping_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -130,6 +131,7 @@ void KernelMain() {
   ipc::Init();
 
   net::Init();
+  net::InitPing();
 
   proc::CreateKthread(ProcInit, 0);
 

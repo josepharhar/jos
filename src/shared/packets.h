@@ -2,6 +2,7 @@
 #define PACKETS_H_
 
 #include "string.h"
+#include "stdlib.h"
 
 // https://www.tcpdump.org/pcap.html
 
@@ -20,8 +21,9 @@
 #define ARP_HARDWARE_SIZE 6
 #define ARP_PROTOCOL_SIZE 4
 
-#define ICMP_PING_REQUEST 8
-#define ICMP_PING_REPLY 0
+#define ICMP_TYPE_PING_REQUEST 8
+#define ICMP_TYPE_PING_REPLY 0
+#define ICMP_CODE_PING 0
 
 uint16_t ntohs(uint16_t network_short);
 uint32_t ntohl(uint32_t network_long);
@@ -81,6 +83,20 @@ class IpAddr {
     addr[3] = four;
   }
 
+  static IpAddr FromString(char* string) {
+    IpAddr addr(0, 0, 0, 0);
+    stdj::string jstring(string);
+    stdj::Array<stdj::string> splits = jstring.Split(".");
+    if (splits.Size() != 4) {
+      return addr;
+    }
+    addr.addr[0] = atoi(splits.Get(0));
+    addr.addr[1] = atoi(splits.Get(1));
+    addr.addr[2] = atoi(splits.Get(2));
+    addr.addr[3] = atoi(splits.Get(3));
+    return addr;
+  }
+
   uint8_t addr[4];
 
   uint64_t ToNumber() const {
@@ -134,7 +150,6 @@ class IP {
   uint8_t fragment_offset;
   uint8_t time_to_live;
   uint8_t protocol;  // TCP = 6
- private:
   uint16_t checksum;
 
  public:
@@ -184,8 +199,6 @@ class ICMP {
  public:
   uint8_t type;
   uint8_t code;
-
- private:
   uint16_t checksum;
 
  public:
