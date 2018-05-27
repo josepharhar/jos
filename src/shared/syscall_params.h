@@ -53,6 +53,7 @@ struct SyscallOpenParams {
 
 struct SyscallPingParams {
   char* ip_addr;
+  int status_writeback;
 };
 
 #endif  // SHARED_SYSCALL_PARAMS_H_

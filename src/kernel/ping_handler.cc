@@ -6,16 +6,29 @@
 #include "syscall.h"
 #include "proc.h"
 #include "icmp.h"
+#include "asm.h"
 
 namespace net {
 
 struct PingState {
   proc::BlockedQueue proc_queue;
   proc::ProcContext* proc;
+  SyscallPingParams* params;
 };
 
 static void ReceivedPingResponseCallback(void* arg) {
   PingState* state = (PingState*)arg;
+
+  uint64_t old_cr3 = Getcr3();
+  bool swap_tables = old_cr3 != state->proc->cr3;
+  if (swap_tables) {
+    Setcr3(state->proc->cr3);
+  }
+  state->params->status_writeback = 0;
+  if (swap_tables) {
+    Setcr3(old_cr3);
+  }
+
   state->proc_queue.UnblockHead();
   delete state;
 }
@@ -31,6 +44,7 @@ static void HandleSyscallPing(uint64_t interrupt_number,
   state->proc = proc::GetCurrentProc();
   state->proc_queue = proc::BlockedQueue();
   state->proc_queue.BlockCurrentProcNoNesting();
+  state->params = params;
 
   Ping(ip_addr, ReceivedPingResponseCallback, state);
 }
