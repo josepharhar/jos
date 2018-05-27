@@ -13,6 +13,7 @@ void SendPacket(void* packet, uint64_t length);
 void SetPacketReceivedHandler(PacketReceivedHandler handler);
 
 IpAddr GetMyIp();
+IpAddr GetGatewayIp();
 Mac GetMyMac();
 
 }

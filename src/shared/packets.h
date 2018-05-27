@@ -53,8 +53,6 @@ class Mac {
     addr[5] = six;
   }
 
-  static const Mac BCAST;
-
   uint8_t addr[6];
 
   uint64_t ToNumber() const {

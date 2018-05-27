@@ -3,6 +3,7 @@
 #include "jmap.h"
 #include "jarray.h"
 #include "printk.h"
+#include "ethernet.h"
 
 namespace net {
 
@@ -65,7 +66,8 @@ bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   arp->hardware_size = ARP_HARDWARE_SIZE;
   arp->protocol_size = ARP_PROTOCOL_SIZE;
   arp->SetOpcode(ARP_OPCODE_REQUEST);
-  SendEthernetPacket(arp, sizeof(ARP), Mac::BCAST, ETHERTYPE_ARP);
+  SendEthernetPacket(arp, sizeof(ARP), Mac(255, 255, 255, 255, 255, 255),
+                     ETHERTYPE_ARP);
   delete arp;
 
   return true;

@@ -4,6 +4,8 @@
 #include "printk.h"
 #include "net.h"
 #include "kmalloc.h"
+#include "ethernet.h"
+#include "arp.h"
 
 namespace net {
 
@@ -66,9 +68,9 @@ void SendIpPacket(void* packet,
   // TODO do subnet logic here to figure out if
   // the ip dest it outside of our LAN and if it should be sent
   // to the gateway ip or just the straight up ip
-  SendIpContext context = new SendIpContext();
+  SendIpContext* context = new SendIpContext();
   context->ip = ip;
-  contxt->ip_length = ip_length;
+  context->ip_length = ip_length;
   ArpGetIp(GetGatewayIp(), GotMacCallback, context);
 }
 

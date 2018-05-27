@@ -5,8 +5,10 @@
 
 namespace net {
 
-void SendEthernetPacket(void* packet, uint64_t packet_length, Mac dest);
-
+void SendEthernetPacket(void* packet,
+                        uint64_t packet_length,
+                        Mac dest,
+                        uint16_t ethernet_type);
 }
 
 #endif  // ETHERNET_H_

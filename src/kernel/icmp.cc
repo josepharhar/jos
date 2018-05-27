@@ -2,6 +2,9 @@
 
 #include "net.h"
 #include "arp.h"
+#include "kmalloc.h"
+#include "ip.h"
+#include "printk.h"
 
 namespace net {
 
@@ -13,13 +16,13 @@ struct PingRequest {
   PingCallback callback;
   void* callback_arg;
 };
-static stdj::Array<PingRequest>* ping_requests = new stdj::Array<PingState>();
+static stdj::Array<PingRequest>* ping_requests = new stdj::Array<PingRequest>();
 
-void Ping(IpAddr ip_address, PingCallback callback, void* callback_param) {
+void Ping(IpAddr ip_address, PingCallback callback, void* callback_arg) {
   PingRequest ping_request;
   ping_request.target = ip_address;
   ping_request.callback = callback;
-  ping_request.callback_param = callback_param;
+  ping_request.callback_arg = callback_arg;
   ping_requests->Add(ping_request);
 
   ICMP* icmp = (ICMP*)kmalloc(sizeof(ICMP));
