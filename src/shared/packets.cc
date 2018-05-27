@@ -58,3 +58,60 @@ void PrintMac(Mac mac) {
 void PrintIp(IpAddr ip) {
   printf("%d.%d.%d.%d", ip.addr[0], ip.addr[1], ip.addr[2], ip.addr[3]);
 }
+
+IpAddr::IpAddr() {}
+IpAddr::IpAddr(const uint8_t* new_addr) {
+  memcpy(addr, new_addr, 4);
+}
+IpAddr::IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
+  addr[0] = one;
+  addr[1] = two;
+  addr[2] = three;
+  addr[3] = four;
+}
+
+// static
+IpAddr IpAddr::FromString(char* string) {
+  IpAddr addr(0, 0, 0, 0);
+  stdj::string jstring(string);
+  stdj::Array<stdj::string> splits = jstring.Split(".");
+  if (splits.Size() != 4) {
+    return addr;
+  }
+  stdj::string str = splits.Get(0);
+  addr.addr[0] = atoi(str.c_str());
+  str = splits.Get(1);
+  addr.addr[1] = atoi(str.c_str());
+  str = splits.Get(2);
+  addr.addr[2] = atoi(str.c_str());
+  str = splits.Get(3);
+  addr.addr[3] = atoi(str.c_str());
+  return addr;
+}
+
+stdj::string IpAddr::ToString() {
+  stdj::string output = "";
+  for (int i = 0; i < 4; i++) {
+    output = output + stdj::string::ParseInt(addr[i]);
+  }
+  return output;
+}
+
+uint64_t IpAddr::ToNumber() const {
+  uint64_t number = 0;
+  memcpy(&number, addr, 4);
+  return number;
+}
+
+bool IpAddr::operator==(const IpAddr& other) {
+  for (int i = 0; i < 4; i++) {
+    if (addr[i] != other.addr[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool IpAddr::operator!=(const IpAddr& other) {
+  return !operator==(other);
+}

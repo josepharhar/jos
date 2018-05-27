@@ -77,57 +77,17 @@ class Mac {
 
 class IpAddr {
  public:
-  IpAddr() {}
-  IpAddr(const uint8_t* new_addr) { memcpy(addr, new_addr, 4); }
-  IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
-    addr[0] = one;
-    addr[1] = two;
-    addr[2] = three;
-    addr[3] = four;
-  }
-
-  static IpAddr FromString(char* string) {
-    IpAddr addr(0, 0, 0, 0);
-    stdj::string jstring(string);
-    stdj::Array<stdj::string> splits = jstring.Split(".");
-    if (splits.Size() != 4) {
-      return addr;
-    }
-    stdj::string str = splits.Get(0);
-    addr.addr[0] = atoi(str.c_str());
-    str = splits.Get(1);
-    addr.addr[1] = atoi(str.c_str());
-    str = splits.Get(2);
-    addr.addr[2] = atoi(str.c_str());
-    str = splits.Get(3);
-    addr.addr[3] = atoi(str.c_str());
-    return addr;
-  }
-
-  stdj::string ToString() {
-    stdj::string output = "";
-    for (int i = 0; i < 4; i++) {
-      output = output + stdj::string::ParseInt(addr[i]);
-    }
-    return output;
-  }
+  IpAddr();
+  IpAddr(const uint8_t* new_addr);
+  IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four);
+  static IpAddr FromString(char* string);
 
   uint8_t addr[4];
 
-  uint64_t ToNumber() const {
-    uint64_t number = 0;
-    memcpy(&number, addr, 4);
-    return number;
-  }
-  bool operator==(const IpAddr& other) {
-    for (int i = 0; i < 4; i++) {
-      if (addr[i] != other.addr[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  bool operator!=(const IpAddr& other) { return !operator==(other); }
+  stdj::string ToString();
+  uint64_t ToNumber() const;
+  bool operator==(const IpAddr& other);
+  bool operator!=(const IpAddr& other);
   friend bool operator<(const IpAddr& left, const IpAddr& right) {
     return left.ToNumber() < right.ToNumber();
   }
