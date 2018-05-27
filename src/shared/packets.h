@@ -36,7 +36,6 @@ unsigned short in_cksum(void* addr, int len);
 
 class Mac {
  public:
-  // Mac() : Mac(0, 0, 0, 0, 0, 0) {}
   constexpr Mac() : addr{0, 0, 0, 0, 0, 0} {}
   Mac(const uint8_t* new_addr) { memcpy(addr, new_addr, 6); }
   Mac(uint8_t one,

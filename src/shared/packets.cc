@@ -92,6 +92,9 @@ IpAddr IpAddr::FromString(char* string) {
 stdj::string IpAddr::ToString() {
   stdj::string output = "";
   for (int i = 0; i < 4; i++) {
+    if (i != 0) {
+      output = output + stdj::string(".");
+    }
     output = output + stdj::string::ParseInt(addr[i]);
   }
   return output;
