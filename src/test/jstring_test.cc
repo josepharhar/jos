@@ -69,10 +69,17 @@ static void TestSplit() {
   }
 }
 
+void TestParseNumber() {
+  ASSERT_EQ(stdj::string("4880"), stdj::string(4880));
+  ASSERT_EQ(stdj::string("0"), stdj::string((int64_t)0));
+  ASSERT_EQ(stdj::string("-2"), stdj::string((int64_t)2));
+}
+
 int main(int argc, char** argv) {
   TestAssignment();
   TestAdd();
   TestWeirdLength();
   TestSubstring();
   TestSplit();
+  TestParseNumber();
 }

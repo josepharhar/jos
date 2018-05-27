@@ -21,6 +21,8 @@ class string {
   string(const char* other_string);
   string(char* other_string);
 
+  string(int64_t value);
+
   void Add(char value);
   int Size() const;
   const char* Data() const;

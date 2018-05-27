@@ -44,6 +44,10 @@ static void ClearRequests(IpAddr addr) {
 }
 
 bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
+  {
+    stdj::string target_string = target.ToString();
+    printk("ArpGetIp target: %s", target_string.c_str());
+  }
   if (!arp_table) {
     arp_table = new ArpTable();
   }

@@ -1,7 +1,7 @@
 #ifndef SHARED_STDLIB_H_
 #define SHARED_STDLIB_H_
 
-#include "stdint.h"
+#include "shared/stdint.h"
 
 extern "C" {
 

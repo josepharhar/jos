@@ -37,6 +37,17 @@ string& string::operator=(const string& other) {
   return *this;
 }
 
+string::string(int64_t value) {
+  if (value < 0) {
+    Add('-');
+    value *= -1;
+  }
+  while (value) {
+    Add('0' + (value % 10));
+    value = value / 10;
+  }
+}
+
 void string::Add(char value) {
   // initialize array if needed
   if (!array_ || array_ == NULL_STRING) {

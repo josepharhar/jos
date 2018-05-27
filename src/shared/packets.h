@@ -104,6 +104,14 @@ class IpAddr {
     return addr;
   }
 
+  stdj::string ToString() {
+    stdj::string output = "";
+    for (int i = 0; i < 4; i++) {
+      output = output + stdj::string(addr[i]);
+    }
+    return output;
+  }
+
   uint8_t addr[4];
 
   uint64_t ToNumber() const {
