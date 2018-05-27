@@ -37,15 +37,28 @@ string& string::operator=(const string& other) {
   return *this;
 }
 
-string::string(int64_t value) {
+// static
+string string::ParseInt(int64_t value) {
+  if (!value) {
+    return string("0");
+  }
+  string output = "";
+  bool is_negative = false;
   if (value < 0) {
-    Add('-');
+    is_negative = true;
     value *= -1;
   }
   while (value) {
-    Add('0' + (value % 10));
+    char new_digit[2];
+    new_digit[0] = '0' + (value % 10);
+    new_digit[1] = 0;
+    output = string(new_digit) + output;
     value = value / 10;
   }
+  if (is_negative) {
+    output = string("-") + output;
+  }
+  return output;
 }
 
 void string::Add(char value) {

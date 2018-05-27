@@ -107,7 +107,7 @@ class IpAddr {
   stdj::string ToString() {
     stdj::string output = "";
     for (int i = 0; i < 4; i++) {
-      output = output + stdj::string(addr[i]);
+      output = output + stdj::string::ParseInt(addr[i]);
     }
     return output;
   }

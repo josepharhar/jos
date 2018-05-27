@@ -1,11 +1,12 @@
-#include "test.h"
-
+#undef TEST
 #include "shared/stdlib.h"
 
+#include <assert.h>
+
 int main(int argc, char** argv) {
-  ASSERT_EQ(42, atoi("42"));
-  ASSERT_EQ(0, atoi("0"));
-  ASSERT_EQ(-2, atoi(-2));
+  assert(42 == atoi("42"));
+  assert(0 == atoi("0"));
+  assert(-2 == atoi("-2"));
 
   return 0;
 }
