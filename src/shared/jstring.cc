@@ -37,6 +37,34 @@ string& string::operator=(const string& other) {
   return *this;
 }
 
+static char NumberToChar(int64_t number) {
+  if (number > 255) {
+    return '?';
+  }
+  char char_number = (char)number;
+  char_number = '0' + char_number;
+  if (char_number > '9') {
+    char_number = char_number + ('A' - '9') - 1;
+  }
+  if (char_number > 'Z' || char_number < '0') {
+    return '?';
+  }
+  return char_number;
+}
+
+static char CharToNumber(char character) {
+  if (character >= '0' && character <= '9') {
+    return character - '0';
+  }
+  if (character >= 'a' && character <= 'z') {
+    return character - 'a' + 10;
+  }
+  if (character >= 'A' && character <= 'Z') {
+    return character - 'A' + 10;
+  }
+  return -1;
+}
+
 // static
 string string::ParseInt(int64_t value) {
   return ParseInt(value, 10);
@@ -53,7 +81,8 @@ string string::ParseInt(int64_t value, int base) {
   string output = "";
   while (value) {
     char new_digit[2];
-    new_digit[0] = ('0' + value) % base;
+    // new_digit[0] = '0' + (value % base);
+    new_digit[0] = NumberToChar(value % base);
     new_digit[1] = 0;
     output = string(new_digit) + output;
     value = value / base;
@@ -212,11 +241,7 @@ int64_t string::ToInt(int base) {
 
   int multiplier = 1;
   while (str_copy.Size()) {
-    char char_digit = str_copy.Get(str_copy.Size() - 1);
-    if (char_digit >= 'A' && char_digit <= 'Z') {
-      char_digit = char_digit - ('A' - 'a');
-    }
-    int64_t digit = (int64_t)((char_digit) - '0');
+    char digit = CharToNumber(str_copy.Get(str_copy.Size() - 1));
     if (digit < 0 || digit >= base) {
       return -1;
     }

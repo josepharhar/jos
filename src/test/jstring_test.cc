@@ -73,7 +73,7 @@ void TestParseNumber() {
   ASSERT_EQ(stdj::string("4880"), stdj::string::ParseInt(4880));
   ASSERT_EQ(stdj::string("0"), stdj::string::ParseInt(0));
   ASSERT_EQ(stdj::string("-2"), stdj::string::ParseInt(-2));
-  ASSERT_EQ(stdj::string("fead"), stdj::string::ParseInt(0xfead, 16));
+  ASSERT_EQ(stdj::string("FEAD"), stdj::string::ParseInt(0xfead, 16));
 }
 
 void TestToInt() {
@@ -82,8 +82,8 @@ void TestToInt() {
   ASSERT_EQ((int64_t)0, stdj::string("0").ToInt());
   ASSERT_EQ((int64_t)0, stdj::string("0").ToInt(16));
   ASSERT_EQ((int64_t)0xff, stdj::string("ff").ToInt(16));
-  ASSERT_EQ((int64_t)0xACDEF, stdj::string("abcdef").ToInt(16));
-  ASSERT_EQ((int64_t)0x1a2b3c, stdj::string("0x1A2b3c").ToInt(16));
+  ASSERT_EQ((int64_t)0xabcdef, stdj::string("abcdef").ToInt(16));
+  ASSERT_EQ((int64_t)0x1a2b3c, stdj::string("1A2b3c").ToInt(16));
 }
 
 int main(int argc, char** argv) {
