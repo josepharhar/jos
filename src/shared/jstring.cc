@@ -71,14 +71,14 @@ string string::ParseInt(int64_t value) {
 }
 
 // static
-string string::ParseInt(int64_t value, int base) {
-  if (!value) {
-    return string("0");
-  }
+string string::ParseInt(int64_t value, int base, int zero_padding) {
   if (value < 0) {
-    return string("-") + ParseInt(value * -1, base);
+    return string("-") + ParseInt(value * -1, base, zero_padding);
   }
   string output = "";
+  if (!value) {
+    output = "0";
+  }
   while (value) {
     char new_digit[2];
     // new_digit[0] = '0' + (value % base);
@@ -86,6 +86,12 @@ string string::ParseInt(int64_t value, int base) {
     new_digit[1] = 0;
     output = string(new_digit) + output;
     value = value / base;
+  }
+  while (output.Size() < zero_padding) {
+    char new_digit[2];
+    new_digit[0] = '0';
+    new_digit[1] = 0;
+    output = string(new_digit) + output;
   }
   return output;
 }

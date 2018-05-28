@@ -22,7 +22,7 @@ class string {
   string(char* other_string);
 
   static string ParseInt(int64_t value);
-  static string ParseInt(int64_t value, int base);
+  static string ParseInt(int64_t value, int base, int zero_padding = 0);
 
   int64_t ToInt(int base = 10);
 

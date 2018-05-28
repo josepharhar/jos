@@ -36,64 +36,40 @@ unsigned short in_cksum(void* addr, int len);
 
 class Mac {
  public:
-  constexpr Mac() : addr{0, 0, 0, 0, 0, 0} {}
-  Mac(const uint8_t* new_addr) { memcpy(addr, new_addr, 6); }
+  Mac();
+  Mac(const uint8_t* new_addr);
   Mac(uint8_t one,
       uint8_t two,
       uint8_t three,
       uint8_t four,
       uint8_t five,
-      uint8_t six) {
-    addr[0] = one;
-    addr[1] = two;
-    addr[2] = three;
-    addr[3] = four;
-    addr[4] = five;
-    addr[5] = six;
-  }
-
-  stdj::string ToString();
+      uint8_t six);
   static Mac FromString(const char* string);
 
+  stdj::string ToString();
+  uint64_t ToNumber() const;
+  bool operator==(const Mac& other);
+  bool operator!=(const Mac& other);
+
   uint8_t addr[6];
-
-  uint64_t ToNumber() const {
-    uint64_t number = 0;
-    memcpy(&number, addr, 6);
-    return number;
-  }
-
-  bool operator==(const Mac& other) {
-    for (int i = 0; i < 6; i++) {
-      if (addr[i] != other.addr[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-  bool operator!=(const Mac& other) { return !operator==(other); }
-  friend bool operator<(const Mac& left, const Mac& right) {
-    return left.ToNumber() < right.ToNumber();
-  }
 } __attribute__((packed));
+bool operator<(const Mac& left, const Mac& right);
 
 class IpAddr {
  public:
   IpAddr();
   IpAddr(const uint8_t* new_addr);
   IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four);
-  static IpAddr FromString(char* string);
-
-  uint8_t addr[4];
+  static IpAddr FromString(const char* string);
 
   stdj::string ToString();
   uint64_t ToNumber() const;
   bool operator==(const IpAddr& other);
   bool operator!=(const IpAddr& other);
-  friend bool operator<(const IpAddr& left, const IpAddr& right) {
-    return left.ToNumber() < right.ToNumber();
-  }
+
+  uint8_t addr[4];
 } __attribute__((packed));
+bool operator<(const IpAddr& left, const IpAddr& right);
 
 class Ethernet {
  public:

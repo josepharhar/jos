@@ -71,7 +71,7 @@ IpAddr::IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
 }
 
 // static
-IpAddr IpAddr::FromString(char* string) {
+IpAddr IpAddr::FromString(const char* string) {
   IpAddr addr(0, 0, 0, 0);
   stdj::string jstring(string);
   stdj::Array<stdj::string> splits = jstring.Split(".");
@@ -121,34 +121,82 @@ bool IpAddr::operator!=(const IpAddr& other) {
 
 stdj::string Mac::ToString() {
   stdj::string output = "";
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
     if (i != 0) {
       output = output + stdj::string(":");
     }
-    output = output + stdj::string::ParseInt(addr[i]);
+    output = output + stdj::string::ParseInt(addr[i], 16, 2);
   }
   return output;
 }
 
 // static
 Mac Mac::FromString(const char* string) {
-  Mac addr(0, 0, 0, 0, 0, 0);
+  Mac mac_addr(0, 0, 0, 0, 0, 0);
   stdj::string jstring(string);
   stdj::Array<stdj::string> splits = jstring.Split(":");
   if (splits.Size() != 6) {
-    return addr;
+    return mac_addr;
   }
   stdj::string str = splits.Get(0);
-  addr.addr[0] = atoi(str.c_str());
+  mac_addr.addr[0] = atoi(str.c_str());
   str = splits.Get(1);
-  addr.addr[1] = atoi(str.c_str());
+  mac_addr.addr[1] = atoi(str.c_str());
   str = splits.Get(2);
-  addr.addr[2] = atoi(str.c_str());
+  mac_addr.addr[2] = atoi(str.c_str());
   str = splits.Get(3);
-  addr.addr[3] = atoi(str.c_str());
+  mac_addr.addr[3] = atoi(str.c_str());
   str = splits.Get(3);
-  addr.addr[3] = atoi(str.c_str());
+  mac_addr.addr[3] = atoi(str.c_str());
   str = splits.Get(3);
-  addr.addr[3] = atoi(str.c_str());
-  return addr;
+  mac_addr.addr[3] = atoi(str.c_str());
+  return mac_addr;
+}
+
+// Mac
+
+Mac::Mac() {}
+
+Mac::Mac(uint8_t one,
+         uint8_t two,
+         uint8_t three,
+         uint8_t four,
+         uint8_t five,
+         uint8_t six) {
+  addr[0] = one;
+  addr[1] = two;
+  addr[2] = three;
+  addr[3] = four;
+  addr[4] = five;
+  addr[5] = six;
+}
+
+Mac::Mac(const uint8_t* new_addr) {
+  memcpy(addr, new_addr, 6);
+}
+
+uint64_t Mac::ToNumber() const {
+  uint64_t number = 0;
+  memcpy(&number, addr, 6);
+  return number;
+}
+
+bool Mac::operator==(const Mac& other) {
+  for (int i = 0; i < 6; i++) {
+    if (addr[i] != other.addr[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+bool Mac::operator!=(const Mac& other) {
+  return !operator==(other);
+}
+
+bool operator<(const Mac& left, const Mac& right) {
+  return left.ToNumber() < right.ToNumber();
+}
+
+bool operator<(const IpAddr& left, const IpAddr& right) {
+  return left.ToNumber() < right.ToNumber();
 }
