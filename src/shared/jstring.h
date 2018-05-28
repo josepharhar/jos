@@ -21,9 +21,10 @@ class string {
   string(const char* other_string);
   string(char* other_string);
 
-  //string(int64_t value);
-  //static string ParseInt(uint64_t value);
   static string ParseInt(int64_t value);
+  static string ParseInt(int64_t value, int base);
+
+  int64_t ToInt(int base = 10);
 
   void Add(char value);
   int Size() const;

@@ -55,6 +55,13 @@ static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
 }
 
 void SendPacket(void* packet, uint64_t length) {
+  {
+    printk("net::SendPacket() length: %d\n", length);
+    Ethernet* ethernet = (Ethernet*)packet;
+    stdj::string mac_src = ethernet->GetSrc().ToString();
+    stdj::string mac_dest = ethernet->GetDest().ToString();
+    printk("  mac src: %s dest: %s\n", mac_src.c_str(), mac_dest.c_str());
+  }
   driver->sendPacket(packet, length);
 }
 

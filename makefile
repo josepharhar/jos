@@ -260,3 +260,7 @@ clean:
 	-sudo umount /mnt/fatgrub
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
+
+.PHONY: pcap
+pcap:
+	tcpdump -qns 0 -A -r dump.pcap

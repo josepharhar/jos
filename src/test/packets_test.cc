@@ -23,8 +23,16 @@ void TestIpAddrParsing() {
   assert(addr == IpAddr::FromString("192.168.0.1"));
 }
 
+void TestMacAddrParsing() {
+  Mac addr(0xff, 0x00, 0x01, 0x20, 0x23, 0xa3);
+  assert(addr.ToString() == stdj::string("ff:00:01:20:23:a3"));
+  assert(addr == Mac::FromString("ff:00:01:20:23:a3"));
+  assert(addr == Mac::FromString("ff:0:1:20:23:a3"));
+}
+
 int main(int argc, char** argv) {
   TestEndian();
   TestIpAddrParsing();
+  TestMacAddrParsing();
   return 0;
 }

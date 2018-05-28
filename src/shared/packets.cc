@@ -118,3 +118,37 @@ bool IpAddr::operator==(const IpAddr& other) {
 bool IpAddr::operator!=(const IpAddr& other) {
   return !operator==(other);
 }
+
+stdj::string Mac::ToString() {
+  stdj::string output = "";
+  for (int i = 0; i < 4; i++) {
+    if (i != 0) {
+      output = output + stdj::string(":");
+    }
+    output = output + stdj::string::ParseInt(addr[i]);
+  }
+  return output;
+}
+
+// static
+Mac Mac::FromString(const char* string) {
+  Mac addr(0, 0, 0, 0, 0, 0);
+  stdj::string jstring(string);
+  stdj::Array<stdj::string> splits = jstring.Split(":");
+  if (splits.Size() != 6) {
+    return addr;
+  }
+  stdj::string str = splits.Get(0);
+  addr.addr[0] = atoi(str.c_str());
+  str = splits.Get(1);
+  addr.addr[1] = atoi(str.c_str());
+  str = splits.Get(2);
+  addr.addr[2] = atoi(str.c_str());
+  str = splits.Get(3);
+  addr.addr[3] = atoi(str.c_str());
+  str = splits.Get(3);
+  addr.addr[3] = atoi(str.c_str());
+  str = splits.Get(3);
+  addr.addr[3] = atoi(str.c_str());
+  return addr;
+}

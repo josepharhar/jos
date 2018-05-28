@@ -52,6 +52,9 @@ class Mac {
     addr[5] = six;
   }
 
+  stdj::string ToString();
+  static Mac FromString(const char* string);
+
   uint8_t addr[6];
 
   uint64_t ToNumber() const {

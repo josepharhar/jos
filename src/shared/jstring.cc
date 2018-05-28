@@ -39,24 +39,27 @@ string& string::operator=(const string& other) {
 
 // static
 string string::ParseInt(int64_t value) {
+  if (value < 0) {
+    return string("-") + ParseInt((uint64_t)(value * -1));
+  }
+  return ParseInt(value, 10);
+}
+
+// static
+string string::ParseInt(int64_t value, int base) {
   if (!value) {
     return string("0");
   }
-  string output = "";
-  bool is_negative = false;
   if (value < 0) {
-    is_negative = true;
-    value *= -1;
+    return string("-") + ParseInt(value * -1, base);
   }
+  string output = "";
   while (value) {
     char new_digit[2];
-    new_digit[0] = '0' + (value % 10);
+    new_digit[0] = '0' + (value % base);
     new_digit[1] = 0;
     output = string(new_digit) + output;
-    value = value / 10;
-  }
-  if (is_negative) {
-    output = string("-") + output;
+    value = value / base;
   }
   return output;
 }
@@ -194,6 +197,42 @@ bool string::operator==(const string& other) const {
 
 bool string::operator!=(const string& other) const {
   return !Equals(other);
+}
+
+int64_t string::ToInt(int base) {
+  if (!Size()) {
+    return 0;
+  }
+
+  string str_copy = *this;
+  int64_t output = 0;
+
+  bool is_negative = false;
+  if (str_copy.Get(0) == '-') {
+    is_negative = true;
+    str_copy = str_copy.Substring(1, str_copy.Size());
+  }
+
+  int multiplier = 1;
+  while (str_copy.Size()) {
+    char char_digit = str_copy.Get(str_copy.Size() - 1);
+    if (char_digit >= 'A' && char_digit <= 'Z') {
+      char_digit = char_digit - ('A' - 'a');
+    }
+    int64_t digit = (int64_t)((char_digit) - '0');
+    if (digit < 0 || digit >= base) {
+      return -1;
+    }
+    output += digit * multiplier;
+    multiplier *= base;
+
+    str_copy = str_copy.Substring(0, str_copy.Size() - 1);
+  }
+
+  if (is_negative) {
+    output *= -1;
+  }
+  return output;
 }
 
 }  // namespace stdj
