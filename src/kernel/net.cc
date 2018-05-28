@@ -21,6 +21,7 @@ static IpAddr gateway_ip;
 static stdj::Array<PacketReceivedHandler>* handlers = 0;
 
 static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
+  printk("HandlePacketReceived length: %d\n", length);
   if (length < sizeof(Ethernet)) {
     printk("packet length is less than ethernet length: %d\n", length);
     return;
