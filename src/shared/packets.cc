@@ -130,29 +130,6 @@ stdj::string Mac::ToString() {
   return output;
 }
 
-// static
-Mac Mac::FromString(const char* string) {
-  Mac mac_addr(0, 0, 0, 0, 0, 0);
-  stdj::string jstring(string);
-  stdj::Array<stdj::string> splits = jstring.Split(":");
-  if (splits.Size() != 6) {
-    return mac_addr;
-  }
-  stdj::string str = splits.Get(0);
-  mac_addr.addr[0] = atoi(str.c_str());
-  str = splits.Get(1);
-  mac_addr.addr[1] = atoi(str.c_str());
-  str = splits.Get(2);
-  mac_addr.addr[2] = atoi(str.c_str());
-  str = splits.Get(3);
-  mac_addr.addr[3] = atoi(str.c_str());
-  str = splits.Get(3);
-  mac_addr.addr[3] = atoi(str.c_str());
-  str = splits.Get(3);
-  mac_addr.addr[3] = atoi(str.c_str());
-  return mac_addr;
-}
-
 // Mac
 
 Mac::Mac() {}
@@ -199,4 +176,21 @@ bool operator<(const Mac& left, const Mac& right) {
 
 bool operator<(const IpAddr& left, const IpAddr& right) {
   return left.ToNumber() < right.ToNumber();
+}
+
+// static
+Mac Mac::FromString(const char* string) {
+  stdj::string jstring(string);
+  stdj::Array<stdj::string> splits = jstring.Split(":");
+  if (splits.Size() != 6) {
+    return Mac(0, 0, 0, 0, 0, 0);
+  }
+  Mac mac_addr(0, 0, 0, 0, 0, 0);
+  mac_addr.addr[0] = splits.Get(0).ToInt(16);
+  mac_addr.addr[1] = splits.Get(1).ToInt(16);
+  mac_addr.addr[2] = splits.Get(2).ToInt(16);
+  mac_addr.addr[3] = splits.Get(3).ToInt(16);
+  mac_addr.addr[4] = splits.Get(4).ToInt(16);
+  mac_addr.addr[5] = splits.Get(5).ToInt(16);
+  return mac_addr;
 }

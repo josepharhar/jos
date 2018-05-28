@@ -51,7 +51,8 @@ class Mac {
   bool operator==(const Mac& other);
   bool operator!=(const Mac& other);
 
-  uint8_t addr[6];
+  // TODO if this is 6 then it causes segfaults
+  uint8_t addr[8];
 } __attribute__((packed));
 bool operator<(const Mac& left, const Mac& right);
 
