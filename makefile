@@ -261,6 +261,6 @@ clean:
 	-sudo losetup -d $(LOOP_TWO)
 	-sudo losetup -d $(LOOP_ONE)
 
-.PHONY: pcap
-pcap:
+.PHONY: dump
+dump:
 	tcpdump -qns 0 -A -r dump.pcap

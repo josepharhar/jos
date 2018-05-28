@@ -4,6 +4,7 @@
 #include "jarray.h"
 #include "printk.h"
 #include "ethernet.h"
+#include "net.h"
 
 namespace net {
 
@@ -46,7 +47,7 @@ static void ClearRequests(IpAddr addr) {
 bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   {
     stdj::string target_string = target.ToString();
-    printk("ArpGetIp target: %s", target_string.c_str());
+    printk("ArpGetIp target: %s\n", target_string.c_str());
   }
   if (!arp_table) {
     arp_table = new ArpTable();
@@ -70,6 +71,10 @@ bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
   arp->hardware_size = ARP_HARDWARE_SIZE;
   arp->protocol_size = ARP_PROTOCOL_SIZE;
   arp->SetOpcode(ARP_OPCODE_REQUEST);
+  arp->SetTargetIp(target);
+  arp->SetSourceIp(GetMyIp());
+  arp->SetSourceMac(GetMyMac());
+  arp->SetTargetMac(Mac(0, 0, 0, 0, 0, 0));
   SendEthernetPacket(arp, sizeof(ARP), Mac(255, 255, 255, 255, 255, 255),
                      ETHERTYPE_ARP);
   delete arp;

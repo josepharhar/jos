@@ -61,6 +61,13 @@ void SendPacket(void* packet, uint64_t length) {
     stdj::string mac_src = ethernet->GetSrc().ToString();
     stdj::string mac_dest = ethernet->GetDest().ToString();
     printk("  mac src: %s dest: %s\n", mac_src.c_str(), mac_dest.c_str());
+    if (ethernet->GetType() == ETHERTYPE_ARP) {
+      ARP* arp = (ARP*)(ethernet + 1);
+      stdj::string target = arp->GetTargetIp().ToString();
+      stdj::string src = arp->GetSourceIp().ToString();
+      printk("  arp targetip: %s, srcip: %s\n",
+          target.c_str(), src.c_str());
+    }
   }
   driver->sendPacket(packet, length);
 }
