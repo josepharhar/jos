@@ -39,9 +39,6 @@ string& string::operator=(const string& other) {
 
 // static
 string string::ParseInt(int64_t value) {
-  if (value < 0) {
-    return string("-") + ParseInt((uint64_t)(value * -1));
-  }
   return ParseInt(value, 10);
 }
 
@@ -56,7 +53,7 @@ string string::ParseInt(int64_t value, int base) {
   string output = "";
   while (value) {
     char new_digit[2];
-    new_digit[0] = '0' + (value % base);
+    new_digit[0] = ('0' + value) % base;
     new_digit[1] = 0;
     output = string(new_digit) + output;
     value = value / base;
