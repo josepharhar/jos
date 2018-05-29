@@ -72,12 +72,12 @@ IpAddr::IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four) {
 
 // static
 IpAddr IpAddr::FromString(const char* string) {
-  IpAddr addr(0, 0, 0, 0);
   stdj::string jstring(string);
   stdj::Array<stdj::string> splits = jstring.Split(".");
   if (splits.Size() != 4) {
-    return addr;
+    return INVALID;
   }
+  IpAddr addr(0, 0, 0, 0);
   stdj::string str = splits.Get(0);
   addr.addr[0] = atoi(str.c_str());
   str = splits.Get(1);
@@ -152,6 +152,9 @@ Mac::Mac(const uint8_t* new_addr) {
   memcpy(addr, new_addr, 6);
 }
 
+const Mac Mac::INVALID = Mac(0x42, 0x42, 0x42, 0x42, 0x42, 0x42);
+const IpAddr IpAddr::INVALID = IpAddr(192, 0, 2, 42);
+
 uint64_t Mac::ToNumber() const {
   uint64_t number = 0;
   memcpy(&number, addr, 6);
@@ -183,7 +186,7 @@ Mac Mac::FromString(const char* string) {
   stdj::string jstring(string);
   stdj::Array<stdj::string> splits = jstring.Split(":");
   if (splits.Size() != 6) {
-    return Mac(0, 0, 0, 0, 0, 0);
+    return INVALID;
   }
   Mac mac_addr(0, 0, 0, 0, 0, 0);
   mac_addr.addr[0] = splits.Get(0).ToInt(16);
@@ -194,3 +197,47 @@ Mac Mac::FromString(const char* string) {
   mac_addr.addr[5] = splits.Get(5).ToInt(16);
   return mac_addr;
 }
+
+TcpAddr::TcpAddr() {}
+
+TcpAddr::TcpAddr(IpAddr new_ip_addr, uint16_t new_port)
+    : ip_addr(new_ip_addr), port(new_port) {}
+
+// static
+TcpAddr TcpAddr::FromString(const char* string) {
+  stdj::string jstring(string);
+  stdj::Array<stdj::string> port_split = jstring.Split(":");
+  if (port_split.Size() != 2) {
+    return INVALID;
+  }
+  stdj::string ip_string = port_split.Get(0);
+  IpAddr ip_addr = IpAddr::FromString(ip_string.c_str());
+  if (ip_addr == IpAddr::INVALID) {
+    return INVALID;
+  }
+
+  uint16_t port = (uint16_t)port_split.Get(1).ToInt();
+  return TcpAddr(ip_addr, port);
+}
+
+stdj::string TcpAddr::ToString() {
+  return ip_addr.ToString() + stdj::string(":") + stdj::string::ParseInt(port);
+}
+
+uint64_t TcpAddr::ToNumber() const {
+  return ip_addr.ToNumber() + (((uint64_t)port) << 32);
+}
+
+bool TcpAddr::operator==(const TcpAddr& other) {
+  return ip_addr == other.ip_addr && port == other.port;
+}
+
+bool TcpAddr::operator!=(const TcpAddr& other) {
+  return !operator==(other);
+}
+
+bool operator<(const TcpAddr& left, const TcpAddr& right) {
+  return left.ToNumber() < right.ToNumber();
+}
+
+const TcpAddr TcpAddr::INVALID = TcpAddr(IpAddr::INVALID, 42);

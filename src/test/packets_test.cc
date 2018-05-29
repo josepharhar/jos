@@ -31,9 +31,16 @@ void TestMacAddrParsing() {
   assert(addr == Mac::FromString("fF:0:1:20:23:a3"));
 }
 
+void TestTcpAddrParsing() {
+  TcpAddr addr(IpAddr(192, 168, 0, 1), 80);
+  assert(addr.ToString() == stdj::string("192.168.0.1:80"));
+  assert(addr == TcpAddr::FromString("192.168.0.1:80"));
+}
+
 int main(int argc, char** argv) {
   TestEndian();
   TestIpAddrParsing();
   TestMacAddrParsing();
+  TestTcpAddrParsing();
   return 0;
 }

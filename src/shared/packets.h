@@ -45,6 +45,7 @@ class Mac {
       uint8_t five,
       uint8_t six);
   static Mac FromString(const char* string);
+  static const Mac INVALID;
 
   stdj::string ToString();
   uint64_t ToNumber() const;
@@ -52,7 +53,7 @@ class Mac {
   bool operator!=(const Mac& other);
 
   // TODO if this is 6 then it causes segfaults
-  uint8_t addr[8];
+  uint8_t addr[16];
 } __attribute__((packed));
 bool operator<(const Mac& left, const Mac& right);
 
@@ -62,15 +63,33 @@ class IpAddr {
   IpAddr(const uint8_t* new_addr);
   IpAddr(uint8_t one, uint8_t two, uint8_t three, uint8_t four);
   static IpAddr FromString(const char* string);
+  static const IpAddr INVALID;
 
   stdj::string ToString();
   uint64_t ToNumber() const;
   bool operator==(const IpAddr& other);
   bool operator!=(const IpAddr& other);
 
-  uint8_t addr[4];
+  uint8_t addr[16];
 } __attribute__((packed));
 bool operator<(const IpAddr& left, const IpAddr& right);
+
+class TcpAddr {
+ public:
+  TcpAddr();
+  TcpAddr(IpAddr ip_addr, uint16_t port);
+  static TcpAddr FromString(const char* string);
+  static const TcpAddr INVALID;
+
+  stdj::string ToString();
+  uint64_t ToNumber() const;
+  bool operator==(const TcpAddr& other);
+  bool operator!=(const TcpAddr& other);
+
+  uint16_t port;
+  IpAddr ip_addr;
+};
+bool operator<(const TcpAddr& left, const TcpAddr& right);
 
 class Ethernet {
  public:
