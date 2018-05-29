@@ -1,6 +1,8 @@
 #include "tcp.h"
 
 #include "jmap.h"
+#include "jarray.h"
+#include "jpair.h"
 
 namespace net {
 
@@ -24,6 +26,122 @@ class TcpConnection {
     SetState(kClosed);
     my_seq_ = tcp_rand() % UINT32_MAX + 1;
 
+    TCPFlags send_flags;
+    send_flags.syn = 1;
+    Send(0, 0, send_flags.GetValue());
+    SetState(kSynSent);
+
+    // invisible syn byte
+    my_seq_++;
+  }
+
+  int Receive(TCP* tcp, uint64_t length) {
+    uint64_t payload_length = length - tcp->data_offset * 4;
+
+    printk("received tcp. state: %d\n", state_);
+    printk("  fin: %d, syn: %d, rst: %d, psh: %d\n", tcp->GetFlags()->fin,
+           tcp->GetFlags()->syn, tcp->GetFlags()->rst, tcp->GetFlags()->psh);
+    printk("  ack: %d, urg: %d, ece: %d, cwr: %d\n", tcp->GetFlags()->ack,
+           tcp->GetFlags()->urg, tcp->GetFlags()->ece, tcp->GetFlags()->cwr);
+
+    switch (state_) {
+      case kUninitialized:
+        DCHECK(false);
+        break;
+
+      case kClosed:
+        printk("  state is kClosed, ignoring received packet\n");
+        break;
+
+      case kSynSent: {
+        // packet coming back should be SYN-ACK
+        TCPFlags expected_flags;
+        expected_flags.syn = 1;
+        expected_flags.ack = 1;
+        if (*(tcp->GetFlags()) != expected_flags) {
+          printk("  packet coming back should have been synack.\n");
+          Cancel();
+          break;
+        }
+        init_other_seq_ = tcp->GetSeq();
+        other_seq_ = tcp->GetSeq();
+
+        other_seq_++;  // TODO when exactly should this be incremented?
+        // the ack number we send back is supposed to be
+        // the last seq we fully received + 1.
+
+        // send an ack
+        printk("  got synack. sending ack\n");
+        TCPFlags ack_flags;
+        ack_flags.ack = 1;
+        Send(0, 0, ack_flags.GetValue());
+
+        SetState(kEstablished);
+
+        // send all buffered packets
+        for (unsigned i = 0; i < buffered_packets_to_send_.Size(); i++) {
+          auto buffered_packet = buffered_packets_to_send_.Get(i);
+          Send(buffered_packet.first, buffered_packet.second);
+        }
+
+        break;
+      }
+
+      case kEstablished:
+        if (tcp->GetSeq() != other_seq_) {
+          printd("  BAD tcp->GetSeq(): %u\n", tcp->GetSeq());
+          printd("         other_seq_: %u\n", other_seq_);
+          printd("    init_other_seq_: %u\n", init_other_seq_);
+          break;
+        }
+        if (payload_size) {
+          /*char* payload = (char*)calloc(1, payload_size + 1);
+          memcpy(payload, tcp + 1, payload_size);
+          printd("  %d byte payload:\n%s\n", payload_size, payload);*/
+          /*printd(
+              "  sizeof(TCP): %lu, tcp->GetHeaderLength(): %d, full size: %d\n",
+              sizeof(TCP), tcp->GetHeaderLength(), size);*/
+          if (g_loop_function) {
+            g_loop_function(tcp + 1, payload_size);
+          }
+        }
+        if (!payload_size) {
+          // printd("  no payload, should other_seq_ be incremented??\n");
+        }
+        other_seq_ += payload_size;
+
+        if (tcp->GetFlags()->fin) {
+          // TODO only send fin back when we are done sending data n stuff.
+          printk("  received fin, sending fin back.\n");
+          TCPFlags fin_flags;
+          fin_flags.fin = 1;
+          fin_flags.ack = 1;
+          other_seq_++;  // TODO delet this
+          Send(0, 0, fin_flags.GetValue());
+
+          return 1;
+        }
+        break;
+    }
+  }
+
+  void Cancel() {
+    switch (state_) {
+      case kUninitialized:
+      case kClosed:
+        break;
+      case kSynSent:
+      case kEstablished: {
+        printk("  sending reset\n");
+        TCPFlags reset_flags;
+        reset_flags.rst = 1;
+        Send(0, 0, reset_flags.GetValue());
+        break;
+      }
+    }
+    SetState(kClosed);
+  }
+
  private:
   TcpHandle handle_;
   State state_;
@@ -31,6 +149,58 @@ class TcpConnection {
   uint32_t other_seq_;
   uint32_t init_my_seq_;
   uint32_t init_other_seq_;
+  stdj::Array<stdj::pair<const void*, int>> buffered_packets_to_send_;
+
+  void Send(const void* buffer, uint64_t buffer_length, uint8_t flags) {
+    uint16_t tcp_length = sizeof(TCP) + buffer_length;
+    uint16_t tcp_pseudo_lenght = sizeof(TCPPseudoHeader) + tcp_length;
+
+    TCPPseudoHeader* pseudo_header =
+        (TCPPseudoHeader*)kcalloc(tcp_pseudo_length, 1);
+
+    pseudo_header->SetSrc(GetMyIp());
+    pseudo_header->SetDest(handle_.remote_addr.ip_addr);
+    pseudo_header->reserved = 0;
+    pseudo_header->protocol = IP_PROTOCOL_TCP;
+    pseudo_header->SetTcpLength(tcp_length);
+
+    TCP* tcp = (TCP*)(pseudo_header + 1);
+    tcp->SetSrcPort(handle_.local_port);
+    tcp->SetDestPort(handle_.remote_addr.port);
+    tcp->SetSeq(my_seq_);
+    my_seq_ += buffer_length;
+    tcp->SetAckNumber(other_seq_);
+    tcp->data_offset = sizeof(TCP) / 4;
+    *(tcp->GetFlags()) = flags;
+    tcp->SetWindowSize(29200);
+
+    memcpy(tcp + 1, buffer, buffer_length);
+    tcp->checksum = 0;
+    tcp->checksum = in_cksum(pseudo_header, tcp_pseudo_length);
+
+    SendIpPacket(tcp, tcp_length, handle_.remote_addr.ip_addr, IP_PROTOCOL_TCP);
+    kfree(pseudo_header);
+  }
+
+  void SetState(State new_state) {
+    switch (new_state) {
+      case kUninitialized:
+        DCHECK(false);
+        break;
+      case kClosed:
+        break;
+      case kSynSent:
+        if (state_ != kClosed) {
+          printk("state_: %d, new_state: %d\n", state_, new_state);
+        }
+        DCHECK(state_ == kClosed);
+        break;
+      case kEstablished:
+        DCHECK(false);
+        break;
+    }
+    state_ = new_state;
+  }
 };
 
 // static stdj::DefaultMap<TcpHandle, TcpState> handle_to_state;
