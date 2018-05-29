@@ -12,5 +12,6 @@ int main(int argc, char** argv) {
   char* ip_address = argv[1];
   int ping_retval = ping(ip_address);
   printf("ping returned %d\n", ping_retval);
+  exit(0);
   return 0;
 }
