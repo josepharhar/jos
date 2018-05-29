@@ -20,7 +20,6 @@ struct TcpHandle {
 };
 bool operator<(const TcpHandle& left, const TcpHandle& right);
 
-typedef int TcpHandle;
 typedef void (*TcpPacketHandler)(void*, uint64_t, void*);
 typedef void (*TcpConnectionClosedHandler)(void*);
 

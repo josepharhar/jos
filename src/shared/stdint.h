@@ -5,6 +5,8 @@
 // test programs already have this defined from the actual c++ stdlib
 #ifndef TEST
 
+#define UINT32_MAX 0xFFFFFFFF
+
 typedef char int8_t;
 typedef unsigned char uint8_t;
 

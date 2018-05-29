@@ -3,6 +3,9 @@
 #include "jmap.h"
 #include "jarray.h"
 #include "jpair.h"
+#include "kmalloc.h"
+#include "printk.h"
+#include "ip.h"
 
 namespace net {
 
@@ -82,33 +85,29 @@ class TcpConnection {
         for (unsigned i = 0; i < buffered_packets_to_send_.Size(); i++) {
           auto buffered_packet = buffered_packets_to_send_.Get(i);
           Send(buffered_packet.first, buffered_packet.second);
+          kfree((void*)buffered_packet.first);
         }
+        buffered_packets_to_send_ = stdj::Array<stdj::pair<const void*, int>>();
 
         break;
       }
 
       case kEstablished:
         if (tcp->GetSeq() != other_seq_) {
-          printd("  BAD tcp->GetSeq(): %u\n", tcp->GetSeq());
-          printd("         other_seq_: %u\n", other_seq_);
-          printd("    init_other_seq_: %u\n", init_other_seq_);
+          printk("  BAD tcp->GetSeq(): %u\n", tcp->GetSeq());
+          printk("         other_seq_: %u\n", other_seq_);
+          printk("    init_other_seq_: %u\n", init_other_seq_);
           break;
         }
-        if (payload_size) {
-          /*char* payload = (char*)calloc(1, payload_size + 1);
-          memcpy(payload, tcp + 1, payload_size);
-          printd("  %d byte payload:\n%s\n", payload_size, payload);*/
-          /*printd(
-              "  sizeof(TCP): %lu, tcp->GetHeaderLength(): %d, full size: %d\n",
-              sizeof(TCP), tcp->GetHeaderLength(), size);*/
+        if (payload_length) {
           if (g_loop_function) {
-            g_loop_function(tcp + 1, payload_size);
+            g_loop_function(tcp + 1, payload_length);
           }
         }
-        if (!payload_size) {
-          // printd("  no payload, should other_seq_ be incremented??\n");
+        if (!payload_length) {
+          // printk("  no payload, should other_seq_ be incremented??\n");
         }
-        other_seq_ += payload_size;
+        other_seq_ += payload_length;
 
         if (tcp->GetFlags()->fin) {
           // TODO only send fin back when we are done sending data n stuff.
@@ -140,6 +139,28 @@ class TcpConnection {
       }
     }
     SetState(kClosed);
+  }
+
+  void Send(const void* buffer, int buffer_length) {
+    switch (state_) {
+      case kUninitialized:
+      case kClosed:
+      case kSynSent: {
+        void* buffer_copy = kmalloc(buffer_length);
+        memcpy(buffer_copy, buffer, buffer_length);
+        buffered_packets_to_send_.push_back(
+            stdj::pair<const void*, int>(buffer_copy, buffer_length));
+        return;
+      }
+
+      case kEstablished:
+        break;
+    }
+
+    TCPFlags flags;
+    flags.ack = 1;
+    flags.psh = 1;
+    Send(buffer, buffer_length, flags.GetValue());
   }
 
  private:
@@ -258,7 +279,7 @@ bool TcpHandle::operator!=(const TcpHandle& other) {
   return operator==(other);
 }
 
-uint64_t TcpHandle::ToNumber() {
+uint64_t TcpHandle::ToNumber() const {
   return remote_addr.ToNumber() + (((uint64_t)local_port) << 48);
 }
 
