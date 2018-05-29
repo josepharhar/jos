@@ -240,4 +240,5 @@ bool operator<(const TcpAddr& left, const TcpAddr& right) {
   return left.ToNumber() < right.ToNumber();
 }
 
-const TcpAddr TcpAddr::INVALID = TcpAddr(IpAddr::INVALID, 42);
+const TcpAddr TcpAddr::INVALID = TcpAddr(IpAddr::INVALID, TcpAddr::INVALID_PORT);
+const uint16_t TcpAddr::INVALID_PORT = 0;

@@ -80,6 +80,7 @@ class TcpAddr {
   TcpAddr(IpAddr ip_addr, uint16_t port);
   static TcpAddr FromString(const char* string);
   static const TcpAddr INVALID;
+  static const uint16_t INVALID_PORT;
 
   stdj::string ToString();
   uint64_t ToNumber() const;
@@ -110,7 +111,7 @@ class Ethernet {
 
 class IP {
  public:
-  uint8_t length : 4;  // sizeof this struct / 32
+  uint8_t length : 4;  // (sizeof this struct * 8) / 32, number of 32b words
   uint8_t version : 4;
   // uint8_t differentiated_services_field;  // aka TOS
   uint8_t tos;  // aka TOS
@@ -139,6 +140,10 @@ class IP {
   void SetSource(IpAddr addr) { memcpy(source, addr.addr, 4); }
   IpAddr GetDest() { return IpAddr(dest); }
   IpAddr GetSource() { return IpAddr(source); }
+  void* GetNextHeader() {
+    // TODO this should take the length and return null for security
+    return ((uint8_t*)this) + (length * 4);
+  }
 } __attribute__((packed));
 
 class ARP {

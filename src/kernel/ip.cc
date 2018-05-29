@@ -6,6 +6,7 @@
 #include "kmalloc.h"
 #include "ethernet.h"
 #include "arp.h"
+#include "tcp.h"
 
 namespace net {
 
@@ -24,7 +25,7 @@ void HandleIpPacket(Ethernet* ethernet, uint64_t length) {
       break;
 
     case IP_PROTOCOL_TCP:
-      printk("received tcp packet\n");
+      HandleTcpPacket(ethernet, length);
       break;
 
     case IP_PROTOCOL_UDP:
