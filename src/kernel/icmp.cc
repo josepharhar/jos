@@ -28,6 +28,7 @@ void Ping(IpAddr ip_address, PingCallback callback, void* callback_arg) {
   ICMP* icmp = (ICMP*)kmalloc(sizeof(ICMP));
   icmp->type = ICMP_TYPE_PING_REQUEST;
   icmp->code = ICMP_CODE_PING;
+  icmp->checksum = 0;
   memset(icmp->rest, 0, 4);
   icmp->checksum = in_cksum(icmp, sizeof(ICMP));
   SendIpPacket(icmp, sizeof(ICMP), ip_address, IP_PROTOCOL_ICMP);

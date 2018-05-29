@@ -50,7 +50,7 @@ void SendIpPacket(void* packet,
   uint64_t ip_length = sizeof(IP) + length;
   IP* ip = (IP*)kmalloc(ip_length);
   ip->version = IP_VERSION_IPV4;
-  ip->length = sizeof(IP) / 32;
+  ip->length = (sizeof(IP) * 8) / 32;
   ip->tos = 0;  // TODO what should this be
   ip->SetTotalLength(ip_length);
   static uint16_t next_id = 1;
@@ -63,7 +63,8 @@ void SendIpPacket(void* packet,
   ip->SetSource(GetMyIp());
   ip->SetDest(dest);
   memcpy(ip + 1, packet, length);
-  ip->checksum = in_cksum(ip, ip_length);
+  //ip->checksum = in_cksum(ip, ip_length);
+  ip->checksum = in_cksum(ip, sizeof(IP));
 
   // TODO do subnet logic here to figure out if
   // the ip dest it outside of our LAN and if it should be sent

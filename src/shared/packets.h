@@ -91,8 +91,8 @@ class Ethernet {
 
 class IP {
  public:
-  uint8_t version : 4;
   uint8_t length : 4;  // sizeof this struct / 32
+  uint8_t version : 4;
   // uint8_t differentiated_services_field;  // aka TOS
   uint8_t tos;  // aka TOS
  private:
