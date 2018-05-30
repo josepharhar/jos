@@ -34,6 +34,7 @@
 #include "pci.h"
 #include "net.h"
 #include "ping_handler.h"
+#include "socket_handler.h"
 
 extern uint64_t stack_top[];
 extern uint64_t stack_bottom[];
@@ -132,6 +133,7 @@ void KernelMain() {
 
   net::Init();
   net::InitPing();
+  net::InitSocket();
 
   proc::CreateKthread(ProcInit, 0);
 

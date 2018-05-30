@@ -30,6 +30,7 @@
 #define SYSCALL_WAIT 20
 #define SYSCALL_OPEN 21
 #define SYSCALL_PING 22
+#define SYSCALL_SOCKET 23
 
 #define MAX_NUM_SYSCALLS 256
 
