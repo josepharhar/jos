@@ -23,8 +23,7 @@ bool operator<(const TcpHandle& left, const TcpHandle& right);
 typedef void (*TcpPacketHandler)(void*, uint64_t, void*);
 typedef void (*TcpConnectionClosedHandler)(void*);
 
-TcpHandle OpenTcpConnection(IpAddr dest,
-                            uint16_t port,
+TcpHandle OpenTcpConnection(TcpAddr addr,
                             TcpPacketHandler handler,
                             void* handler_arg,
                             TcpConnectionClosedHandler closed_handler,

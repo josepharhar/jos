@@ -1,6 +1,22 @@
 #include "socket_file.h"
 
-SocketFile::SocketFile() {}
+#include "net.h"
+#include "tcp.h"
+#include "packets.h"
+
+static void SocketClosedHandler(void* arg) {
+
+}
+
+static void PacketHandler(void* packet, uint64_t length, void* arg) {
+
+}
+
+SocketFile::SocketFile(TcpAddr addr) {
+  net::OpenTcpConnection(addr,
+      PacketHandler,
+      :
+}
 
 ipc::Pipe* SocketFile::Open(ipc::Mode mode) {
   SocketPipe* pipe = new SocketPipe(this, mode);
