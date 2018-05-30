@@ -23,7 +23,7 @@ class File {
 
   // Opens a pipe to this file in the specified mode.
   virtual Pipe* Open(Mode mode) = 0;
-  // Closes and deletes a pipe created using Open().
+  // Unregisters a pipe created using Open().
   virtual void Close(Pipe* pipe) = 0;
   // Gets the number of pipes currently open accessing this file.
   virtual int GetNumPipes() = 0;
@@ -51,12 +51,13 @@ class Pipe {
 
   // Returns the ipc::File which owns this Pipe
   File* GetFile();
-
   Mode GetMode();
+  void Close();
 
  private:
   File* file_;
   Mode mode_;
+  bool closed_;
 };
 
 }  // namespace ipc

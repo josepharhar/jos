@@ -48,14 +48,4 @@ class BufferFile : public ipc::File {
   stdj::Queue<RdWrRequest> read_request_queue_;
 };
 
-class BufferPipe : public ipc::Pipe {
- public:
-  BufferPipe(ipc::File* file, ipc::Mode mode);
-
-  BufferPipe(const BufferPipe& other) = delete;
-  BufferPipe& operator=(const BufferPipe& other) = delete;
-  BufferPipe(BufferPipe&& other) = delete;
-  BufferPipe& operator=(BufferPipe&& other) = delete;
-};
-
 #endif  // BUFFER_FILE_H_

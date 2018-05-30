@@ -27,9 +27,4 @@ class DiskFile : public ipc::File {
   vfs::File* file_;
 };
 
-class DiskPipe : public ipc::Pipe {
- public:
-  DiskPipe(ipc::File* file, ipc::Mode mode);
-};
-
 #endif  // DISK_FILE_H_

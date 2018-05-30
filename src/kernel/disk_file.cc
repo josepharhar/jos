@@ -8,14 +8,13 @@
 DiskFile::DiskFile(vfs::File* file) : file_(file) {}
 
 ipc::Pipe* DiskFile::Open(ipc::Mode mode) {
-  DiskPipe* pipe = new DiskPipe(this, mode);
+  ipc::Pipe* pipe = new ipc::Pipe(this, mode);
   pipes_.Add(pipe);
   return pipe;
 }
 
 void DiskFile::Close(ipc::Pipe* pipe) {
   pipes_.RemoveValue(pipe);
-  delete pipe;
 }
 
 int DiskFile::GetNumPipes() {
@@ -96,6 +95,6 @@ void DiskFile::Read(ipc::Pipe* pipe,
 void DiskFile::Write(ipc::Pipe* pipe,
                      const uint8_t* src_buffer,
                      int write_size,
-                     int* size_writeback) {}
-
-DiskPipe::DiskPipe(ipc::File* file, ipc::Mode mode) : ipc::Pipe(file, mode) {}
+                     int* size_writeback) {
+  // TODO implement fat32 writing
+}

@@ -23,7 +23,13 @@ class TcpConnection {
     kEstablished = 3,
   };
 
-  TcpConnection(TcpHandle handle) : handle_(handle), state_(kUninitialized) {}
+  TcpConnection(TcpHandle handle,
+                TcpPacketHandler packet_handler,
+                TcpConnectionClosedHandler closed_handler)
+      : handle_(handle),
+        state_(kUninitialized),
+        packet_handler_(packet_handler),
+        closed_handler_(closed_handler) {}
 
   void Start() {
     SetState(kClosed);
@@ -100,9 +106,7 @@ class TcpConnection {
           break;
         }
         if (payload_length) {
-          if (g_loop_function) {
-            g_loop_function(tcp + 1, payload_length);
-          }
+          packet_handler_(tcp + 1, payload_length);
         }
         if (!payload_length) {
           // printk("  no payload, should other_seq_ be incremented??\n");
@@ -139,6 +143,8 @@ class TcpConnection {
       }
     }
     SetState(kClosed);
+    closed_handler_();
+    // TODO delete this and close pipes/socketfiles
   }
 
   void Send(const void* buffer, int buffer_length) {
@@ -171,6 +177,8 @@ class TcpConnection {
   uint32_t init_my_seq_;
   uint32_t init_other_seq_;
   stdj::Array<stdj::pair<const void*, int>> buffered_packets_to_send_;
+  TcpPacketHandler packet_handler_;
+  TcpConnectionClosedHandler closed_handler_;
 
   void Send(const void* buffer, uint64_t buffer_length, uint8_t flags) {
     uint16_t tcp_length = sizeof(TCP) + buffer_length;
@@ -240,14 +248,14 @@ static TcpHandle GenerateHandle(TcpAddr remote_addr) {
 }
 
 TcpHandle OpenTcpConnection(TcpAddr remote_addr,
-                            TcpPacketHandler handler,
+                            TcpPacketHandler packet_handler,
                             void* handler_arg,
                             TcpConnectionClosedHandler closed_handler,
                             void* closed_handler_arg) {
   TcpHandle new_handle = GenerateHandle(remote_addr);
 
-  TcpState new_state;
-  new_state.remote_addr = addr;
+  TcpConnection* new_connection =
+      new TcpConnection(new_handle, packet_handler, closed_handler);
 
   handle_to_state.Put(new_handle, new_state);
 

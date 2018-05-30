@@ -5,13 +5,15 @@
 #include "proc.h"
 #include "jarray.h"
 #include "jbuffer.h"
+#include "tcp.h"
+#include "packets.h"
 
 class SocketFile : public ipc::File {
  public:
-  SocketFile();
+  SocketFile(TcpAddr addr);
 
   ipc::Pipe* Open(ipc::Mode mode) override;
-  int Close(ipc::Pipe* pipe) override;
+  void Close(ipc::Pipe* pipe) override;
   int GetNumPipes() override;
 
   void Write(ipc::Pipe* pipe,
@@ -31,12 +33,14 @@ class SocketFile : public ipc::File {
   };
 
   stdj::Array<ipc::Pipe*> pipes_;
-  TcpHandle handle_;
+  net::TcpHandle handle_;
   stdj::Buffer<uint8_t> buffer_;
 
   proc::BlockedQueue proc_blocked_queue_;
   stdj::Queue<proc::ProcContext*> proc_context_queue_;
   stdj::Queue<ReadRequest> request_queue_;
+
+  bool connection_closed_;
 
   static void GlobalSocketClosedHandler(void* arg);
   static void GlobalIncomingPacketHandler(void* packet,
@@ -45,11 +49,8 @@ class SocketFile : public ipc::File {
 
   void SocketClosedHandler();
   void IncomingPacketHandler(void* packet, uint64_t length);
-};
 
-class SocketPipe : public ipc::Pipe {
- public:
-  SocketPipe(ipc::File* file, ipc::Mode mode);
+  void CloseEverything();
 };
 
 #endif  // KERNEL_SOCKET_FILE_H_

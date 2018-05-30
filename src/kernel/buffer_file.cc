@@ -7,14 +7,13 @@
 BufferFile::BufferFile() : buffer_(4096) {}
 
 ipc::Pipe* BufferFile::Open(ipc::Mode mode) {
-  BufferPipe* pipe = new BufferPipe(this, mode);
+  Pipe* pipe = new Pipe(this, mode);
   pipes_.Add(pipe);
   return pipe;
 }
 
 void BufferFile::Close(ipc::Pipe* pipe) {
   pipes_.RemoveValue(pipe);
-  delete pipe;
 }
 
 int BufferFile::GetNumPipes() {
@@ -107,6 +106,3 @@ void BufferFile::Read(ipc::Pipe* pipe,
 
   read_blocked_queue_.BlockCurrentProcNoNesting();
 }
-
-BufferPipe::BufferPipe(ipc::File* file, ipc::Mode mode)
-    : ipc::Pipe(file, mode) {}
