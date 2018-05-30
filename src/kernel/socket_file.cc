@@ -35,7 +35,21 @@ void SocketFile::Read(ipc::Pipe* pipe,
                       uint8_t* dest_buffer,
                       int read_size,
                       int* size_writeback) {
-  // TODO
+  // read from buffer if there is anything available, else queue
+  if (buffer_.ReadSizeAvailable()) {
+    int amount_read = buffer_.Read(dest_buffer, read_size);
+    *size_writeback = amount_read;
+    return;
+  }
+
+  ReadRequest new_request;
+  new_request.buffer_writeback = dest_buffer;
+  new_request.buffer_length = (uint64_t)write_size;
+  new_request.size_writeback = size_writeback;
+
+  proc_blocked_queue_.BlockCurrentProcNoNesting();
+  proc_context_queue_.Add(proc::GetCurrentProc());
+  request_queue.Add(new_request);
 }
 
 // static
@@ -50,7 +64,10 @@ void SocketFile::GlobalIncomingPacketHandler(void* packet,
   ((SocketFile)arg)->IncomingPacketHandler(packet, length);
 }
 
-void SocketFile::SocketClosedHandler() {}
+void SocketFile::SocketClosedHandler() {
+  // TODO when the socket it closed, we have to return EOF (zero)
+  //   to all read/write calls
+}
 
 void SocketFile::IncomingPacketHandler(void* packet, uint64_t length) {
   if (buffer_.WriteSizeAvailable() < length) {
@@ -78,7 +95,7 @@ void SocketFile::IncomingPacketHandler(void* packet, uint64_t length) {
       Setcr3(proc->cr3);
     }
     buffer_.Read(request.buffer_writeback, read_length);
-    *(request.status_writeback) = read_length;
+    *(request.size_writeback) = read_length;
     if (switch_tables) {
       Setcr3(old_cr3);
     }

@@ -27,12 +27,11 @@ class SocketFile : public ipc::File {
   struct ReadRequest {
     void* buffer_writeback;
     uint64_t buffer_length;
-    int status_writeback;
+    int* size_writeback;
   };
 
   stdj::Array<ipc::Pipe*> pipes_;
   TcpHandle handle_;
-  //stdj::Queue<std::pair<void*, uint64_t>> incoming_packet_queue_;
   stdj::Buffer<uint8_t> buffer_;
 
   proc::BlockedQueue proc_blocked_queue_;
