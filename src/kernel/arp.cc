@@ -45,10 +45,6 @@ static void ClearRequests(IpAddr addr) {
 }
 
 bool ArpGetIp(IpAddr target, ArpGotMacCallback callback, void* callback_arg) {
-  {
-    stdj::string target_string = target.ToString();
-    printk("ArpGetIp target: %s\n", target_string.c_str());
-  }
   if (!arp_table) {
     arp_table = new ArpTable();
   }
@@ -88,11 +84,11 @@ void HandleArp(ARP* arp, uint64_t arp_size) {
   }
 
   if (arp->GetOpcode() == ARP_OPCODE_REPLY) {
-    printk("received arp reply from: ");
+    /*printk("received arp reply from: ");
     PrintMac(arp->GetSourceMac());
     printk(" ");
     PrintIp(arp->GetSourceIp());
-    printk("\n");
+    printk("\n");*/
 
     IpAddr new_ip = arp->GetSourceIp();
     Mac new_mac = arp->GetSourceMac();

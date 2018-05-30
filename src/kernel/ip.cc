@@ -11,7 +11,30 @@
 namespace net {
 
 void HandleIpPacket(Ethernet* ethernet, uint64_t length) {
+  if (length < sizeof(Ethernet) + sizeof(IP)) {
+    // packet is invalid, it says ip but doesnt have enough room for ip header
+    printk("HandleIpPacket packet says its ip but isnt long enough to be\n");
+    return;
+  }
   IP* ip = (IP*)(ethernet + 1);
+
+  uint64_t ip_total_length = ip->GetTotalLength();
+  if (ip_total_length < sizeof(IP)) {
+    printk("HandleIpPacket packet says its shorter than ip\n");
+    // invalid, must at least have header
+    return;
+  }
+  if (length - sizeof(Ethernet) < ip_total_length) {
+    // invalid, packet says its longer than it actually is
+    printk("HandleIpPacket packet says its longer than it is\n");
+    return;
+  }
+  if (length - sizeof(Ethernet) > ip_total_length) {
+    // this happens normally i guess, from ethernet padding or something?
+    /*printk("HandleIpPacket packet says its %d, actually is %d\n",
+           ip_total_length + sizeof(Ethernet), length);*/
+    length = ip_total_length + sizeof(Ethernet);
+  }
 
   if (ip->GetDest() != GetMyIp()) {
     // packet was not addressed to us.
@@ -63,7 +86,7 @@ void SendIpPacket(void* packet,
   ip->SetSource(GetMyIp());
   ip->SetDest(dest);
   memcpy(ip + 1, packet, length);
-  //ip->checksum = in_cksum(ip, ip_length);
+  // ip->checksum = in_cksum(ip, ip_length);
   ip->checksum = in_cksum(ip, sizeof(IP));
 
   // TODO do subnet logic here to figure out if

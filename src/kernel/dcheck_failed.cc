@@ -4,11 +4,12 @@
 #include "vga.h"
 #include "vprintf.h"
 
-void DCHECKFailed(const char* condition) {
-  printk("DCHECK failed: %s\n", condition);
+void DCHECKFailed(const char* file, int line, const char* condition) {
+  printk("%s:%d DCHECK failed: %s\n", file, line, condition);
 
   int one = 1;
-  while (one);
+  while (one)
+    ;
 }
 
 void DCHECKFailedMessage(const char* condition, const char* format, ...) {
@@ -21,5 +22,6 @@ void DCHECKFailedMessage(const char* condition, const char* format, ...) {
   printk("\n");
 
   int one = 1;
-  while (one);
+  while (one)
+    ;
 }

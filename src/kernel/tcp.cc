@@ -36,15 +36,16 @@ class TcpConnection {
         packet_handler_(packet_handler),
         packet_handler_arg_(packet_handler_arg),
         closed_handler_(closed_handler),
-        closed_handler_arg_(closed_handler_arg) {
-    printk("TcpConnection::TcpConnection\n");
-  }
+        closed_handler_arg_(closed_handler_arg) {}
 
   TcpHandle GetHandle() { return handle_; }
 
   void Start() {
     SetState(kClosed);
     my_seq_ = tcp_rand() % UINT32_MAX + 1;
+    init_my_seq_ = my_seq_;
+    other_seq_ = 0;
+    init_other_seq_ = 0;
 
     TCPFlags send_flags;
     send_flags.syn = 1;
@@ -58,11 +59,13 @@ class TcpConnection {
   void Receive(TCP* tcp, uint64_t length) {
     uint64_t payload_length = length - tcp->data_offset * 4;
 
-    printk("received tcp. state: %d\n", state_);
-    printk("  fin: %d, syn: %d, rst: %d, psh: %d\n", tcp->GetFlags()->fin,
-           tcp->GetFlags()->syn, tcp->GetFlags()->rst, tcp->GetFlags()->psh);
-    printk("  ack: %d, urg: %d, ece: %d, cwr: %d\n", tcp->GetFlags()->ack,
-           tcp->GetFlags()->urg, tcp->GetFlags()->ece, tcp->GetFlags()->cwr);
+    // printk("received tcp. state: %d\n", state_);
+    printk("state_: %d  fin: %d, syn: %d, rst: %d, psh: %d\n", state_,
+           tcp->GetFlags()->fin, tcp->GetFlags()->syn, tcp->GetFlags()->rst,
+           tcp->GetFlags()->psh);
+    printk("  plen: %d  ack: %d, urg: %d, ece: %d, cwr: %d\n", payload_length,
+           tcp->GetFlags()->ack, tcp->GetFlags()->urg, tcp->GetFlags()->ece,
+           tcp->GetFlags()->cwr);
 
     switch (state_) {
       case kUninitialized:
@@ -114,6 +117,9 @@ class TcpConnection {
           printk("  BAD tcp->GetSeq(): %u\n", tcp->GetSeq());
           printk("         other_seq_: %u\n", other_seq_);
           printk("    init_other_seq_: %u\n", init_other_seq_);
+          while (1) {
+            asm volatile("hlt");
+          }
           break;
         }
         if (payload_length) {
@@ -244,7 +250,7 @@ class TcpConnection {
         DCHECK(state_ == kClosed);
         break;
       case kEstablished:
-        DCHECK(false);
+        DCHECK(state_ == kSynSent);
         break;
     }
     state_ = new_state;
@@ -264,7 +270,8 @@ static TcpConnection* GetConnection(TcpHandle handle) {
 static TcpHandle GenerateHandle(TcpAddr remote_addr) {
   TcpHandle new_handle;
   new_handle.remote_addr = remote_addr;
-  for (uint16_t i = 49152; i < 65535; i++) {
+  // for (uint16_t i = 49152; i < 65535; i++) {
+  for (uint16_t i = 49169; i < 65535; i++) {
     new_handle.local_port = i;
     if (!GetConnection(new_handle)) {
       return new_handle;
@@ -311,7 +318,10 @@ void HandleTcpPacket(Ethernet* ethernet, uint64_t length) {
     return;
   }
 
+  uint16_t ip_total_length = ip->GetTotalLength(); // includes ip header, excludes ethernet header
+
   uint64_t tcp_length = length - (((uint64_t)tcp) - ((uint64_t)ethernet));
+  printk("length: %d, tcp_length: %d\n", length, tcp_length);
   connection->Receive(tcp, tcp_length);
 }
 

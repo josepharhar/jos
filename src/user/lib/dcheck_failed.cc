@@ -4,8 +4,8 @@
 #include "getc.h"
 #include "vprintf.h"
 
-void DCHECKFailed(const char* condition) {
-  printu("DCHECK failed: %s\n", condition);
+void DCHECKFailed(const char* file, int line, const char* condition) {
+  printu("%s:%d DCHECK failed: %s\n", file, line, condition);
 }
 
 void DCHECKFailedMessage(const char* condition, const char* format, ...) {

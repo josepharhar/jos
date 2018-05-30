@@ -21,7 +21,6 @@ static IpAddr gateway_ip;
 static stdj::Array<PacketReceivedHandler>* handlers = 0;
 
 static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
-  printk("HandlePacketReceived length: %d\n", length);
   if (length < sizeof(Ethernet)) {
     printk("packet length is less than ethernet length: %d\n", length);
     return;
@@ -55,20 +54,6 @@ static void HandlePacketReceived(uint8_t* packet, uint64_t length) {
 }
 
 void SendPacket(void* packet, uint64_t length) {
-  {
-    printk("net::SendPacket() length: %d\n", length);
-    Ethernet* ethernet = (Ethernet*)packet;
-    stdj::string mac_src = ethernet->GetSrc().ToString();
-    stdj::string mac_dest = ethernet->GetDest().ToString();
-    printk("  mac src: %s dest: %s\n", mac_src.c_str(), mac_dest.c_str());
-    if (ethernet->GetType() == ETHERTYPE_ARP) {
-      ARP* arp = (ARP*)(ethernet + 1);
-      stdj::string target = arp->GetTargetIp().ToString();
-      stdj::string src = arp->GetSourceIp().ToString();
-      printk("  arp targetip: %s, srcip: %s\n",
-          target.c_str(), src.c_str());
-    }
-  }
   driver->sendPacket(packet, length);
 }
 
