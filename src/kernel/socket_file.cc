@@ -9,6 +9,10 @@
 
 SocketFile::SocketFile(TcpAddr addr)
     : buffer_(8192), connection_closed_(false) {
+  {
+    stdj::string asdf = addr.ToString();
+    printk("SocketFile::SocketFile addr: %s\n", asdf.c_str());
+  }
   handle_ = net::OpenTcpConnection(addr, GlobalIncomingPacketHandler, this,
                                    GlobalSocketClosedHandler, this);
 }

@@ -36,7 +36,9 @@ class TcpConnection {
         packet_handler_(packet_handler),
         packet_handler_arg_(packet_handler_arg),
         closed_handler_(closed_handler),
-        closed_handler_arg_(closed_handler_arg) {}
+        closed_handler_arg_(closed_handler_arg) {
+    printk("TcpConnection::TcpConnection\n");
+  }
 
   TcpHandle GetHandle() { return handle_; }
 
@@ -53,7 +55,7 @@ class TcpConnection {
     my_seq_++;
   }
 
-  int Receive(TCP* tcp, uint64_t length) {
+  void Receive(TCP* tcp, uint64_t length) {
     uint64_t payload_length = length - tcp->data_offset * 4;
 
     printk("received tcp. state: %d\n", state_);
@@ -131,7 +133,8 @@ class TcpConnection {
           other_seq_++;  // TODO delet this
           Send(0, 0, fin_flags.GetValue());
 
-          return 1;
+          kys();
+          return;
         }
         break;
     }
@@ -151,6 +154,10 @@ class TcpConnection {
         break;
       }
     }
+    kys();
+  }
+
+  void kys() {
     SetState(kClosed);
     closed_handler_(closed_handler_arg_);
     tcp_connections.RemoveValue(this);
@@ -272,9 +279,11 @@ TcpHandle OpenTcpConnection(TcpAddr remote_addr,
                             TcpConnectionClosedHandler closed_handler,
                             void* closed_handler_arg) {
   TcpHandle new_handle = GenerateHandle(remote_addr);
-  tcp_connections.Add(new TcpConnection(new_handle, packet_handler,
-                                        packet_handler_arg, closed_handler,
-                                        closed_handler_arg));
+  TcpConnection* new_connection =
+      new TcpConnection(new_handle, packet_handler, packet_handler_arg,
+                        closed_handler, closed_handler_arg);
+  tcp_connections.Add(new_connection);
+  new_connection->Start();
   return new_handle;
 }
 
@@ -289,6 +298,21 @@ void SendTcpPacket(void* packet, uint64_t length, TcpHandle handle) {
 void HandleTcpPacket(Ethernet* ethernet, uint64_t length) {
   IP* ip = (IP*)(ethernet + 1);
   TCP* tcp = (TCP*)ip->GetNextHeader();  // TODO this is unsecure
+
+  TcpHandle handle;
+  handle.local_port = tcp->GetDestPort();
+  handle.remote_addr = TcpAddr(ip->GetSource(), tcp->GetSrcPort());
+
+  TcpConnection* connection = GetConnection(handle);
+  if (!connection) {
+    stdj::string remote_addr_string = handle.remote_addr.ToString();
+    printk("HandleTcpPacket: no handler for %s -> local:%d\n",
+           remote_addr_string.c_str(), handle.local_port);
+    return;
+  }
+
+  uint64_t tcp_length = length - (((uint64_t)tcp) - ((uint64_t)ethernet));
+  connection->Receive(tcp, tcp_length);
 }
 
 // TcpHandle implementation

@@ -263,4 +263,5 @@ clean:
 
 .PHONY: dump
 dump:
-	tcpdump -qns 0 -A -r dump.pcap
+	#tcpdump -qns 0 -A -r dump.pcap
+	tcpdump -r dump.pcap

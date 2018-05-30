@@ -13,8 +13,8 @@ int main(int argc, char** argv) {
     printf("usage: wget 1.2.3.4:80 /filepath\n");
     exit(1);
   }
-  char* tcp_addr_string = argv[0];
-  char* filepath = argv[1];
+  char* tcp_addr_string = argv[1];
+  char* filepath = argv[2];
 
   TcpAddr tcp_addr = TcpAddr::FromString(tcp_addr_string);
   if (tcp_addr == TcpAddr::INVALID) {

@@ -12,7 +12,6 @@ namespace net {
 
 void HandleIpPacket(Ethernet* ethernet, uint64_t length) {
   IP* ip = (IP*)(ethernet + 1);
-  printk("received ipv4 packet\n");
 
   if (ip->GetDest() != GetMyIp()) {
     // packet was not addressed to us.
