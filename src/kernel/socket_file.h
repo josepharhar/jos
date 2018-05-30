@@ -24,7 +24,28 @@ class SocketFile : public ipc::File {
             int* size_writeback) override;
 
  private:
+  struct ReadRequest {
+    void* buffer_writeback;
+    uint64_t buffer_length;
+    int status_writeback;
+  };
+
   stdj::Array<ipc::Pipe*> pipes_;
+  TcpHandle handle_;
+  //stdj::Queue<std::pair<void*, uint64_t>> incoming_packet_queue_;
+  stdj::Buffer<uint8_t> buffer_;
+
+  proc::BlockedQueue proc_blocked_queue_;
+  stdj::Queue<proc::ProcContext*> proc_context_queue_;
+  stdj::Queue<ReadRequest> request_queue_;
+
+  static void GlobalSocketClosedHandler(void* arg);
+  static void GlobalIncomingPacketHandler(void* packet,
+                                          uint64_t length,
+                                          void* arg);
+
+  void SocketClosedHandler();
+  void IncomingPacketHandler(void* packet, uint64_t length);
 };
 
 class SocketPipe : public ipc::Pipe {
