@@ -58,7 +58,7 @@ struct SyscallPingParams {
 
 struct SyscallSocketParams {
   char* tcp_address;
-  int status_writeback;
+  int fd_writeback;
 };
 
 #endif  // SHARED_SYSCALL_PARAMS_H_

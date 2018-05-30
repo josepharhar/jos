@@ -7,7 +7,7 @@
 int socket(const char* tcp_address) {
   SyscallSocketParams params;
   params.tcp_address = (char*)tcp_address;
-  params.status_writeback = -2;
+  params.fd_writeback = -2;
   Syscall(SYSCALL_SOCKET, (uint64_t)&params);
-  return params.status_writeback;
+  return params.fd_writeback;
 }
