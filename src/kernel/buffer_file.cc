@@ -7,7 +7,7 @@
 BufferFile::BufferFile() : buffer_(4096) {}
 
 ipc::Pipe* BufferFile::Open(ipc::Mode mode) {
-  Pipe* pipe = new Pipe(this, mode);
+  ipc::Pipe* pipe = new ipc::Pipe(this, mode);
   pipes_.Add(pipe);
   return pipe;
 }

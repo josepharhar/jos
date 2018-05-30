@@ -9,6 +9,9 @@
 
 namespace net {
 
+class TcpConnection;
+static stdj::Array<TcpConnection*> tcp_connections;
+
 static uint32_t tcp_rand() {
   static uint32_t next_rand = 0x4880;
   return next_rand++;
@@ -25,11 +28,17 @@ class TcpConnection {
 
   TcpConnection(TcpHandle handle,
                 TcpPacketHandler packet_handler,
-                TcpConnectionClosedHandler closed_handler)
+                void* packet_handler_arg,
+                TcpConnectionClosedHandler closed_handler,
+                void* closed_handler_arg)
       : handle_(handle),
         state_(kUninitialized),
         packet_handler_(packet_handler),
-        closed_handler_(closed_handler) {}
+        packet_handler_arg_(packet_handler_arg),
+        closed_handler_(closed_handler),
+        closed_handler_arg_(closed_handler_arg) {}
+
+  TcpHandle GetHandle() { return handle_; }
 
   void Start() {
     SetState(kClosed);
@@ -106,7 +115,7 @@ class TcpConnection {
           break;
         }
         if (payload_length) {
-          packet_handler_(tcp + 1, payload_length);
+          packet_handler_(tcp + 1, payload_length, packet_handler_arg_);
         }
         if (!payload_length) {
           // printk("  no payload, should other_seq_ be incremented??\n");
@@ -143,8 +152,9 @@ class TcpConnection {
       }
     }
     SetState(kClosed);
-    closed_handler_();
-    // TODO delete this and close pipes/socketfiles
+    closed_handler_(closed_handler_arg_);
+    tcp_connections.RemoveValue(this);
+    delete this;
   }
 
   void Send(const void* buffer, int buffer_length) {
@@ -154,7 +164,7 @@ class TcpConnection {
       case kSynSent: {
         void* buffer_copy = kmalloc(buffer_length);
         memcpy(buffer_copy, buffer, buffer_length);
-        buffered_packets_to_send_.push_back(
+        buffered_packets_to_send_.Add(
             stdj::pair<const void*, int>(buffer_copy, buffer_length));
         return;
       }
@@ -178,14 +188,16 @@ class TcpConnection {
   uint32_t init_other_seq_;
   stdj::Array<stdj::pair<const void*, int>> buffered_packets_to_send_;
   TcpPacketHandler packet_handler_;
+  void* packet_handler_arg_;
   TcpConnectionClosedHandler closed_handler_;
+  void* closed_handler_arg_;
 
   void Send(const void* buffer, uint64_t buffer_length, uint8_t flags) {
     uint16_t tcp_length = sizeof(TCP) + buffer_length;
-    uint16_t tcp_pseudo_lenght = sizeof(TCPPseudoHeader) + tcp_length;
+    uint16_t tcp_pseudo_length = sizeof(TCPPseudoHeader) + tcp_length;
 
     TCPPseudoHeader* pseudo_header =
-        (TCPPseudoHeader*)kcalloc(tcp_pseudo_length, 1);
+        (TCPPseudoHeader*)kcalloc(tcp_pseudo_length);
 
     pseudo_header->SetSrc(GetMyIp());
     pseudo_header->SetDest(handle_.remote_addr.ip_addr);
@@ -232,15 +244,22 @@ class TcpConnection {
   }
 };
 
-// static stdj::DefaultMap<TcpHandle, TcpState> handle_to_state;
-static stdj::Array<TcpConnection> tcp_connections;
+static TcpConnection* GetConnection(TcpHandle handle) {
+  for (int i = 0; i < tcp_connections.Size(); i++) {
+    TcpConnection* connection = tcp_connections.Get(i);
+    if (connection->GetHandle() == handle) {
+      return connection;
+    }
+  }
+  return 0;
+}
 
 static TcpHandle GenerateHandle(TcpAddr remote_addr) {
   TcpHandle new_handle;
   new_handle.remote_addr = remote_addr;
   for (uint16_t i = 49152; i < 65535; i++) {
     new_handle.local_port = i;
-    if (!handle_to_state.ContainsKey(new_handle)) {
+    if (!GetConnection(new_handle)) {
       return new_handle;
     }
   }
@@ -249,20 +268,23 @@ static TcpHandle GenerateHandle(TcpAddr remote_addr) {
 
 TcpHandle OpenTcpConnection(TcpAddr remote_addr,
                             TcpPacketHandler packet_handler,
-                            void* handler_arg,
+                            void* packet_handler_arg,
                             TcpConnectionClosedHandler closed_handler,
                             void* closed_handler_arg) {
   TcpHandle new_handle = GenerateHandle(remote_addr);
-
-  TcpConnection* new_connection =
-      new TcpConnection(new_handle, packet_handler, closed_handler);
-
-  handle_to_state.Put(new_handle, new_state);
-
+  tcp_connections.Add(new TcpConnection(new_handle, packet_handler,
+                                        packet_handler_arg, closed_handler,
+                                        closed_handler_arg));
   return new_handle;
 }
 
-void SendTcpPacket(void* packet, uint64_t length, TcpHandle handle) {}
+void SendTcpPacket(void* packet, uint64_t length, TcpHandle handle) {
+  TcpConnection* connection = GetConnection(handle);
+  if (connection) {
+    connection->Send(packet, length);
+  }
+  // TODO signal an error if there is no connection?
+}
 
 void HandleTcpPacket(Ethernet* ethernet, uint64_t length) {
   IP* ip = (IP*)(ethernet + 1);
