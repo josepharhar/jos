@@ -220,7 +220,7 @@ static void PreInterrupt(
     
     // if RestoreState() is not called during the interrupt, then
     //   we will restore state perfectly back into the syscall handler. i think.
-    // if RestoreState() is called, then fucking shit dude.
+    // if RestoreState() is called, then rip dude.
     
     // if we save context to the current proc, then we could restore context
     // into the syscall handler later. i guess theres nothing wrong with this...
