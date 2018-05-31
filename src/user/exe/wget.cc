@@ -30,7 +30,10 @@ int main(int argc, char** argv) {
   printf("wget got socket fd: %d\n", socket_fd);
 
   stdj::string http_request = stdj::string("GET ") + stdj::string(filepath) +
-                              stdj::string(" HTTP/1.1\r\n\r\n");
+                              stdj::string(" HTTP/1.1\r\n")
+                              + stdj::string("Host: users.csc.calpoly.edu\r\n")
+                              //+ stdj::string("Connection: keep-alive\r\n")
+                              + stdj::string("\r\n");
   write(socket_fd, http_request.c_str(), http_request.Size());
   printf("wget wrote http request\n");
 

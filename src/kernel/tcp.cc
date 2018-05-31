@@ -128,6 +128,7 @@ class TcpConnection {
         if (!payload_length) {
           // printk("  no payload, should other_seq_ be incremented??\n");
         }
+        printk("  other_seq_: %d -> %d\n", other_seq_, other_seq_ + payload_length);
         other_seq_ += payload_length;
 
         if (tcp->GetFlags()->fin) {
@@ -142,6 +143,13 @@ class TcpConnection {
           kys();
           return;
         }
+
+        // send an ack back for the data we just got
+        printk("  sending ack back\n");
+        TCPFlags ack_flags;
+        ack_flags.ack = 1;
+        Send(0, 0, ack_flags.GetValue());
+
         break;
     }
   }
@@ -320,7 +328,7 @@ void HandleTcpPacket(Ethernet* ethernet, uint64_t length) {
   uint16_t ip_total_length = ip->GetTotalLength(); // includes ip header, excludes ethernet header
 
   uint64_t tcp_length = length - (((uint64_t)tcp) - ((uint64_t)ethernet));
-  printk("length: %d, tcp_length: %d\n", length, tcp_length);
+  //printk("length: %d, tcp_length: %d\n", length, tcp_length);
   connection->Receive(tcp, tcp_length);
 }
 
