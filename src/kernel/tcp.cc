@@ -270,8 +270,7 @@ static TcpConnection* GetConnection(TcpHandle handle) {
 static TcpHandle GenerateHandle(TcpAddr remote_addr) {
   TcpHandle new_handle;
   new_handle.remote_addr = remote_addr;
-  // for (uint16_t i = 49152; i < 65535; i++) {
-  for (uint16_t i = 49169; i < 65535; i++) {
+  for (uint16_t i = 49152; i < 65535; i++) {
     new_handle.local_port = i;
     if (!GetConnection(new_handle)) {
       return new_handle;
