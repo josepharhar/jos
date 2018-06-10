@@ -83,6 +83,10 @@ static void ProcInit(void* arg) {
   }
 }
 
+namespace page {
+  void asdf();
+}
+
 void KernelMain() {
   VGA_clear();
   printk("KernelMain()\n\n");
@@ -136,6 +140,8 @@ void KernelMain() {
   net::InitSocket();
 
   proc::CreateKthread(ProcInit, 0);
+
+  page::asdf();
 
   printk("calling procrun....\n");
   proc::Run();

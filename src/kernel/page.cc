@@ -81,6 +81,19 @@ struct PageTableEntry {
   }
 } __attribute__((packed));
 
+void asdf() {
+  uint64_t address;
+  VirtualAddress virtual_address;
+
+  virtual_address.p4_index = 1;
+  address = *((uint64_t*)(&virtual_address));
+  printk("p4_index = 1: %p\n", address);
+
+  virtual_address.p4_index = 2;
+  address = *((uint64_t*)(&virtual_address));
+  printk("p4_index = 2: %p\n", address);
+}
+
 static void AllocatePageTableEntry(PageTableEntry* entry,
                                    bool user_accessible) {
   entry->present = 1;
