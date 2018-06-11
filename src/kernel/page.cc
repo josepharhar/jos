@@ -6,6 +6,7 @@
 #include "kmalloc.h"
 #include "string.h"
 #include "proc.h"
+#include "user.h"
 
 // TODO figure out if we need demand paging later
 // flags for demand paging
@@ -84,6 +85,7 @@ struct PageTableEntry {
 void asdf() {
   uint64_t address;
   VirtualAddress virtual_address;
+  memset(&virtual_address, 0, sizeof(VirtualAddress));
 
   virtual_address.p4_index = 1;
   address = *((uint64_t*)(&virtual_address));
@@ -92,6 +94,48 @@ void asdf() {
   virtual_address.p4_index = 2;
   address = *((uint64_t*)(&virtual_address));
   printk("p4_index = 2: %p\n", address);
+
+  virtual_address.p4_index = P4_KERNEL_STACKS;
+  address = *((uint64_t*)(&virtual_address));
+  printk("p4_index = P4_KERNEL_STACKS: %p\n", address);
+
+  virtual_address.p4_index = P4_USERSPACE_START;
+  address = *((uint64_t*)(&virtual_address));
+  printk("p4_index = P4_USERSPACE_START: %p\n", address);
+
+  printk("USER_STACK_TOP:    %p\n", USER_STACK_TOP);
+  //printk("USER_STACK_BOTTOM: %p\n", USER_STACK_BOTTOM);
+  address = USER_STACK_TOP;
+  virtual_address = *((VirtualAddress*)(&address));
+  printk("user stack top p4:    %d\n", virtual_address.p4_index);
+  /*address = USER_STACK_BOTTOM;
+  virtual_address = *((VirtualAddress*)(&address));
+  printk("user stack bottom p4: %d\n", virtual_address.p4_index);*/
+
+  memset(&virtual_address, 0, sizeof(VirtualAddress));
+  virtual_address.p4_index = 15;
+  address = *((uint64_t*)(&virtual_address));
+  printk("p4 15 -> addr: %p\n", address);
+
+  address  = 0x80000000000;
+  printk("user text start: %p\n", address);
+  virtual_address = *((VirtualAddress*)(&address));
+  printk("  p4 index: %d\n", virtual_address.p4_index);
+
+  address = 0x00000A0000000000;
+  virtual_address = *((VirtualAddress*)(&address));
+  printk("user argv addr: %p\n", address);
+  printk("user argv p4: %d\n", virtual_address.p4_index);
+
+  address = 0x0000090000000000;
+  virtual_address = *((VirtualAddress*)(&address));
+  printk("never used user heap: %p\n", address);
+  printk("never used user heap p4: %d\n", virtual_address.p4_index);
+
+  memset(&virtual_address, 0, sizeof(VirtualAddress));
+  virtual_address.p4_index = 0x1ff;
+  address = *((uint64_t*)(&virtual_address));
+  printk("last p4 index address: %p\n", address);
 }
 
 static void AllocatePageTableEntry(PageTableEntry* entry,

@@ -500,7 +500,7 @@ void ExecProc(ProcContext* proc,
   // TODO formalize the use of this address?
   //   get it from the normal user heap instead?
   //   remotely access the user heap allocator?
-  static const uint64_t argv_addr = 0x00000A0000000000;
+  static const uint64_t argv_addr = 0x0000088000000000;
 
   int argv_size;
   uint64_t total_string_length = 0;
